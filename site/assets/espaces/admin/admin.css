@@ -162,3 +162,56 @@ fieldset.acc-lock { border: 0; padding: 0; margin: 0; min-width: 0; display: fle
 .adc-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
 .adc-row-title { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
 .adc-row .btn-row { margin-top: 4px; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : habillage commun des sections =====
+   Compteurs en tuiles à chiffres pixel ; onglets et filtres actifs (.chip[aria-pressed], [role="tab"][aria-selected]) en
+   aplat --esp (jaune de l'admin) avec texte --esp-text ; bordures de 2 px ; en-têtes de tableau en police pixel. */
+
+/* Compteurs : tuiles, chiffre pixel dans --esp-ink, montée en diagonale au survol quand la tuile est un lien */
+.stat { border-width: 2px; border-radius: 14px; gap: 8px; transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1), border-color .2s; }
+.stat-value { font-family: var(--font-pixel); font-weight: 400; font-size: 34px; color: var(--esp-ink); font-variant-numeric: tabular-nums; }
+.stat-label { font-family: var(--font-pixel); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.stat.attention { border-color: var(--esp); }
+.stat.attention .stat-value { color: var(--esp-ink); }
+@media (hover: hover) { a.stat:hover, button.stat:hover { border-color: var(--esp); transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--esp); } }
+
+/* Filtres et onglets en puces : actifs en aplat --esp */
+.chip { border-width: 2px; border-radius: 12px; transition: transform .15s ease, border-color .15s ease, background .15s ease; }
+@media (hover: hover) { .chip:not([aria-pressed="true"]):hover { border-color: var(--esp); transform: translateY(-2px); } }
+.chip[aria-pressed="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+.badge-toggles .chip[aria-pressed="true"] { box-shadow: 3px 3px 0 #000; }
+
+/* Onglets (role="tab") de toutes les sections : actif en aplat --esp, texte noir */
+.shell [role="tablist"] [role="tab"][aria-selected="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; }
+.shell [role="tablist"] [role="tab"][aria-selected="true"] * { color: inherit; }
+
+/* Interrupteurs : bord 2 px, curseur carré */
+.switch-ui { border-width: 2px; border-radius: 8px; }
+.switch-ui::after { top: 2px; left: 2px; border-radius: 4px; }
+.switch input:checked + .switch-ui { background: var(--esp); border-color: #000; }
+.switch input:checked + .switch-ui::after { background: var(--esp-text); }
+
+/* Listes, éléments et journal */
+.member-row, .item { border-bottom-width: 2px; }
+.new-codes { border-width: 2px; border-radius: 12px; }
+.code { font-family: var(--font-pixel); font-weight: 400; letter-spacing: 2px; }
+.badge-card { border-width: 2px; border-radius: 14px; }
+.badge-img { border-width: 2px; border-radius: 12px; }
+.season-opt { border-width: 2px; border-radius: 12px; }
+.season-opt[aria-checked="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+.season-dot { border-radius: 2px; border: 2px solid #000; }
+.log-row { border-width: 2px; border-radius: 12px; }
+.log-row time { font-family: var(--font-pixel); font-size: 12px; }
+.card-preview { border-width: 2px; }
+
+/* Tableaux des sections : en-têtes en police pixel, lignes séparées par un filet de 2 px */
+.shell table thead th { font-family: var(--font-pixel); font-weight: 400; letter-spacing: 1px; }
+.shell table :is(th, td) { border-bottom-width: 2px; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .stat, .chip { transition: none; }
+  .stat:hover, .chip:hover { transform: none !important; }
+}
+html[data-fx="off"] :is(.stat, .chip) { transition: none; }
+html[data-fx="off"] :is(.stat, .chip):hover { transform: none !important; }

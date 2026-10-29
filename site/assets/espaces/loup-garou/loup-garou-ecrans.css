@@ -9,3 +9,93 @@
 @import url('meneur.css');
 @import url('fin.css');
 @import url('stats.css');
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : habillage de l'accueil et de la salle d'attente =====
+   Après les feuilles par écran pour l'emporter à spécificité égale. Couleur d'espace --esp (violet du Loup-Garou),
+   --esp-ink pour le texte, --esp-text posé sur --esp. Les plateaux, rôles, révélation et meneur ne sont pas restylés ici.
+   Mouvements coupés par data-fx="off", lg-calme et le mouvement réduit. */
+
+/* Texte violet : le violet pur (#8B5CF6) reste sous 4,5:1 sur les surfaces sombres, il est éclairci ici ;
+   en mode clair, --esp-ink (assombri) suffit. */
+.lg-app { --lg-ink: color-mix(in srgb, var(--esp) 70%, #fff); }
+html[data-mode="clair"] .lg-app { --lg-ink: var(--esp-ink); }
+
+/* Fil d'Ariane en petit titre pixel */
+.lg-ariane { font-family: var(--font-pixel); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--lg-ink); }
+.lg-ariane a { color: var(--text); text-underline-offset: 3px; }
+
+/* ---------- Accueil : héros, titre très gros ---------- */
+.lg-acc-hero { border: 2px solid var(--border); border-radius: 14px; }
+/* Mode clair : le texte sombre ne se pose pas sur l'image de nuit du village, le héros prend une surface claire */
+html[data-mode="clair"] .lg-acc-hero { background: color-mix(in srgb, var(--surface) 94%, transparent); }
+.lg-acc-titre { font-size: clamp(56px, 8vw, 96px); line-height: .95; letter-spacing: -1px; text-transform: uppercase; }
+@media (max-width: 700px) { .lg-acc-titre { font-size: clamp(32px, 10vw, 52px); line-height: 1; letter-spacing: -.5px; } }
+.lg-acc-intro { line-height: 1.55; }
+.lg-btn-grand { border-radius: 12px; }
+.lg-acc-actions .btn-ghost, .lg-acc-bouton.btn-ghost, .lg-salle-boutons .btn-ghost { border-color: var(--lg-ink); }
+
+/* Cartes : bordure 2 px, titre précédé d'un petit carré plein violet */
+.lg-acc-carte, .lg-salle-chat { border-width: 2px; border-radius: 14px; }
+.lg-acc-titre-carte { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; }
+.lg-acc-titre-carte::before { content: ''; flex: none; width: 10px; height: 10px; background: var(--esp); }
+.lg-acc-carte-tete .lg-acc-sous { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-pixel); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.lg-acc-carte-tete .lg-acc-sous::before { content: ''; width: 8px; height: 8px; background: var(--sage-text); animation: lg-px-blink 1s steps(2, end) infinite; }
+@keyframes lg-px-blink { 50% { opacity: .2; } }
+
+/* Code de partie : champ à bordure 2 px, texte en police pixel, ombre franche violette au focus */
+.lg-acc-code { border-width: 2px; border-radius: 12px; font-family: var(--font-pixel); font-size: 20px; letter-spacing: 2px; transition: border-color .15s ease, box-shadow .15s ease; }
+.lg-acc-code:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+.lg-acc-code[aria-invalid="true"] { box-shadow: 4px 4px 0 var(--rose); }
+
+/* Listes de parties : tuiles qui montent en diagonale avec une ombre franche violette */
+.lg-acc-liste { gap: 10px; }
+.lg-acc-liste > li.lg-acc-ligne { padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px; background: var(--surface-2);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+@media (hover: hover) { .lg-acc-liste > li.lg-acc-ligne:hover { transform: translate(-3px, -3px); border-color: #000; box-shadow: 6px 6px 0 var(--esp); } }
+/* Mes parties en cours : mises en avant (bordure et ombre de la couleur d'espace) */
+.lg-acc-carte[aria-labelledby="lg-acc-encours-titre"] .lg-acc-liste > li.lg-acc-ligne { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+.lg-acc-puce { border: 2px solid var(--esp); border-radius: 0; background: var(--bg); color: var(--lg-ink); }
+.lg-acc-nb { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; border: 2px solid var(--border-strong); border-radius: 6px; }
+.lg-acc-bouton { border-radius: 12px; }
+.lg-acc-vide { border: 2px dashed var(--border-strong); background: var(--surface-2); }
+
+/* Statistiques : chiffres en police pixel */
+.lg-acc-tuile { border: 2px solid var(--border); border-radius: 10px; }
+.lg-acc-chiffre { font-family: var(--font-pixel); font-weight: 400; font-size: 28px; }
+.lg-acc-tuile-nom { font-family: var(--font-pixel); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.lg-acc-lien { color: var(--lg-ink); text-underline-offset: 3px; }
+.lg-acc-camp-ico { border: 2px solid currentColor; border-radius: 0; }
+
+/* ---------- Salle d'attente ---------- */
+.lg-salle-titre { font-size: clamp(36px, 7vw, 80px); line-height: .95; letter-spacing: -1px; text-transform: uppercase; }
+.lg-salle-etiq { font-family: var(--font-pixel); font-weight: 400; font-size: 13px; letter-spacing: 1px; color: var(--lg-ink); }
+.lg-salle .lg-salle-code { font-family: var(--font-pixel); font-weight: 400; font-size: clamp(30px, 3.4vw, 40px); letter-spacing: 3px; color: var(--lg-ink); }
+.lg-salle-annulee .lg-code { font-family: var(--font-pixel); font-weight: 400; color: var(--lg-ink); }
+.lg-salle-boutons .btn { border-radius: 10px; }
+.lg-salle-pastilles .pill { border: 2px solid var(--border); border-radius: 8px; }
+/* Barre de remplissage : bord pixel, remplissage de la couleur d'espace */
+.lg-progres { height: 12px; border-radius: 0; box-shadow: inset 0 0 0 2px var(--border); background: var(--bg); }
+.lg-progres span { border-radius: 0; background: var(--esp); }
+.lg-salle-entete-joueurs strong { font-family: var(--font-pixel); font-weight: 400; font-size: 18px; }
+.lg-joueur { border-bottom-width: 2px; }
+.lg-joueur.moi { box-shadow: inset 4px 0 0 var(--esp); padding-left: 12px; }
+.lg-sa-role-ligne { border-bottom-width: 2px; }
+.lg-sa-role-nombre { font-family: var(--font-pixel); font-weight: 400; color: var(--lg-ink); }
+.lg-salle-actions { border-width: 2px; }
+.lg-salle [data-pret][aria-pressed="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; }
+.lg-lien-action { color: var(--muted); }
+
+/* Chat : onglet actif en aplat de la couleur d'espace */
+.lg-chat-onglet { border-width: 2px; border-radius: 10px; }
+.lg-chat-onglet[aria-selected="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .lg-acc-liste > li.lg-acc-ligne, .lg-acc-code { transition: none; }
+  .lg-acc-liste > li.lg-acc-ligne:hover { transform: none; }
+  .lg-acc-carte-tete .lg-acc-sous::before { animation: none; }
+}
+html[data-fx="off"] .lg-acc-liste > li.lg-acc-ligne, html[data-fx="off"] .lg-acc-code { transition: none; }
+html[data-fx="off"] .lg-acc-liste > li.lg-acc-ligne:hover { transform: none; }
+html[data-fx="off"] .lg-acc-carte-tete .lg-acc-sous::before, .lg-calme .lg-acc-carte-tete .lg-acc-sous::before { animation: none; }
+.lg-calme .lg-acc-liste > li.lg-acc-ligne:hover { transform: none; }

@@ -412,3 +412,82 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .cz-more-btn { width: 100%; max-width: 420px; min-height: 44px; }
 .cz-more .muted { margin: 0; }
 .cz-sentinel { width: 1px; height: 1px; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : couleur d'espace jaune (--esp), onglets en pastilles pixel, ombres franches =====
+   Seulement l'habillage : la scène d'ouverture (.op-stage, cartouche, console, cartes en éventail) ne change pas. */
+/* En-tête : barre arc-en-ciel devant le petit titre, série et mentions en police pixel */
+.cartes-head .eyebrow { display: flex; align-items: center; gap: 12px; }
+.cartes-head .eyebrow::before { content: ""; flex: none; width: 48px; height: 8px;
+  background: linear-gradient(90deg, #FE3104 0 16.6%, #FCA301 0 33.3%, #FBD32D 0 50%, #159946 0 66.6%, #2B5AE2 0 83.3%, #4E2398 0); }
+.cartes-wallet .cartes-small { margin: 0; font: 400 12px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; }
+
+/* Onglets : pastilles pixel, l'onglet actif en aplat de la couleur d'espace (texte noir) ; elles passent à la ligne */
+.cartes-tabs { flex-wrap: wrap; gap: 8px; overflow: visible; border-bottom: 0; padding: 2px 6px 6px 2px; }
+.cartes-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 2px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text); font: 400 14px/1 var(--font-pixel); letter-spacing: 1px; text-transform: uppercase;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .15s ease; }
+.cartes-tab[aria-selected="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+@media (hover: hover) { .cartes-tab:not([aria-selected="true"]):hover { border-color: var(--esp); transform: translateY(-2px); } }
+.cartes-tab:focus-visible { outline: 3px solid var(--esp-ink); outline-offset: 3px; }
+.cartes-section-sel label { font: 400 12px var(--font-pixel); letter-spacing: 1px; color: var(--esp-ink); }
+
+/* Titres des blocs : Archivo Black ; petits titres et compteurs en police pixel */
+.cartes-block > h2, .cartes-panel .card > h2 { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.cartes-progress-label { font: 400 12px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; }
+#cartes-p-collection .field > label, #cartes-peer .field > label { font: 400 12px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.cartes-filtres > summary { font-family: var(--font-display); font-weight: 400; }
+
+/* Tuiles des boosters (Ouverture) et articles de la Boutique : bordure 2 px, montée en diagonale et ombre franche au survol */
+.cart-tile { border-width: 2px; border-radius: 14px; padding: 16px; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+#cartes-free { border-color: var(--esp); }
+@media (max-width: 600px) { .cart-tile { padding: 12px; } .cartes-lb li { padding: 10px 12px; } }
+.cart-h { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.cart-act .cartes-timer { font: 400 13px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.shop-item { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+@media (hover: hover) {
+  .cart-tile:hover, .shop-item:hover { transform: translate(-3px, -3px); box-shadow: var(--px-shadow-up); border-color: var(--esp); }
+}
+.inv-big { font: 400 28px var(--font-pixel); }
+.inv-list strong { font-family: var(--font-pixel); font-weight: 400; }
+
+/* Abords de la scène d'ouverture : cadre jaune à ombre franche, petit titre pixel, commandes centrées */
+#cartes-reveal > .cartes-block { border-color: var(--esp); box-shadow: var(--px-shadow-up); }
+#cartes-reveal .cartes-block > h2 { font: 400 14px var(--font-pixel); letter-spacing: 3px; text-transform: uppercase; color: var(--esp-ink); }
+#cartes-reveal .cartes-row { justify-content: center; }
+#cartes-reveal .cartes-row > p { margin: 0; font: 400 12px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; }
+
+/* Quêtes : encart en pointillés de la couleur d'espace */
+.cq-encart { border: 2px dashed var(--esp-ink); border-radius: 12px; color: var(--text); }
+.cq-encart a { color: var(--esp-ink); }
+.cq-count { font: 400 12px var(--font-pixel); letter-spacing: 1px; }
+
+/* Classement : une ligne encadrée par membre, rang en pixel (aplat jaune pour le podium), ta ligne bordée de jaune */
+.cartes-lb { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.cartes-lb li { padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px; background: var(--surface-2); }
+.cartes-lb-rank { display: grid; place-items: center; width: 36px; height: 36px; box-sizing: border-box; font: 400 16px var(--font-pixel); color: var(--esp-ink); }
+.cartes-lb li:nth-child(-n+3) .cartes-lb-rank { background: var(--esp); color: var(--esp-text); border: 2px solid #000; box-shadow: 2px 2px 0 #000; }
+.cartes-lb-score { font: 400 18px var(--font-pixel); color: var(--esp-ink); }
+/* « (toi) » n'est écrit que sur la ligne du membre connecté */
+.cartes-lb li:has(> .cartes-row > span > .muted.small) { border-color: var(--esp); }
+
+/* Fenêtres (détail d'une carte, recyclage, choix de la série) : bordure 2 px, ombre franche */
+.cartes-dialog { border-width: 2px; border-radius: 14px; box-shadow: 8px 8px 0 #000; }
+.cartes-dialog h2, .cartes-dialog-pad h2 { font-family: var(--font-display); font-weight: 400; }
+.cartes-close, .cd-wish { border-width: 2px; }
+.cd-h { font: 400 12px var(--font-pixel); letter-spacing: 2px; color: var(--esp-ink); border-bottom-width: 2px; }
+.serie-opt { border-width: 2px; border-radius: 12px; }
+.serie-opt:has(input:checked) { border-color: var(--esp); box-shadow: 3px 3px 0 var(--esp); }
+.serie-opt:focus-within { outline-color: var(--esp-ink); }
+
+/* Filets de 2 px partout (jamais 1 px) */
+.cartes-odds th, .cartes-odds td, .cartes-copies li, .cartes-log li, .cq-item, .inv-list li, .inv-gifts-list li { border-bottom-width: 2px; }
+.pv-tag { border-width: 2px; }
+.cz-more { border-width: 2px; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .cartes-tab, .cart-tile, .shop-item { transition: none; }
+  .cartes-tab:hover, .cart-tile:hover, .shop-item:hover { transform: none !important; }
+}
+html[data-fx="off"] :is(.cartes-tab, .cart-tile, .shop-item) { transition: none; }
+html[data-fx="off"] :is(.cartes-tab, .cart-tile, .shop-item):hover { transform: none !important; }

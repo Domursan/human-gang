@@ -206,3 +206,112 @@
   .jx-l-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .jx-l-court { display: inline; }
 }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : vue « Tous les jeux » et en-tête de la page ===== */
+/* Couleur d'espace --esp (vert des jeux, base.css) : filtres actifs, ombre des tuiles au survol, pastille « Fait ». */
+
+/* En-tête : petit titre pixel (eyebrow de base.css), très grand titre, Paillettes du jour dans un encart pixel */
+.jeux-head { padding: 32px 0 22px; align-items: flex-end; gap: 16px 24px; }
+.jeux-title { font-size: clamp(44px, 9vw, 88px); line-height: .95; margin-top: 10px; }
+.jeux-head .eyebrow { font-size: 14px; }
+.jeux-bal:not([hidden]) { padding: 14px 18px; border: 2px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--px-shadow); gap: 6px; }
+.jeux-bal-v { font: 400 clamp(26px, 3.6vw, 38px) / 1 var(--font-pixel); color: var(--sand); font-variant-numeric: tabular-nums; }
+.jeux-bal-l { font: 400 12px var(--font-pixel); letter-spacing: 1px; color: var(--muted); }
+.jeux-retour { font-family: var(--font-pixel); font-weight: 400; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+.jeux-retour:hover, .jeux-retour:focus-visible { color: var(--esp-ink); }
+@media (max-width: 600px) { .jeux-head { padding: 18px 0 14px; flex-wrap: wrap; } .jeux-bal:not([hidden]) { padding: 10px 14px; } }
+
+/* Filtres (aplat vert quand actif, nombre de jeux en pixel) et recherche */
+.jx { gap: 24px; }
+.jx-filtre { display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface);
+  color: var(--text); font: 700 15px var(--font-body); transition: transform .15s ease, background .15s ease, border-color .15s ease; }
+.jx-nb { font: 400 12px var(--font-pixel); opacity: .8; }
+@media (hover: hover) { .jx-filtre:hover { border-color: var(--esp); transform: translateY(-2px); } }
+.jx-filtre[aria-pressed="true"] { background: var(--esp); border-color: var(--esp); color: var(--esp-text); }
+.jx-filtre:focus-visible { outline: 3px solid var(--esp); outline-offset: 2px; }
+.jx-cherche input { width: 300px; min-height: 48px; border-radius: 12px; border: 2px solid var(--border); font-weight: 500;
+  transition: border-color .15s ease, box-shadow .15s ease; }
+.jx-cherche input:focus { outline: none; border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+
+/* Corps : jeux à gauche, classement du jour en colonne à droite (grand écran), sous les jeux sinon */
+.jx-corps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: 28px; align-items: start; }
+.jx-main { display: flex; flex-direction: column; gap: 40px; min-width: 0; }
+.jx-classement { position: sticky; top: 16px; min-width: 0; }
+.jx-classement .jc { margin-top: 0; }
+@media (max-width: 1023px) { .jx-corps { grid-template-columns: minmax(0, 1fr); } .jx-classement { position: static; } }
+
+/* En-têtes de section : petit titre pixel (« // QUOTIDIENS »), grand titre et nombre de jeux ; ancre #quotidien… */
+.jx-section { scroll-margin-top: 16px; }
+.jx-sh { align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin: 0 0 16px; }
+.jx-sh-t { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.jx-code { font: 400 13px var(--font-pixel); letter-spacing: 2px; color: var(--esp-ink); text-transform: uppercase; }
+.jx-h { font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 3.4vw, 34px); line-height: 1; }
+.jx-h:focus { outline: none; }
+.jx-h:focus-visible { outline: 3px solid var(--esp); outline-offset: 4px; }
+.jx-h-nb { font: 400 16px var(--font-pixel); color: var(--muted); vertical-align: middle; }
+.jx-sh > p.small { font-size: 14px; }
+
+/* Tuiles carrées : vignette en plein, titre sur un dégradé sombre, montée en diagonale et ombre franche verte au survol */
+.jx-grille { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 16px; }
+.jx-carte { position: relative; aspect-ratio: 1 / 1; border: 2px solid var(--border); border-radius: 14px; background: var(--surface);
+  transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s ease, border-color .2s ease; }
+.jx-lien { position: absolute; inset: 0; display: block; height: auto; }
+.jx-lien:focus-visible { outline: 3px solid var(--esp); outline-offset: -3px; border-radius: 12px; }
+.jx-vig { position: absolute; inset: 0; overflow: hidden; }
+.jx-img { width: 100%; height: 100%; aspect-ratio: auto; border-bottom: 0; transition: transform .4s cubic-bezier(.2, .8, .2, 1); }
+.jx-ico { background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--jx) 10%, var(--surface-2)) 0 8px, var(--surface-2) 8px 16px); }
+.jx-ico .jx-gi { width: 48px; height: 48px; margin-bottom: 30%; }
+/* Texte posé sur l'image : couleurs fixes (le dégradé reste sombre dans tous les modes) */
+.jx-txt { position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 12px 12px; gap: 4px; pointer-events: none;
+  background: linear-gradient(to top, #08080B 0%, rgba(8, 8, 11, .92) 50%, rgba(8, 8, 11, 0) 100%); }
+.jx-t { font-size: 16px; font-weight: 800; line-height: 1.2; color: #F4F1EA; }
+.jx-s { font-size: 13px; line-height: 1.35; color: #B8B4C0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (hover: hover) {
+  .jx-carte:not(.is-prep):hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--esp); border-color: #08080B; }
+  .jx-carte:not(.is-prep):hover .jx-t { color: #F4F1EA; }
+  .jx-carte:not(.is-prep):hover .jx-img { transform: scale(1.06); }
+}
+.jx-carte:not(.is-prep):focus-within { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--esp); }
+.jx-carte:not(.is-prep):active { transform: translate(-1px, -1px); box-shadow: 2px 2px 0 var(--esp); }
+/* Jeu fait aujourd'hui : bord vert */
+.jx-carte:has([data-cbadge] .pill-ok) { border-color: var(--esp); }
+
+/* Pastilles « Fait » / « À jouer » / « En cours » / admins : étiquettes pixel à bord noir */
+.jx-pills { top: 8px; left: 8px; right: 8px; z-index: 1; }
+.jx-pills .pill { font: 400 12px / 1.2 var(--font-pixel); letter-spacing: .5px; text-transform: uppercase; padding: 4px 8px; gap: 4px;
+  border: 2px solid #08080B; border-radius: 0; animation: px-pop .36s cubic-bezier(.2, .8, .2, 1.4) backwards; }
+.jx-pills .pill-ok { background: var(--esp); color: #08080B; }
+.jx-pills .jeux-pill-sand { background: #F4F1EA; color: #08080B; }
+.jx-pills .jeux-pill-amber { background: #FCA301; color: #08080B; }
+.jx-pills .jx-prep { background: #FBD32D; color: #08080B; border-color: #08080B; }
+.jx-carte.is-chantier .jx-prep { background: #F2B705; border-color: #08080B; color: #08080B; }
+.jx-carte.is-chantier .jx-vig::after { z-index: 1; }
+
+/* Téléphone : deux tuiles par rangée */
+@media (max-width: 760px) {
+  .jx-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .jx-txt { padding: 36px 10px 10px; }
+  .jx-t { font-size: 14px; }
+  .jx-s { display: -webkit-box; font-size: 12px; }
+  .jx-pills { top: 6px; left: 6px; right: 6px; }
+  .jx-pills .pill { font-size: 11px; padding: 3px 6px; }
+  .jx-cherche input { width: 100%; }
+  .jx-main { gap: 32px; }
+}
+@media (max-width: 380px) { .jx-s { display: none; } }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .jx-filtre, .jx-carte, .jx-img, .jx-cherche input { transition: none; }
+  .jx-filtre:hover, .jx-carte:not(.is-prep):hover, .jx-carte:not(.is-prep):focus-within, .jx-carte:not(.is-prep):active { transform: none; }
+  .jx-carte:not(.is-prep):hover .jx-img { transform: none; }
+  .jx-pills .pill { animation: none; }
+}
+html[data-fx="off"] :is(.jx-filtre, .jx-carte, .jx-img, .jx-cherche input) { transition: none; }
+html[data-fx="off"] :is(.jx-filtre:hover, .jx-carte:not(.is-prep):hover, .jx-carte:not(.is-prep):focus-within, .jx-carte:not(.is-prep):active) { transform: none; }
+html[data-fx="off"] .jx-carte:not(.is-prep):hover .jx-img { transform: none; }
+html[data-fx="off"] .jx-pills .pill { animation: none; }
+/* Classement en colonne : nom en entier, nombre de jeux en dessous (deux lignes par membre) */
+.jx-classement .jc-ligne { grid-template-columns: 2em 28px minmax(0, 1fr) auto; grid-template-areas: "r a n p" "r a f p"; row-gap: 2px; }
+.jx-classement .jc-rang { grid-area: r; } .jx-classement .jc-ligne > .avatar { grid-area: a; } .jx-classement .jc-nom { grid-area: n; }
+.jx-classement .jc-faits { grid-area: f; display: block; } .jx-classement .jc-pts { grid-area: p; }

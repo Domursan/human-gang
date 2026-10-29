@@ -118,3 +118,48 @@
 @media (prefers-reduced-motion: reduce) {
   .sd, .sd-label, .sd-toggle .sd-ico { transition: none; }
 }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) =====
+   Bordures de 2 px, coins de 10 à 14 px, ombres noires franches (sans flou) ; survol et focus : bord et ombre à la couleur
+   d'espace --esp ; pastilles en police pixel. Mouvements coupés par le mouvement réduit et html[data-fx="off"]. */
+@media (min-width: 720px) {
+  .sd { border-right-width: 2px; border-top-width: 2px; }
+  .sd-links a, .sd-config { border-width: 2px; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+  .sd-links a:hover, .sd-config:hover, .sd-links a:focus-visible, .sd-config:focus-visible {
+    background: var(--surface-2); border-color: var(--esp); transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--esp); }
+  .sd-links a[aria-current="page"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+  .sd-config { border-top: 2px solid var(--border); border-radius: 10px; }
+  /* Bulle du nom : bord 2 px, ombre noire franche, coins de 10 px */
+  .sd-label { border-radius: 10px; border-width: 2px; box-shadow: var(--px-shadow); font-weight: 700; }
+}
+.sd-count { font-family: var(--font-pixel); font-weight: 400; font-size: 10px; border-radius: 6px; border: 2px solid var(--surface); line-height: 14px; }
+@media (max-width: 719.98px) {
+  .sd-fab { border-radius: 14px; border: 2px solid #000; background: var(--esp); color: var(--esp-text); box-shadow: var(--px-shadow); transition: transform .12s ease, box-shadow .12s ease; }
+  .sd-fab:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+  .sd-fab[aria-expanded="true"] { background: var(--surface-2); color: var(--text); border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+  .sd-fab-n { font-family: var(--font-pixel); font-weight: 400; font-size: 11px; border-radius: 6px; border: 2px solid #000; line-height: 16px; }
+  .sd-body { border-width: 2px; border-radius: 14px; box-shadow: var(--px-shadow-up); }
+  .sd-links a, .sd-config { border-width: 2px; }
+  .sd-links a:hover, .sd-config:hover { border-color: var(--esp); }
+  .sd-links a[aria-current="page"] { background: var(--esp); color: var(--esp-text); border-color: #000; }
+  .sd-config { border-top-width: 2px; }
+}
+
+/* Fenêtre « Choisir mes raccourcis » */
+.sd-dialog { border-width: 2px; border-radius: 14px; box-shadow: 8px 8px 0 #000; }
+.sd-dialog::backdrop { background: rgba(8, 8, 11, .7); }
+.sd-dlg-form h2 { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.sd-dlg-leg { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--esp-ink); }
+.sd-opt { border-width: 2px; border-radius: 12px; }
+.sd-opt:has(input:checked) { border-color: var(--esp); }
+.sd-opt input { accent-color: var(--esp); }
+.sd-dlg-ok { border: 2px solid #000; border-radius: 12px; background: var(--esp); color: var(--esp-text); box-shadow: var(--px-shadow); transition: transform .12s ease, box-shadow .12s ease; }
+.sd-dlg-ok:hover { border-color: #000; }
+.sd-dlg-ok:active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-links a, .sd-config, .sd-fab, .sd-dlg-ok { transition: none; }
+  .sd-links a:hover, .sd-config:hover, .sd-links a:focus-visible, .sd-config:focus-visible, .sd-fab:active, .sd-dlg-ok:active { transform: none !important; }
+}
+html[data-fx="off"] :is(.sd-links a, .sd-config, .sd-fab, .sd-dlg-ok) { transition: none; }
+html[data-fx="off"] :is(.sd-links a, .sd-config, .sd-fab, .sd-dlg-ok):is(:hover, :focus-visible, :active) { transform: none !important; }

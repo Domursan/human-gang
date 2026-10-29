@@ -202,3 +202,75 @@
 .day-actions .btn { min-height: 44px; }
 .day-actions .day-next { flex: 1 1 0; }
 .day-actions .day-go { flex: 1.4 1 0; text-decoration: none; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) ===== */
+/* Haut de l'accueil : thème en cours à gauche, carré des rubriques à droite (placerHaut, accueil.js).
+   Le carré se partage entre les zones visibles : 4 en deux par deux, 3 avec la dernière en largeur, 2 en rangées, 1 en entier. */
+.home-top { display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; margin-bottom: 20px; }
+.home-top > .tile-theme { flex: 1.3 1 440px; min-width: 0; margin: 0; }
+.home-top > .home-tiles.is-carre { flex: 1 1 380px; min-width: 0; margin: 0; aspect-ratio: 1 / 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.is-carre > .tile { min-height: 0; overflow: hidden; padding: 18px; }
+.is-carre > [data-pos="ligne"] { grid-column: 1 / -1; }
+.is-carre > [data-pos="tout"] { grid-column: 1 / -1; grid-row: 1 / -1; }
+.is-carre .tile-icon { width: 44px; height: 44px; font-size: 26px; border-radius: 10px; margin-bottom: 4px; }
+.is-carre .tile-label { font-size: 22px !important; }
+.is-carre .tile-arrow { top: 20px; right: 18px; }
+.is-carre .tile-main { font-size: 16px; }
+.is-carre .tile-sub { font-size: 13px; }
+@media (max-width: 860px) {
+  .home-top > .home-tiles.is-carre { aspect-ratio: auto; grid-template-rows: none; }
+  .is-carre > .tile { min-height: 170px; }
+}
+.home-tiles-suite { margin-bottom: 20px; }
+
+/* Tuile du thème en cours */
+.tile-theme { display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; padding: 24px;
+  border-color: var(--sand); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, var(--surface)), var(--surface) 70%); }
+.theme-txt { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.theme-txt p { margin: 0; }
+.theme-tag { align-self: flex-start; padding: 6px 10px; background: var(--sand); color: #08080B; font: 400 13px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; }
+.tile-theme .theme-nom { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 4vw, 38px); line-height: 1.05; }
+.theme-desc { font-size: 16px; line-height: 1.5; }
+.theme-fin { margin-top: auto !important; padding-top: 8px; font: 400 13px var(--font-pixel); letter-spacing: 1px; color: var(--sand); text-transform: uppercase; }
+.theme-cd { font: 400 32px var(--font-pixel); color: var(--sand); font-variant-numeric: tabular-nums; }
+.theme-scene { flex: 1 1 180px; min-height: 200px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--sand); border-radius: 12px;
+  background: #08080B repeating-linear-gradient(0deg, rgba(255, 255, 255, .04) 0 2px, transparent 2px 4px); }
+.theme-emoji { font-size: 110px; line-height: 1; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; animation: px-flotte 3s ease-in-out infinite; }
+@keyframes px-flotte { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* Tuiles des rubriques : à plat dans la couleur de leur espace, texte noir, ombre franche au survol */
+.tile.card-ss { --tuile: #FF3B5C; } .tile.card-irl { --tuile: #FCA301; } .tile.card-hist { --tuile: #3D7BFF; } .tile.card-admin { --tuile: #FBD32D; }
+.tile:is(.card-ss, .card-irl, .card-hist, .card-admin) { background: var(--tuile); border-color: #08080B; color: #08080B; }
+.tile:is(.card-ss, .card-irl, .card-hist, .card-admin) :is(.tile-sub, .tile-kicker, .tile-main, .tile-arrow) { color: #08080B; }
+.tile:is(.card-ss, .card-irl, .card-hist, .card-admin) .tile-icon { color: #08080B; background: rgba(0, 0, 0, .12); border-color: rgba(0, 0, 0, .35); }
+.tile:is(.card-ss, .card-irl, .card-hist, .card-admin) .pill { background: #08080B; color: #FFFFFF; border-color: #08080B; }
+.tile:is(.card-ss, .card-irl, .card-hist, .card-admin) .skeleton { background: rgba(0, 0, 0, .14); animation: none; }
+.tile-link { transition: transform .15s ease, box-shadow .15s ease; }
+@media (hover: hover) {
+  .tile-link:is(.card-ss, .card-irl, .card-hist, .card-admin):hover { color: #08080B; border-color: #08080B; transform: translate(-3px, -3px); box-shadow: 6px 6px 0 #000; }
+  .tile-link:hover .tile-arrow { color: #08080B; }
+}
+
+/* Fil d'activité compact : une ligne par entrée, sur deux colonnes quand il y a la place */
+.home-row > .home-feed { flex: 2 1 520px; }
+.home-feed .feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); column-gap: 24px; }
+.home-feed .feed-item { align-items: center; gap: 10px; padding: 8px 0; border-bottom-width: 2px; min-width: 0; }
+.home-feed .feed-item .avatar { width: 28px !important; height: 28px !important; font-size: 11px; }
+.home-feed .feed-text { flex: 1; display: flex; align-items: baseline; gap: 10px; }
+.home-feed .feed-text p { margin: 0; flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-feed .feed-text time { flex: none; font-family: var(--font-pixel); font-size: 12px; }
+.home-feed .feed-item.feed-poll, .home-feed .feed .empty, .home-feed .skeleton-row { grid-column: 1 / -1; }
+.home-feed .feed-item.feed-poll .feed-text { display: block; }
+.home-feed .feed-item:has(.feed-poll-see) .feed-text { flex-wrap: wrap; }
+.home-feed .feed-item:has(.feed-poll-see) .feed-text p { white-space: normal; }
+
+/* Boîte à idées : tout en bas, en pleine largeur, titre à gauche et champ à droite */
+.home-ideas form { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px 32px; align-items: start; }
+.home-ideas form > :not(.ideas-head) { grid-column: 2; }
+.home-ideas .btn-row { justify-content: flex-end; }
+@media (max-width: 760px) { .home-ideas form { grid-template-columns: 1fr; } .home-ideas form > :not(.ideas-head) { grid-column: 1; } }
+
+/* Mouvement réduit ou effets coupés */
+@media (prefers-reduced-motion: reduce) { .theme-emoji { animation: none; } .tile-link { transition: none; } .tile-link:hover { transform: none !important; } }
+html[data-fx="off"] .theme-emoji { animation: none; }

@@ -148,3 +148,62 @@
 @media (pointer: coarse) and (max-width: 760px) {
   .shell-all { width: 44px; }
 }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : coquille du panel =====
+   Couleur d'espace --esp (jaune #FBD32D pour l'admin, posée par theme-boot.js) : navigation active en aplat --esp et texte
+   --esp-text ; bordures de 2 px, ombres noires franches (--px-shadow), petits titres et compteurs en police pixel.
+   Mouvements coupés par le mouvement réduit et html[data-fx="off"] (fin de section). */
+
+/* Ruban arc-en-ciel qui glisse lentement (comme la traînée du logo) */
+.shell::before { height: 4px; background: linear-gradient(90deg, var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-6), var(--rb-1));
+  background-size: 200% 100%; animation: shell-arc 6s linear infinite; }
+@keyframes shell-arc { from { background-position: 0 0; } to { background-position: 200% 0; } }
+
+/* En-tête */
+.shell-top { margin-top: 4px; border-bottom-width: 2px; }
+.shell-logo { border-radius: 12px; border: 2px solid #000; box-shadow: 3px 3px 0 #000; }
+.shell-brand span { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.shell-all { border-radius: 12px; border-width: 2px; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+@media (hover: hover) { .shell-all:hover { border-color: var(--esp); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--esp); } }
+.shell-ico { border-radius: 12px; }
+.shell-god.is-on { color: var(--esp-text); background: var(--esp); border: 2px solid #000; }
+.shell-god.is-on::after { border-radius: 0; background: var(--esp-text); }
+.shell-avatar { border-radius: 12px; border: 2px solid #000; }
+.shell-avatar[aria-expanded="true"] { box-shadow: 3px 3px 0 var(--esp); }
+.shell-menu { border-width: 2px; box-shadow: var(--px-shadow-up); }
+.shell-menu a:hover, .shell-menu button:hover, .shell-menu :focus-visible { background: var(--esp); color: var(--esp-text); }
+
+/* En-tête de zone : fil d'Ariane en petit titre pixel (--esp-ink), grand titre Archivo Black */
+.zone-head { border-bottom-width: 2px; padding-top: 22px; padding-bottom: 18px; }
+.zone-back { min-height: 32px; border-radius: 10px; border-width: 2px; font-family: var(--font-pixel); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+@media (hover: hover) { .zone-back:hover { border-color: var(--esp); color: var(--text); } }
+.zone-crumb { font-family: var(--font-pixel); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--esp-ink); }
+.zone-crumb a { color: var(--muted); }
+.zone-crumb [aria-current] { color: var(--esp-ink); font-weight: 400; }
+.zone-sep { color: var(--muted); }
+.zone-title { font-size: clamp(28px, 3.6vw, 44px); line-height: 1; letter-spacing: -.5px; }
+
+/* Colonne de liste */
+.shell-col { border-right-width: 2px; }
+.shell-info { border-left-width: 2px; }
+
+/* Compteur « à traiter » : chiffres pixel, coins presque carrés */
+.nav-count { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; border-radius: 6px; padding: 2px 7px; border: 2px solid var(--border); }
+.nav-count.hot { border-color: #000; }
+.shell-badge { font-family: var(--font-pixel); font-weight: 400; font-size: 11px; border-radius: 6px; }
+
+/* Barre du bas (téléphone) : lieu actif en aplat --esp, texte noir */
+@media (max-width: 760px) {
+  .shell-tabs { border-top-width: 2px; }
+  .shell-tab-pic { border-radius: 10px; border: 2px solid transparent; }
+  .shell-tab[aria-current="true"] .shell-tab-pic { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 2px 2px 0 #000; }
+}
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .shell::before { animation: none; }
+  .shell-all { transition: none; }
+  .shell-all:hover { transform: none; }
+}
+html[data-fx="off"] .shell::before { animation: none; }
+html[data-fx="off"] .shell-all:hover { transform: none; }

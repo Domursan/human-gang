@@ -236,3 +236,131 @@ html[data-mode="clair"] .medal-lvl { color: #FFFFFF; }
   /* Les boutons flottants (en ligne, staff) passent au-dessus de la barre pendant qu'elle est visible */
   html[data-savebar] .ol, html[data-savebar] .sd { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : Mon compte en violet d'espace (--esp), bordures 2 px, ombres franches ===== */
+/* Connexion : carte cadrée de la couleur d'espace, bande arc-en-ciel en haut, onglet actif en aplat */
+.acc-auth { position: relative; overflow: hidden; border-color: var(--esp); box-shadow: 8px 8px 0 #000; padding-top: 34px; }
+.acc-auth::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px;
+  background: linear-gradient(90deg, #FE3104 0 16.66%, #FCA301 0 33.33%, #FBD32D 0 50%, #2FD16B 0 66.66%, #3D7BFF 0 83.33%, #8B5CF6 0); }
+.tabs { gap: 6px; padding: 6px; border: 2px solid var(--border); border-radius: 14px; background: var(--bg); }
+.tab { font: 400 14px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; border-radius: 10px; border: 2px solid transparent;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: color .15s ease, background .15s ease; }
+.tab::before { content: ''; width: 8px; height: 8px; flex: none; background: currentColor; opacity: .5; }
+@media (hover: hover) { .tab[aria-selected="false"]:hover { color: var(--text); border-color: var(--border-strong); } }
+.tab[aria-selected="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+.tab[aria-selected="true"]::before { opacity: 1; }
+.tab:focus-visible { outline: 2px solid var(--esp-ink); outline-offset: 2px; }
+.tab-pane h2 { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.acc-narrow .page-head .page-title { font-size: clamp(40px, 7vw, 72px); }
+
+/* En-tête du membre : avatar carré pixel cerclé de sa couleur, pseudo très gros souligné d'une barre de sa couleur */
+.acc-head { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 32px; row-gap: 18px; align-items: center; }
+.acc-head .acc-id { display: contents; }
+#head-avatar { grid-row: 1 / span 2; align-self: start; display: block; line-height: 0; }
+.acc-id .avatar { width: 160px !important; height: 160px !important; border-radius: 0; border: 3px solid var(--member, var(--esp));
+  box-shadow: var(--px-shadow-up); font: 400 56px/1 var(--font-pixel); letter-spacing: 2px; }
+.acc-id-txt { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.acc-id-txt .eyebrow { margin: 0; display: inline-flex; align-items: center; gap: 10px; }
+.acc-id-txt .eyebrow::before { content: ''; width: 10px; height: 10px; flex: none; background: var(--esp); }
+.acc-head .page-title { margin: 0; }
+.acc-head .page-title::after { content: ''; display: block; width: min(220px, 60%); height: 10px; margin-top: 14px; background: var(--member, var(--esp)); box-shadow: var(--px-shadow); }
+.acc-head-actions { grid-column: 2; }
+
+/* Chiffres : tuiles aux chiffres pixel, liseré gauche aux couleurs de la traînée du logo */
+.acc-stats { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; max-width: 760px; }
+.acc-stats[hidden] { display: none; }
+.acc-stats li { --c: #FBD32D; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 10px 12px; background: var(--surface);
+  border: 2px solid var(--border); border-left: 6px solid var(--c); animation: px-pop .25s cubic-bezier(.2, 1.4, .4, 1) both; }
+.acc-stats li:nth-child(2) { --c: #FCA301; animation-delay: .04s; } .acc-stats li:nth-child(3) { --c: #FE3104; animation-delay: .08s; }
+.acc-stats li:nth-child(4) { --c: #2FD16B; animation-delay: .12s; } .acc-stats li:nth-child(5) { --c: #3D7BFF; animation-delay: .16s; }
+.acc-stats li:nth-child(6) { --c: #8B5CF6; animation-delay: .2s; }
+.acc-stats strong { font: 400 26px/1 var(--font-pixel); color: var(--text); font-variant-numeric: tabular-nums; }
+.acc-stats span { font: 400 12px/1.2 var(--font-pixel); letter-spacing: .5px; text-transform: uppercase; color: var(--muted); overflow-wrap: anywhere; }
+
+/* Sommaire : étiquettes pixel, section courante en aplat violet */
+.acc-nav { border-bottom-width: 2px; }
+.acc-nav-list a { gap: 8px; border: 2px solid var(--border-strong); border-radius: 10px; font: 400 13px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; color: var(--text);
+  transition: transform .12s ease, border-color .15s ease; }
+.acc-nav-list a::before { content: ''; width: 8px; height: 8px; flex: none; background: var(--esp); }
+@media (hover: hover) { .acc-nav-list a:hover { border-color: var(--esp); transform: translateY(-2px); } }
+.acc-nav-list a:focus-visible { outline-color: var(--esp-ink); }
+.acc-nav-list a[aria-current="true"] { background: var(--esp); border-color: #000; color: var(--esp-text); box-shadow: 3px 3px 0 #000; }
+.acc-nav-list a[aria-current="true"]::before { background: var(--esp-text); }
+
+/* Cartes du compte : titre en Archivo Black, icône dans la couleur d'espace */
+#app .card-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: -.2px; }
+#app .card-title svg { color: var(--esp-ink); }
+.privacy-note { border: 2px solid var(--rose); border-radius: 12px; background: color-mix(in srgb, var(--rose) 8%, var(--surface)); }
+.privacy-note svg { color: var(--rose); }
+
+/* Étiquettes de visibilité : carrées, police pixel */
+.vis-tag { border: 2px solid var(--border-strong); border-radius: 4px; padding: 2px 8px; font: 400 11px var(--font-pixel); letter-spacing: 1px; }
+.vis-public { color: var(--esp-ink); border-color: var(--esp); }
+.vis-private { color: var(--rose); border-color: var(--rose); }
+
+/* Couleur : pastilles carrées, ombre franche au survol */
+.color-row input[type="color"] { border: 2px solid var(--border-strong); border-radius: 10px; }
+.swatch { width: 40px; height: 40px; border-radius: 8px; border: 2px solid #000; box-shadow: none; transition: transform .12s ease, box-shadow .12s ease; }
+@media (hover: hover) { .swatch:hover { transform: translate(-2px, -2px); box-shadow: var(--px-shadow); } }
+.swatch:focus-visible { outline: 2px solid var(--esp-ink); outline-offset: 2px; }
+#av-preview .avatar { border-radius: 0; border: 3px solid var(--border-strong); box-shadow: var(--px-shadow); font-family: var(--font-pixel); }
+#app .check input { accent-color: var(--esp); }
+
+/* Informations diverses : accordéons à bord franc, nom du groupe en pixel */
+.info-group { border-width: 2px; border-radius: 12px; }
+.info-group[open] { border-color: var(--esp); }
+.info-group summary::before { border-color: var(--esp-ink); }
+.info-group summary:focus-visible { outline-color: var(--esp-ink); }
+.info-group-name { font: 400 14px var(--font-pixel); letter-spacing: 1px; text-transform: uppercase; }
+.info-group-count { font-family: var(--font-pixel); font-size: 12px; }
+.info-status { font-family: var(--font-pixel); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Badges : tuiles qui montent en diagonale au survol, médaille carrée, compteur pixel */
+#badge-count { font-family: var(--font-pixel); font-weight: 400; border: 2px solid var(--esp); border-radius: 4px; background: transparent; color: var(--text); }
+.badge { border-width: 2px; border-radius: 12px; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.badge.is-got { border-color: color-mix(in srgb, var(--tint) 60%, var(--border)); }
+@media (hover: hover) { .badge.is-got:hover { transform: translate(-3px, -3px); border-color: var(--tint); box-shadow: 6px 6px 0 var(--tint); } }
+.badge-medal { border-radius: 6px; }
+.badge.has-levels .badge-medal img, .badge-medal img { border-radius: 4px; }
+.badge-name { font-size: 15px; }
+.badge-state { font: 400 12px var(--font-pixel); letter-spacing: .3px; text-transform: uppercase; }
+.medal-lvl { border-radius: 2px; font-family: var(--font-pixel); font-weight: 400; }
+
+/* Boîte de dialogue, barre d'enregistrement : bords et ombres francs */
+.acc-dialog { border-width: 2px; border-radius: 14px; box-shadow: 8px 8px 0 #000; }
+.acc-dialog h2 { font-weight: 400; }
+@media (max-width: 719.98px) {
+  .acc-savebar:not([hidden]) { border-top: 2px solid var(--esp); box-shadow: none; }
+  .acc-savebar p { color: var(--esp-ink); font: 400 13px var(--font-pixel); text-transform: uppercase; letter-spacing: .5px; }
+}
+
+/* Téléphone : avatar plus petit à côté du pseudo, chiffres et boutons en pleine largeur dessous */
+@media (max-width: 600px) {
+  .acc-head { column-gap: 16px; row-gap: 8px; }
+  #head-avatar { grid-row: 1 / span 2; align-self: center; }
+  .acc-stats, .acc-head-actions { margin-top: 8px; }
+  .acc-id .avatar { width: 88px !important; height: 88px !important; font-size: 30px; }
+  .acc-head .page-title { font-size: clamp(34px, 11vw, 48px); }
+  .acc-head .page-title::after { height: 8px; margin-top: 10px; }
+  .acc-id-txt { display: contents; }
+  .acc-id-txt .eyebrow, .acc-head .page-title { grid-column: 2; }
+  .acc-stats { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .acc-stats li { padding: 8px; }
+  .acc-stats strong { font-size: 20px; }
+  .acc-head-actions { grid-column: 1 / -1; }
+  .tab { font-size: 12px; letter-spacing: .5px; gap: 6px; }
+  .acc-auth { box-shadow: var(--px-shadow); }
+  .swatch { width: 44px; height: 44px; padding: 0; border: 2px solid #000; background-clip: border-box; }
+}
+
+/* Mode clair : ombres en noir doux comme le reste du site */
+html[data-mode="clair"] .acc-auth, html[data-mode="clair"] .acc-dialog { box-shadow: 8px 8px 0 #1B1A1F; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .acc-stats li { animation: none; }
+  .badge, .swatch, .acc-nav-list a, .tab { transition: none; }
+  .badge:hover, .swatch:hover, .acc-nav-list a:hover { transform: none !important; }
+}
+html[data-fx="off"] .acc-stats li { animation: none; }
+html[data-fx="off"] :is(.badge, .swatch, .acc-nav-list a):hover { transform: none !important; }

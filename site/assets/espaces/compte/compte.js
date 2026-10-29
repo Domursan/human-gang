@@ -534,10 +534,11 @@ function bindSommaire() {
 async function renderMember(user) {
   const p = me;
   app.innerHTML = `
-    <section class="page-head acc-head">
+    <section class="page-head acc-head" id="acc-head" style="--member:${esc(memberColor(p))}">
       <div class="acc-id">
         <span id="head-avatar">${avatarHtml(p, 72)}</span>
-        <div><p class="eyebrow">Mon compte</p><h1 class="page-title" id="head-pseudo">${esc(p.pseudo)}</h1></div>
+        <div class="acc-id-txt"><p class="eyebrow">Mon compte</p><h1 class="page-title" id="head-pseudo">${esc(p.pseudo)}</h1>
+          <ul class="acc-stats" id="acc-stats" aria-label="Mes chiffres" hidden></ul></div>
       </div>
       <div class="btn-row acc-head-actions">
         <a class="btn btn-primary" href="/pages/compte/membre.html">${ICON.badge} Voir ma carte d'identité</a>
@@ -684,14 +685,43 @@ async function renderMember(user) {
   bindData();
   bindInfos();
   loadBadges();
+  loadHeadStats();
   // Profil gaming (migration 090) : carte publique, chargée à la demande.
   import('./profil-gaming.js').then((m) => m.mountGamingEditor($('#gaming'), me)).catch((e) => console.warn('[gaming]', e));
   // Entraide et liens (idées P6, P7, P8) : module à part, une erreur n'empêche pas le reste du compte
   import('./compte-social.js').then((m) => m.mountSocialCard($('#social-slot'), me)).catch((e) => console.warn('[entraide]', e?.message || e));
 }
 
+/** Couleur du membre (hexadécimale), ou le bordeaux par défaut : liseré de l'avatar et barre sous le pseudo de l'en-tête. */
+const memberColor = (p) => (/^#[0-9a-f]{6}$/i.test(p?.color || '') ? p.color : '#9E3543');
+
+/** Chiffres de l'en-tête : les mêmes que sur la carte de membre (clé, libellé au singulier, au pluriel). */
+const HEAD_STATS = [
+  ['secret_santa', 'Secret Santa', 'Secret Santa'], ['sorties', 'Sortie', 'Sorties'], ['organisees', 'Organisée', 'Organisées'],
+  ['photos', 'Photo', 'Photos'], ['moments', 'Moment', 'Moments'],
+];
+/**
+ * Tuiles de chiffres sous le pseudo (refonte Pixel Pop) : badges obtenus et statistiques de la carte de membre
+ * (RPC hg_member_card, en lecture). En cas d'erreur, les tuiles restent masquées sans gêner le reste du compte.
+ */
+async function loadHeadStats() {
+  const ul = $('#acc-stats');
+  if (!ul) return;
+  try {
+    const { data, error } = await sb.rpc('hg_member_card', { p_user: me.id });
+    if (error) throw error;
+    if (!data || typeof data !== 'object') return;
+    const stats = data.stats || {};
+    const nb = Array.isArray(data.badges) ? data.badges.length : 0;
+    const tuile = (n, one, many) => `<li><strong>${n}</strong><span>${esc(n > 1 ? many : one)}</span></li>`;
+    ul.innerHTML = tuile(nb, 'Badge', 'Badges') + HEAD_STATS.map(([k, one, many]) => tuile(Number(stats[k]) || 0, one, many)).join('');
+    ul.hidden = false;
+  } catch (e) { console.warn('[chiffres]', e?.message || e); }
+}
+
 /** Met à jour partout l'identité affichée (avatar, pseudo, en-tête du site) après une modification. */
 function refreshIdentity() {
+  $('#acc-head')?.style.setProperty('--member', memberColor(me));
   $('#head-avatar').innerHTML = avatarHtml(me, 72);
   $('#av-preview').innerHTML = avatarHtml(me, 96);
   $('#head-pseudo').textContent = me.pseudo;

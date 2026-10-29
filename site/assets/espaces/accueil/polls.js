@@ -262,6 +262,8 @@ export async function mountPolls({ feed, head, rows = [], members = new Map(), r
   feed.querySelectorAll('li[data-ref^="poll:"]').forEach((li) => {
     const id = li.dataset.ref.slice(5), p = P.polls.get(id);
     if (!p) return;
+    // Sondage clos : plus montré sur l'accueil (ses résultats restent dans « Sondages »)
+    if (p.closed) { li.hidden = true; return; }
     if (li.dataset.kind === 'sondage' && open.includes(id) && !done.has(id)) {
       done.add(id);
       li.classList.add('feed-poll');

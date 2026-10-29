@@ -3,6 +3,8 @@
  * Rôle : construit la barre du haut de chaque page (refonte du 23/10, maquette « Humane Gang · nouveau menu »).
  *   - Barre horizontale : « Le jeu de cartes », « IRL », « Jeux », « Calendrier » et « Autres » (pages restantes
  *     accessibles), chacun ouvrant un menu déroulant ; « Arcade » ouvre un sous-menu (Paillettes, Raclette, Domu-mobile).
+ *     « Jeux » propose les raccourcis vers les sections de la page Jeux (Tous les jeux, quotidiens, flash, duels, spéciaux) ;
+ *     une section n'est proposée que si le membre y voit au moins un jeu (mêmes règles que jeux.js).
  *     Un lien n'apparaît que si le membre a accès à sa page (pages-access.js) ; un menu vide disparaît.
  *   - À droite, la photo de profil seule. Un clic ouvre un quart de cercle d'icônes autour d'elle, sur deux rangées :
  *     Messages, Recherche, Mon compte ; puis Aide et tutos, Affichage, Mode sans limite (admin), Admin ou Staff,
@@ -33,6 +35,7 @@ import { bindRechercheLien } from './recherche-lien.js';
 import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 import { MENUS, menuKey } from './menu-def.js';
+import { CARTES } from '../../espaces/jeux/catalogue.js';
 
 /* ---------- Structure du menu ---------- */
 
@@ -46,6 +49,24 @@ const NAV_SHORT = { membre: 'Annuaire', recap: 'Récap de l’année' };
 /** Vrai si le lien est accessible (sans profil : aucun lien de page). */
 // strict : la page doit être déclarée dans hg_pages (sinon masquée, même si canAccess laisse passer les pages inconnues).
 const allowed = (it, profile) => !!profile && (!it.page || canAccess(it.page)) && (!it.strict || !!pageLabel(it.page));
+
+/**
+ * Menu « Jeux » : raccourcis vers les sections de la page Jeux (ancres lues par jeux.js, qui fait défiler jusqu'à la section).
+ * Le titre du menu garde le libellé réglé pour l'ancien lien direct (menu-def.js : { id: 'jeux', href, page: 'jeux' }).
+ * section : id de SECTIONS (espaces/jeux/catalogue.js) ; l'entrée n'apparaît que si la section a un jeu visible.
+ */
+const JEUX_ITEMS = [
+  { label: 'Tous les jeux', href: '/pages/jeux/jeux.html#tous', page: 'jeux' },
+  { label: 'Jeux quotidiens', href: '/pages/jeux/jeux.html#quotidien', page: 'jeux', section: 'quotidien' },
+  { label: 'Jeux flash', href: '/pages/jeux/jeux.html#flash', page: 'jeux', section: 'flash' },
+  { label: 'Duels / multijoueurs', href: '/pages/jeux/jeux.html#multi', page: 'jeux', section: 'multi' },
+  { label: 'Jeux spéciaux', href: '/pages/jeux/jeux.html#speciaux', page: 'jeux', section: 'speciaux' },
+];
+/** Vrai si le membre voit au moins un jeu de la section (comme carteVisible de jeux.js : jeux en préparation pour les admins). */
+function sectionVisible(id, profile) {
+  const admin = !!profile?.is_admin && !viewAsActive();
+  return CARTES.some((c) => c.section === id && (c.bientot || c.admin ? admin : !c.page || (canAccess(c.page) && !!pageLabel(c.page))));
+}
 
 /**
  * Entrées du menu « Autres » : pages du menu (in_nav) accessibles et pas encore rangées, dans l'ordre de la base.
@@ -110,6 +131,15 @@ function itemsHtml(items, id, profile) {
 function navHtml(profile) {
   if (!profile) return '';
   return MENUS.map((m) => {
+    // Jeux : menu déroulant des sections de la page Jeux (titre : libellé réglé de l'ancien lien direct)
+    if (m.id === 'jeux' && m.href) {
+      if (!allowed(m, profile)) return '';
+      const inner = JEUX_ITEMS.filter((it) => !it.section || sectionVisible(it.section, profile)).map(linkHtml).join('');
+      return `<div class="nav-group" data-menu="${m.id}">
+        <button class="nav-top${isHere(m.href) ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}${ICON_CHEVRON}</button>
+        <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
+      </div>`;
+    }
     if (m.href) {
       if (!allowed(m, profile)) return '';
       return `<a class="nav-top" href="${esc(m.href)}"${curAttr(m.href)}>${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}</a>`;

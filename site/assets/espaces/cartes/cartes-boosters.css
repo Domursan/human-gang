@@ -164,3 +164,8 @@ html[data-fx="off"] .cart--holo .cart-body { animation: none; }
 .rv-new { --c: var(--sand); color: var(--sand); }
 /* Interrupteur « Révéler mes boosters d'un coup » sous le résultat */
 .rv-pref { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2, transparent); }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : résumé d'ouverture en pastilles à bord 2 px, puces carrées ===== */
+.rv-chip { border-width: 2px; }
+.rv-chip i { border-radius: 0; }
+.rv-pref { border-width: 2px; border-radius: 12px; }

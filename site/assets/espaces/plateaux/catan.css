@@ -187,3 +187,101 @@ circle.ct-zone { stroke-width: 0; }   /* sans contour : la zone reste celle du r
   .ct-jeton-vol, .ct-des-vol { display: none; }
 }
 body.plat-calme .ct-table .ct-lance, body.plat-calme .ct-table .ct-produit, body.plat-calme .ct-table .ct-neuf, body.plat-calme .ct-table .ct-arrive, body.plat-calme .ct-table .ct-a-toi, body.plat-calme .ct-table .ct-touche { animation: none !important; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : habillage des pages de Catan =====
+   Accueil, rejoindre et salle d'attente (classes communes plat- de plateaux.css, limitées ici à body.plat-catan),
+   puis la coque de la table (blocs, boutons, étiquettes). Le plateau (hexagones, jetons, pions), les dés et les cartes
+   de ressources ne changent pas. Couleur d'espace --esp (vert des jeux), --esp-ink pour le texte, --esp-text posé sur --esp.
+   Mouvements coupés par data-fx="off", plat-calme et le mouvement réduit. */
+
+/* ---------- En-têtes : petit titre pixel, titre très gros ---------- */
+.plat-catan .plat-fil { font-family: var(--font-pixel); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.plat-catan .plat-fil a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.plat-catan .plat-titre { font-size: clamp(36px, 7vw, 80px); line-height: .95; letter-spacing: -1px; }
+.plat-catan .plat-accueil-tete { align-items: flex-end; gap: 24px; }
+@media (max-width: 760px) { .plat-catan .plat-accueil-tete { align-items: flex-start; } }
+.plat-catan .plat-partie > .small { white-space: nowrap; }
+.plat-catan .plat-accueil-tete > div { display: flex; flex-direction: column; min-width: 0; }
+/* Le nombre de joueurs passe au-dessus du titre, en petit titre pixel (ordre visuel seulement) */
+.plat-catan .plat-accueil-tete > div > .small.muted { order: -1; margin: 0; font-family: var(--font-pixel); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.plat-catan .plat-accueil-tete .plat-titre { font-size: clamp(44px, 8vw, 88px); margin: 10px 0 14px; }
+.plat-catan .plat-accroche { color: var(--muted); max-width: 620px; line-height: 1.5; }
+.plat-catan .plat-accueil-image { width: 150px; height: 150px; box-sizing: border-box; padding: 6px; border: 2px solid var(--esp); border-radius: 14px; background: var(--surface); box-shadow: var(--px-shadow); }
+.plat-catan .plat-app .btn-ghost { border-color: var(--esp-ink); }
+
+/* ---------- Cartes du salon : titre précédé d'un petit carré plein ---------- */
+.plat-catan .plat-carte h2 { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+.plat-catan .plat-carte h2::before { content: ''; flex: none; width: 10px; height: 10px; background: var(--esp); }
+.plat-catan .plat-code-form label { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.plat-catan .plat-input { border-width: 2px; border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+.plat-catan .plat-input:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+.plat-catan .plat-input:focus-visible { outline: 0; }
+.plat-catan .plat-code-form .plat-input { font-family: var(--font-pixel); font-size: 17px; letter-spacing: 2px; text-transform: uppercase; }
+
+/* ---------- Listes de parties : tuiles qui montent en diagonale avec une ombre franche verte ---------- */
+.plat-catan .plat-liste-parties { gap: 10px; }
+.plat-catan .plat-partie { border: 2px solid var(--border); border-radius: 12px; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.plat-catan .plat-partie:focus-within { border-color: var(--esp); }
+@media (hover: hover) { .plat-catan .plat-partie:hover { transform: translate(-3px, -3px); border-color: #000; box-shadow: 6px 6px 0 var(--esp); } }
+.plat-catan .plat-partie .plat-code { font-family: var(--font-pixel); letter-spacing: 1px; color: var(--esp-ink); }
+.plat-catan .plat-etiquette { border-width: 2px; border-radius: 6px; font-family: var(--font-pixel); font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+/* « À toi de jouer » : la tuile prend la couleur d'espace, l'étiquette passe en aplat avec un carré qui clignote */
+.plat-catan .plat-partie.is-tour { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); background: color-mix(in srgb, var(--esp) 10%, var(--surface-2)); }
+.plat-catan .plat-etiquette.is-tour { gap: 6px; border-color: #000; background: var(--esp); color: var(--esp-text); font-weight: 400; }
+.plat-catan .plat-etiquette.is-tour::before { content: ''; width: 6px; height: 6px; background: currentColor; animation: ct-px-blink 1s steps(2, end) infinite; }
+@keyframes ct-px-blink { 50% { opacity: .2; } }
+
+/* ---------- Rejoindre ---------- */
+.plat-catan .plat-rej-surtitre { font-family: var(--font-pixel); font-size: 13px; color: var(--esp-ink); }
+.plat-catan .plat-rej-nom { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: -.5px; }
+.plat-catan .plat-rej-places-ligne { font-family: var(--font-pixel); font-size: 12px; letter-spacing: .5px; }
+.plat-catan .plat-rej-barre, .plat-catan .plat-progres { height: 12px; border-radius: 0; background: var(--bg); box-shadow: inset 0 0 0 2px var(--border); }
+.plat-catan .plat-rej-barre span, .plat-catan .plat-progres span { background: var(--esp); }
+.plat-catan .plat-rej-chips li { border-width: 2px; border-radius: 8px; }
+.plat-catan .plat-rej-bouton { border: 2px solid #000; box-shadow: var(--px-shadow); }
+.plat-catan .plat-rej-lien { color: var(--esp-ink); }
+
+/* ---------- Salle d'attente : code de partie en grand dans la police pixel ---------- */
+.plat-catan .plat-etiquette-haut { font-family: var(--font-pixel); font-size: 13px; color: var(--esp-ink); }
+.plat-catan .plat-code-grand { display: table; font-family: var(--font-pixel); font-size: clamp(24px, 5vw, 40px); letter-spacing: 3px; color: var(--esp-ink); max-width: 100%; box-sizing: border-box;
+  margin: 10px 0 16px; padding: 10px 16px; background: var(--bg); border: 2px solid var(--esp); border-radius: 12px; box-shadow: 4px 4px 0 var(--esp); overflow-wrap: anywhere; }
+.plat-catan .plat-joueur { border-width: 2px; border-radius: 12px; }
+.plat-catan .plat-joueur.is-moi { box-shadow: inset 4px 0 0 var(--esp); }
+.plat-catan .plat-joueur.plat-place-libre, .plat-catan .plat-place-vide { border-width: 2px; }
+.plat-catan .plat-icone { border-width: 2px; border-radius: 10px; }
+.plat-catan .plat-actions { border-width: 2px; }
+.plat-catan [data-pret][aria-pressed="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; }
+
+/* ---------- Coque de la table : blocs à bordure 2 px, boutons à ombre franche ---------- */
+.plat-catan .ct-bloc { border-width: 2px; border-radius: 14px; }
+.plat-catan .ct-btn { border-width: 2px; border-radius: 12px; transition: transform .12s ease, box-shadow .12s ease, border-color .15s ease; }
+.plat-catan .ct-btn-primary { border-color: #000; background: var(--accent); color: var(--accent-text); box-shadow: var(--px-shadow); }
+.plat-catan .ct-btn[aria-pressed="true"] { border-color: #000; background: var(--esp); color: var(--esp-text); }
+@media (hover: hover) {
+  .plat-catan .ct-btn-primary:not(:disabled):hover { transform: translate(-2px, -2px); box-shadow: var(--px-shadow-up); }
+  .plat-catan .ct-btn-ghost:not(:disabled):hover, .plat-catan .ct-carte-choix:hover:not(:disabled) { border-color: var(--esp); }
+}
+.plat-catan .ct-btn-primary:not(:disabled):active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+.plat-catan .ct-carte-choix { border-radius: 12px; }
+.plat-catan .ct-tag { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+  border: 2px solid #000; border-radius: 8px; background: var(--esp); color: var(--esp-text); }
+.plat-catan .ct-fieldset { border-width: 2px; border-radius: 14px; }
+.plat-catan .ct-fieldset legend { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.plat-catan .ct-label select { border-width: 2px; }
+.plat-catan .ct-label select:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); outline: 0; }
+.plat-catan .ct-mode { border-width: 2px; border-radius: 12px; }
+.plat-catan .ct-barre-pts { height: 12px; border-radius: 0; box-shadow: inset 0 0 0 2px var(--ct-bord-fort); }
+.plat-catan .ct-fin-ligne { border-width: 2px; border-radius: 12px; }
+.plat-catan .ct-fin-ligne.is-gagnant { box-shadow: 4px 4px 0 var(--ct-or); }
+.plat-catan .ct-fin-rang, .plat-catan .ct-fin-points { font-family: var(--font-pixel); font-weight: 400; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .plat-catan .plat-partie, .plat-catan .plat-input { transition: none; }
+  .plat-catan .plat-partie:hover, .plat-catan .ct-btn:hover, .plat-catan .ct-btn:active { transform: none !important; }
+  .plat-catan .plat-etiquette.is-tour::before { animation: none; }
+}
+html[data-fx="off"] .plat-catan .plat-partie, html[data-fx="off"] .plat-catan .plat-input, html[data-fx="off"] .plat-catan .ct-btn { transition: none; }
+html[data-fx="off"] .plat-catan .plat-partie:hover, html[data-fx="off"] .plat-catan .ct-btn:hover, html[data-fx="off"] .plat-catan .ct-btn:active { transform: none !important; }
+html[data-fx="off"] .plat-catan .plat-etiquette.is-tour::before { animation: none; }
+body.plat-calme .plat-partie:hover { transform: none !important; }

@@ -180,11 +180,36 @@ function renderEmpty() {
  */
 function headHtml() {
   const idx = stepIndex();
+  // Étapes en blocs pixel : passées et en cours en aplat de la couleur d'espace, à venir en creux.
   const pills = STEPS.map(([key, label], i) => {
-    const cls = i < idx ? 'pill-ok' : i === idx ? 'pill-current' : 'pill-todo';
+    const cls = i < idx ? 'is-done' : i === idx ? 'is-current' : 'is-todo';
     const state = i < idx ? 'terminée' : i === idx ? 'en cours' : 'à venir';
-    return `<li class="pill ${cls}">${i < idx ? I.check : `<span class="ss-step-n" aria-hidden="true">${i + 1}</span>`}${label}<span class="visually-hidden"> (${state})</span></li>`;
+    return `<li class="ss-step ${cls}"><span class="ss-step-n" aria-hidden="true">${i < idx ? I.check : i + 1}</span>`
+      + `<span class="ss-step-lib">${label}</span><span class="ss-step-st"><span class="ss-step-dot" aria-hidden="true"></span>${state}</span></li>`;
   }).join('');
+  // Barre d'avancement de l'édition : étapes atteintes (en cours comprise) sur 4 ; terminée = barre pleine.
+  const reached = Math.min(idx + 1, STEPS.length);
+  const bar = `<div class="ss-steps-bar" role="progressbar" aria-label="Avancement de l’édition" aria-valuemin="0" aria-valuemax="${STEPS.length}" aria-valuenow="${reached}" aria-valuetext="Étape ${reached} sur ${STEPS.length}">
+      <span style="width:${Math.round((reached / STEPS.length) * 100)}%"></span></div>`;
+  // Compte à rebours jusqu'à l'échange (date réelle de l'édition) ; rien d'inventé si la date n'est pas fixée.
+  const dx = daysUntil(S.ed.exchange_date);
+  let count;
+  if (!S.ed.exchange_date || dx === null) {
+    count = { lab: 'Échange · en attente', big: '', txt: 'Date d’échange pas encore fixée' };
+  } else if (dx > 0 && S.ed.status !== 'termine') {
+    count = { lab: 'Échange dans', big: `J-${dx}`, txt: `${dx > 1 ? `${dx} jours` : '1 jour'} avant l’échange du ${fmtDate(S.ed.exchange_date)}` };
+  } else if (dx === 0) {
+    count = { lab: 'Échange', big: 'Jour J', txt: 'L’échange, c’est aujourd’hui' };
+  } else {
+    count = { lab: 'Échange', big: '', txt: `Échange du ${fmtDate(S.ed.exchange_date)}` };
+  }
+  const live = count.big === 'Jour J' || (dx !== null && dx > 0 && dx <= 7 && S.ed.status !== 'termine');
+  const countHtml = `
+      <div class="ss-count${count.big ? '' : ' is-wait'}" role="group" aria-label="Compte à rebours de l’échange">
+        <div class="ss-count-lab"><span class="ss-count-dot${live ? ' is-live' : ''}" aria-hidden="true"></span>${esc(count.lab)}</div>
+        ${count.big ? `<p class="ss-count-big">${esc(count.big)}</p>` : ''}
+        <p class="ss-count-txt">${esc(count.txt)}</p>
+      </div>`;
   const dl = daysUntil(S.ed.send_deadline);
   const dlHint = S.ed.send_deadline && S.ed.status === 'envoi' && dl !== null
     ? (dl > 1 ? `dans ${dl} jours` : dl === 1 ? 'demain' : dl === 0 ? 'aujourd’hui' : 'dépassée') : '';
@@ -195,11 +220,17 @@ function headHtml() {
   ].map(([k, v]) => `<div class="ss-fact"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   return `
     <header class="page-head ss-head">
-      <div>
-        <div class="eyebrow">Édition ${esc(S.ed.year)}</div>
-        <h1 class="page-title">Secret Santa</h1>
+      <div class="ss-head-top">
+        <div class="ss-head-title">
+          <div class="eyebrow">Édition ${esc(S.ed.year)}</div>
+          <h1 class="page-title">Secret Santa</h1>
+        </div>
+        ${countHtml}
       </div>
-      <ol class="ss-steps" aria-label="Étapes de l’édition">${pills}${S.ed.status === 'termine' ? `<li class="pill pill-ok">${I.check}Terminée</li>` : ''}</ol>
+      <div class="ss-steps-wrap">
+        <ol class="ss-steps" aria-label="Étapes de l’édition">${pills}${S.ed.status === 'termine' ? `<li class="ss-step is-done is-end"><span class="ss-step-n" aria-hidden="true">${I.check}</span><span class="ss-step-lib">Terminée</span><span class="ss-step-st">édition close</span></li>` : ''}</ol>
+        ${bar}
+      </div>
     </header>
     <dl class="ss-facts">${facts}</dl>`;
 }

@@ -4,7 +4,7 @@
  * (catalogue : assets/espaces/jeux/catalogue.js) : Jeux quotidiens et Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
  * (pages à part). Une carte n'est affichée que si le membre y a droit : accès de sa page (comme le menu), et les jeux
  * pas encore sortis (« bientot ») pour les seuls admins. Ce qui n'est visible que des admins (jeu en préparation,
- * page encore en mode admin) a une ambiance « chantier » : bandes jaunes et noires et petit panneau de travaux. Le menu du haut mène directement à cette vue.
+ * page encore en mode admin) a une ambiance « chantier » : bandes jaunes et noires et petit panneau de travaux. Le menu « Jeux » du haut mène à cette vue et à ses sections.
  * Construit aussi la barre d'onglets (liste de assets/espaces/jeux/onglets.js), précédée de l'onglet « Les missions du jour »
  * (programme du jour : chaque jeu avec son état, Paillettes gagnées aujourd'hui). Charge le module d'un jeu à la
  * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (/pages/jeux/jeux.html#geo) ;
@@ -14,6 +14,8 @@
  * choisi occupe toute la largeur ; le tableau de bord et chaque jeu portent leur titre. L'Arène n'est plus ici (/pages/cartes/cartes.html#arene) :
  * l'ancienne adresse /pages/jeux/jeux.html#bataille y redirige.
  * Un lien « Tous les jeux » ramène à la vue de départ depuis un jeu.
+ * Ancres de section (menu « Jeux » de l'en-tête) : /pages/jeux/jeux.html#quotidien, #flash, #multi, #speciaux (id de SECTIONS)
+ * ouvrent la vue de départ, remettent filtres et recherche à zéro et font défiler jusqu'à la section.
  * Accessibilité : motif ARIA des onglets, flèches (gauche/droite et haut/bas), Début et Fin, un seul onglet dans
  * l'ordre de tabulation.
  * Page : /pages/jeux/jeux.html (session membre requise).
@@ -78,11 +80,12 @@ const svg = (inner, cls = 'jeux-ico') => `<svg class="${cls}" viewBox="0 0 24 24
 const couleur = (c) => (/^(var\(--[a-z0-9-]+\)|#[0-9a-f]{3,8})$/i.test(c || '') ? c : 'var(--sand)');
 /**
  * Onglet et choix lus dans l'adresse : #geo → { id: 'geo', sub: null } ; #arcade-raclette → { id: 'arcade', sub: 'raclette' } ;
- * adresse inconnue → { id: null, sub: null }.
+ * #quotidien (section de la vue de départ) → { id: 'tous', sub: null, section: 'quotidien' } ; adresse inconnue → { id: null, sub: null }.
  */
 function lireAdresse() {
   const h = decodeURIComponent(location.hash.slice(1)).split('/')[0];
   if (LISTE.some((o) => o.id === h)) return { id: h, sub: null };
+  if (SECTIONS.some((s) => s.id === h)) return { id: TOUS, sub: null, section: h };
   const o = LISTE.find((x) => !x.hub && !x.catalogue && h.startsWith(`${x.id}-`) && h.length > x.id.length + 1);
   return o ? { id: o.id, sub: h.slice(o.id.length + 1) } : { id: null, sub: null };
 }
@@ -272,28 +275,38 @@ function carteHtml(c) {
  * @param {HTMLElement} panel Panneau de la vue.
  */
 function monterCatalogue(panel) {
-  const parSection = SECTIONS.map((s) => ({ ...s, cartes: CARTES.filter((c) => c.section === s.id && carteVisible(c)) }))
+  const parSection = SECTIONS.map((s) => ({ ...s, court: s.titre.replace(/^Jeux /, '').replace(/^./, (x) => x.toUpperCase()),
+    cartes: CARTES.filter((c) => c.section === s.id && carteVisible(c)) }))
     .filter((s) => s.cartes.length);
+  const total = parSection.reduce((n, s) => n + s.cartes.length, 0);
+  // Filtres avec leur nombre de jeux ; sections avec petit titre pixel (« // QUOTIDIENS ») et ancre (#quotidien…) ;
+  // classement du jour en colonne à droite sur grand écran, sous les jeux sur téléphone.
   panel.innerHTML = `<div class="jx">
       <div class="jx-outils">
         <div class="jx-filtres" role="group" aria-label="Afficher">
-          <button class="jx-filtre" type="button" data-f="" aria-pressed="true">Tous</button>
-          ${parSection.map((s) => `<button class="jx-filtre" type="button" data-f="${s.id}" aria-pressed="false">${esc(s.titre.replace(/^Jeux /, '').replace(/^./, (x) => x.toUpperCase()))}</button>`).join('')}
+          <button class="jx-filtre" type="button" data-f="" aria-pressed="true">Tous <span class="jx-nb">${nf(total)}</span></button>
+          ${parSection.map((s) => `<button class="jx-filtre" type="button" data-f="${s.id}" aria-pressed="false">${esc(s.court)} <span class="jx-nb">${nf(s.cartes.length)}</span></button>`).join('')}
         </div>
         <label class="jx-cherche"><span class="visually-hidden">Rechercher un jeu</span>
           <input type="search" id="jx-q" placeholder="Rechercher un jeu" autocomplete="off"></label>
       </div>
-      <div class="jx-classement" id="jx-classement"></div>
+      <div class="jx-corps">
+        <div class="jx-main">
       ${parSection.map((s) => {
         // Section entièrement réservée aux admins : ambiance chantier (bandes, panneau) ; sinon seules ses cartes réservées
         const chantier = s.cartes.every(reserveAdmin);
-        return `<section class="jx-section${chantier ? ' is-chantier' : ''}" data-s="${s.id}" aria-labelledby="jx-h-${s.id}">
-          <div class="jx-sh"><h2 class="jx-h" id="jx-h-${s.id}">${esc(s.titre)}</h2><p class="small muted">${esc(s.texte)}</p>
+        return `<section class="jx-section${chantier ? ' is-chantier' : ''}" id="${s.id}" data-s="${s.id}" aria-labelledby="jx-h-${s.id}">
+          <div class="jx-sh"><div class="jx-sh-t"><span class="jx-code" aria-hidden="true">// ${esc(s.court)}</span>
+              <h2 class="jx-h" id="jx-h-${s.id}" tabindex="-1">${esc(s.titre)} <span class="jx-h-nb" data-nb="${s.id}">${nf(s.cartes.length)}</span></h2></div>
+            <p class="small muted">${esc(s.texte)}</p>
             ${chantier ? `<p class="jx-chantier">${PANNEAU}<span><strong>Chantier en cours</strong> · visible des admins seulement</span></p>` : ''}</div>
           <ul class="jx-grille" role="list">${s.cartes.map(carteHtml).join('')}</ul>
         </section>`;
       }).join('')}
-      <p class="card jx-vide" id="jx-vide" hidden>Aucun jeu ne correspond à ta recherche.</p>
+          <p class="card jx-vide" id="jx-vide" role="status" hidden>Aucun jeu ne correspond à ta recherche.</p>
+        </div>
+        <div class="jx-classement" id="jx-classement"></div>
+      </div>
     </div>`;
   // Classement général des jeux du jour et progression vers le bonus « 16 jeux terminés » (migration 157)
   S.classements.set(TOUS, monterClassement(panel.querySelector('#jx-classement'), null));
@@ -308,6 +321,8 @@ function monterCatalogue(panel) {
         li.hidden = !on; if (on) vis += 1;
       }
       sec.hidden = !vis; n += vis;
+      const nb = sec.querySelector('[data-nb]');
+      if (nb) nb.textContent = nf(vis);
     }
     panel.querySelector('#jx-vide').hidden = n > 0;
   };
@@ -320,6 +335,23 @@ function monterCatalogue(panel) {
   });
   panel.querySelector('#jx-q').addEventListener('input', appliquer);
   peindreHub();
+}
+
+/**
+ * Fait défiler la vue de départ jusqu'à une section (ancre #quotidien, #flash…, menu « Jeux » de l'en-tête) :
+ * filtres et recherche remis à zéro pour que la section soit visible, puis focus sur son titre.
+ * @param {string} id Identifiant de la section (SECTIONS de catalogue.js).
+ */
+function allerSection(id) {
+  const panel = document.getElementById(`jeux-panel-${TOUS}`);
+  const sec = panel?.querySelector(`.jx-section[data-s="${id}"]`);
+  if (!sec) return;
+  const q = panel.querySelector('#jx-q');
+  if (q?.value) q.value = '';
+  panel.querySelector('.jx-filtre[data-f=""]')?.click(); // réapplique aussi la recherche vidée
+  const calme = document.documentElement.dataset.fx === 'off' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sec.scrollIntoView({ behavior: calme ? 'auto' : 'smooth', block: 'start' });
+  sec.querySelector('.jx-h')?.focus({ preventScroll: true });
 }
 
 /* ---------- Chargement d'un jeu ---------- */
@@ -374,10 +406,11 @@ function monter(o) {
 /**
  * Affiche un onglet : état ARIA, panneau visible, adresse et mémoire à jour, module chargé si besoin.
  * @param {string} id Identifiant de l'onglet.
- * @param {{focus?: boolean, adresse?: boolean, sub?: string|null}} [opts] focus : donne le focus à l'onglet ; adresse : met #id dans l'URL ;
- *   sub : choix propre au jeu (ctx.sub) ; s'il est fourni, le module déjà monté est prévenu par « jeux:sub ».
+ * @param {{focus?: boolean, adresse?: boolean, sub?: string|null, section?: string}} [opts] focus : donne le focus à l'onglet ; adresse : met #id dans l'URL ;
+ *   sub : choix propre au jeu (ctx.sub) ; s'il est fourni, le module déjà monté est prévenu par « jeux:sub » ;
+ *   section : section de la vue de départ où défiler (ancre #quotidien…).
  */
-function choisir(id, { focus = false, adresse = true, sub = undefined } = {}) {
+function choisir(id, { focus = false, adresse = true, sub = undefined, section = null } = {}) {
   const o = LISTE.find((x) => x.id === id) || LISTE[0];
   const avant = S.cur;
   S.cur = o.id;
@@ -409,6 +442,7 @@ function choisir(id, { focus = false, adresse = true, sub = undefined } = {}) {
     panneau?.dispatchEvent(new CustomEvent('jeux:show'));
     if (sub !== undefined) panneau?.dispatchEvent(new CustomEvent('jeux:sub', { detail: { sub: CTX.sub } }));
     if (avant !== o.id) S.classements.get(o.id)?.rafraichir();
+    if (section && o.catalogue) allerSection(section);
   });
 }
 
@@ -430,7 +464,7 @@ tablist.addEventListener('keydown', (e) => {
   choisir(tabs[j].dataset.id, { focus: true });
 });
 // Lien direct ou retour arrière vers /pages/jeux/jeux.html#<id> ou /pages/jeux/jeux.html#<id>-<choix>
-window.addEventListener('hashchange', () => { const a = lireAdresse(); if (a.id) choisir(a.id, { adresse: false, sub: a.sub }); });
+window.addEventListener('hashchange', () => { const a = lireAdresse(); if (a.id) choisir(a.id, { adresse: false, sub: a.sub, section: a.section }); });
 // En quittant la page : chaque module chargé peut libérer ses ressources (minuteurs, abonnements…)
 window.addEventListener('pagehide', () => { for (const m of S.mods.values()) { try { m.unmount?.(); } catch { /* sans importance */ } } });
 
@@ -438,7 +472,7 @@ window.addEventListener('pagehide', () => { for (const m of S.mods.values()) { t
 construire();
 const depart = lireAdresse();
 // Sans adresse : la vue de départ (tous les jeux), et non plus le dernier jeu ouvert
-choisir(depart.id || TOUS, { sub: depart.sub, adresse: !!depart.id });
+choisir(depart.id || TOUS, { sub: depart.sub, adresse: !!depart.id, section: depart.section });
 // Les états des jeux (« Fait »…) et les gains du jour sont utiles même sans ouvrir le tableau de bord
 if (S.cur !== HUB) rafraichirHub();
 app.setAttribute('aria-busy', 'false');

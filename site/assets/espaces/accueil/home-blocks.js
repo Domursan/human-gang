@@ -218,6 +218,8 @@ function arrange(app, st) {
     p.innerHTML = `${off} bloc${off > 1 ? 's' : ''} masqué${off > 1 ? 's' : ''} sur ton accueil · <button class="btn-link" type="button" data-home-edit>Personnaliser</button>`;
     app.append(p);
   }
+  // L'accueil replace son haut (thème en cours, carré des rubriques, tuile Admin) après chaque rangement
+  app.dispatchEvent(new CustomEvent('hg:home-arrange'));
 }
 
 /**

@@ -130,3 +130,55 @@ a.plateau-act, a.plateau-act:visited { color: #0D0B0A; display: inline-flex; ali
 html[data-mode="clair"] .plateau-cell,
 html[data-mode="clair"] .lieu-tile { background: var(--surface-2); }
 html[data-mode="clair"] .plateau-cell { box-shadow: 0 1px 2px rgba(30, 28, 34, .06); }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : plateau (tableau de bord) et pages de lieu =====
+   Cases et tuiles : bordure 2 px à la couleur du lieu, rayons 14 px, montée en diagonale au survol avec une ombre franche
+   de la couleur du lieu ; compteurs en tuile noire bordée, chiffres en police pixel ; boutons à ombre noire qui s'enfoncent.
+   Mouvements coupés par le mouvement réduit et html[data-fx="off"] (fin de section). */
+.plateau-board { border-width: 2px; border-radius: 18px; }
+.plateau-board > .plateau-road path { stroke-dasharray: 8 12; stroke-linecap: butt; }
+.plateau-cell { border-radius: 14px; transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1); }
+@media (hover: hover) {
+  .plateau-board:not(.plateau-board--edit) .plateau-cell:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--lieu); }
+}
+.plateau-ico { border-radius: 12px; border: 2px solid #000; }
+/* Pastille « à traiter » du lieu : tuile noire, chiffre pixel à la couleur du lieu */
+.plateau-pastille { border-radius: 8px; border: 2px solid var(--lieu); background: #08080B; color: var(--lieu);
+  font-family: var(--font-pixel); font-size: 20px; line-height: 40px; box-shadow: 3px 3px 0 #000; }
+.plateau-name { letter-spacing: -.3px; }
+.plateau-info { border-radius: 10px; border: 2px solid color-mix(in srgb, var(--text) 10%, transparent); }
+.plateau-act { border-radius: 12px; border-color: #000; box-shadow: var(--px-shadow); transition: transform .12s ease, box-shadow .12s ease; }
+.plateau-act--line { border-color: var(--lieu); box-shadow: none; }
+@media (hover: hover) {
+  .plateau-act:not(.plateau-act--line):hover { filter: none; transform: translate(-2px, -2px); box-shadow: var(--px-shadow-up); }
+  .plateau-act--line:hover { transform: translateY(-2px); }
+}
+.plateau-act:not(.plateau-act--line):active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+.plateau-board--edit .plateau-handle { border-radius: 4px; border: 2px solid #000; }
+.plateau-ghost { border-radius: 14px; }
+@container (max-width: 120px) { .plateau-pastille { line-height: 26px; } }
+
+/* Page de lieu */
+.lieu-banner { border-radius: 14px; border-width: 2px; border-color: var(--lieu); padding-left: 28px; }
+.lieu-banner::before { width: 8px; }
+.lieu-tag { font-size: 16px; }
+.lieu-total { border-radius: 6px; border: 2px solid #000; font-family: var(--font-pixel); font-weight: 400; font-size: 13px; letter-spacing: .5px; box-shadow: 3px 3px 0 #000; }
+.lieu-h { font-size: 22px; }
+.lieu-todo-box .empty, .lieu-todo-empty { border-width: 2px; border-radius: 12px; }
+.lieu-todo-item { border-radius: 14px; border: 2px solid var(--border); border-left: 8px solid var(--lieu); }
+.lieu-group-title { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; letter-spacing: 2px; color: var(--esp-ink); display: flex; align-items: center; gap: 8px; }
+.lieu-group-title::before { content: ""; width: 8px; height: 8px; flex: none; background: var(--esp); } /* petit carré plein comme puce */
+.lieu-tile { border-radius: 14px; border: 2px solid var(--border); transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1), border-color .2s; }
+@media (hover: hover) { .lieu-tile:hover { border-color: var(--lieu); background: var(--surface); transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--lieu); } }
+.lieu-tile:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+.lieu-tile-ico { border-radius: 10px; border: 2px solid var(--lieu); background: color-mix(in srgb, var(--lieu) 18%, transparent); }
+.lieu-tile-name { font-weight: 700; }
+html[data-mode="clair"] .lieu-tile:hover { background: var(--surface-2); }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .plateau-cell, .plateau-act, .lieu-tile { transition: none; }
+  .plateau-cell:hover, .plateau-act:hover, .plateau-act:active, .lieu-tile:hover { transform: none !important; }
+}
+html[data-fx="off"] :is(.plateau-cell, .plateau-act, .lieu-tile) { transition: none; }
+html[data-fx="off"] :is(.plateau-cell, .plateau-act, .lieu-tile):is(:hover, :active) { transform: none !important; }

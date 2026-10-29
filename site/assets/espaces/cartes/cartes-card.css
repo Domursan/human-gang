@@ -53,7 +53,11 @@ button.hgc { cursor: pointer; }
 /* ---------- Calques ---------- */
 .hgc-frame { position: absolute; inset: 0; display: block; transition: transform .15s ease;
   filter: drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .35)); }
-button.hgc:hover .hgc-frame { transform: translateY(-3px); }
+/* Survol (Pixel Pop) : la carte monte en diagonale avec une ombre franche qui suit ses bords en escalier (drop-shadow sans flou) */
+@media (hover: hover) {
+  button.hgc:hover .hgc-frame { transform: translate(-3px, -3px); filter: drop-shadow(var(--px-shadow-up, 6px 6px 0 #000)); }
+  button.hgc.is-missing:hover .hgc-frame { filter: grayscale(1) drop-shadow(var(--px-shadow-up, 6px 6px 0 #000)); }
+}
 .hgc-unique .hgc-frame { filter: drop-shadow(0 0 calc(var(--u) * 6) rgba(240, 205, 106, .3)) drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .4)); }
 .hgc-mythique .hgc-frame { filter: drop-shadow(0 0 calc(var(--u) * 7) rgba(233, 194, 90, .35)) drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .35)); }
 .hgc-layer { position: absolute; display: block; }
@@ -195,7 +199,9 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
   background: #111; color: #fff; border: calc(var(--u) * 3) solid #111; border-radius: calc(var(--u) * 9); box-shadow: calc(var(--u) * 3) calc(var(--u) * 3) 0 #FBD32D;
   font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif; font-size: max(6px, calc(var(--u) * 16)); font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 
-@media (prefers-reduced-motion: reduce) { .hgc-frame { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .hgc-frame { transition: none; } button.hgc:hover .hgc-frame { transform: none; } }
+html[data-fx="off"] .hgc-frame { transition: none; }
+html[data-fx="off"] button.hgc:hover .hgc-frame { transform: none; }
 
 /* ---------- Brillante « fondue » (booster Raclette, migration 080) ----------
    Nappe de fromage en haut du cadre et coulures sur les bords, sous le nom et sous la fenêtre (jamais sur le texte).

@@ -827,7 +827,7 @@ html[data-mode="clair"] .cpt-badge { color: #FFFFFF; }
 :root { --esp: #FE3104; --esp-text: #08080B; --esp-ink: var(--esp); --px-shadow: 4px 4px 0 #000; --px-shadow-up: 6px 6px 0 #000; }
 html[data-espace="cartes"], html[data-espace="admin"] { --esp: #FBD32D; }
 html[data-espace="jeux"] { --esp: #2FD16B; }
-html[data-espace="lg"], html[data-espace="compte"] { --esp: #8B5CF6; }
+html[data-espace="lg"], html[data-espace="compte"] { --esp: #8B5CF6; --esp-ink: #A78BFA; } /* violet du logo trop sombre en texte sur fond noir : teinte claire (contraste ≥ 6:1) */
 html[data-espace="irl"] { --esp: #FCA301; }
 html[data-espace="ss"] { --esp: #FF3B5C; }
 html[data-espace="calendrier"], html[data-espace="messages"], html[data-espace="infos"] { --esp: #3D7BFF; }
@@ -886,6 +886,8 @@ html:not([data-mode="clair"]) body {
 .input, .field input, .field select, .field textarea { border-width: 2px; border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
 .input:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
 
+/* Pastilles d'état à bord franc */
+.pill-current, .pill-todo { border-width: 2px; }
 /* Barres de progression : bord pixel */
 .progress { border-radius: 2px; box-shadow: inset 0 0 0 2px var(--border); }
 .progress > span { border-radius: 0; }

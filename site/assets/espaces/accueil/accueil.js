@@ -6,7 +6,8 @@
 // accueil-ce-jour.js (tuile « Ce jour-là »).
 // Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
-import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, logoAttrs, canAccess, pageLabel } from '../../commun/core.js';
+import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, logoAttrs, canAccess, pageLabel, applyTheme, getSiteTheme } from '../../commun/core.js';
+import { viewAsActive } from '../../commun/core/view-as.js';
 import { svg } from '../../commun/icons.js';
 import { tourState } from '../../commun/core/tour-etat.js'; // Q1 : visite guidée au premier passage (tour.js ne se charge que si une visite est due)
 import { SITE_DEFAULTS, siteIdentite } from '../../commun/core/site-defaults.js'; // textes d'origine (repli des textes réglables)
@@ -45,7 +46,7 @@ const txtIn = (key, sub, fallback) => (TX[key] && typeof TX[key][sub] === 'strin
 
 /* ---------- Icônes (SVG à trait) ---------- */
 /* Emojis des rubriques (demandés par Ethan) */
-const EMOJI = { ss: '🎁', irl: '📍', hist: '📜' };
+const EMOJI = { ss: '🎁', irl: '📍', hist: '📜', admin: '🛠️' };
 /** Pastille d'icône d'une tuile (emoji de la rubrique). */
 const tileIcon = (k) => `<span class="tile-icon tile-icon-${k}" aria-hidden="true">${EMOJI[k]}</span>`;
 const ICON = {
@@ -182,6 +183,7 @@ function renderMemberShell() {
     <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
     <div id="qdj-home" hidden></div>
 
+    <section class="card tile-theme" id="tile-theme" aria-labelledby="theme-title" hidden></section>
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="/pages/irl/secret-santa.html" id="tile-ss">
         ${tileIcon('ss')}
@@ -201,6 +203,12 @@ function renderMemberShell() {
         <h2 class="tile-label">Historique</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
+      ${me.is_admin && !viewAsActive() ? `<a class="card card-admin tile tile-link" href="/pages/admin/admin.html" id="tile-admin">
+        ${tileIcon('admin')}
+        <span class="tile-arrow">${ICON.arrow}</span>
+        <h2 class="tile-label">Admin</h2>
+        <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
+      </a>` : ''}
       <section class="card card-hist home-day" id="tile-day" data-home-block="ce_jour_la" data-home-label="Ce jour-là" data-home-kind="tile" aria-labelledby="day-title" hidden></section>
     </section>
 
@@ -334,6 +342,134 @@ function startCountdown(target, year) {
   tick();
   run();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); run(); });
+}
+
+/* ---------- Haut de l'accueil (Pixel Pop) : thème en cours + carré des rubriques ---------- */
+/**
+ * Fin d'un thème de saison : son jour « MM-DD » à 23 h 59, cette année ou l'an prochain s'il est déjà passé
+ * (plage à cheval sur deux années, comme l'hiver). Null pour un thème sans date de fin (thème choisi par l'admin).
+ * @param {string|null} md jour de fin « MM-DD »
+ * @returns {Date|null}
+ */
+function finDuTheme(md) {
+  const m = /^(\d{2})-(\d{2})$/.exec(md || '');
+  if (!m) return null;
+  const now = new Date();
+  const fin = new Date(now.getFullYear(), Number(m[1]) - 1, Number(m[2]), 23, 59, 59);
+  if (fin < now) fin.setFullYear(fin.getFullYear() + 1);
+  return fin;
+}
+
+let themeTimer;
+/**
+ * Tuile « Thème en cours » : affichée quand le site porte un thème spécial (Halloween, Noël…), avec sa date de fin et
+ * un compte à rebours. Rien pour le thème par défaut : le carré des rubriques reprend alors toute la largeur.
+ */
+async function loadTheme() {
+  const box = $('#tile-theme');
+  if (!box) return;
+  await applyTheme().catch(() => null); // même chargement que le socle (une seule requête)
+  const t = getSiteTheme();
+  if (!t || t.is_default) { box.hidden = true; placerHaut(); return; }
+  const fin = finDuTheme(t.end_md);
+  const emoji = (Array.isArray(t.emojis) && t.emojis[0]) || '✨';
+  const pad = (n) => String(n).padStart(2, '0');
+  box.innerHTML = `
+    <div class="theme-txt">
+      <p class="theme-tag">Thème en cours</p>
+      <h2 class="theme-nom" id="theme-title">Thème ${esc(t.name)}</h2>
+      <p class="theme-desc">Le site se met aux couleurs de la saison : logo, couleurs et effets.</p>
+      ${fin ? `<p class="theme-fin">Fin le ${esc(fmtDate(fin))} à 23:59</p><p class="theme-cd" id="theme-cd" role="timer"></p>` : ''}
+    </div>
+    <div class="theme-scene" aria-hidden="true"><span class="theme-emoji">${esc(emoji)}</span></div>`;
+  box.hidden = false;
+  placerHaut();
+  if (!fin) return;
+  const cd = $('#theme-cd');
+  const tick = () => {
+    const s = Math.max(0, Math.floor((fin - Date.now()) / 1000));
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), mi = Math.floor((s % 3600) / 60);
+    cd.textContent = `${d} J ${pad(h)}:${pad(mi)}:${pad(s % 60)}`;
+    cd.setAttribute('aria-label', `Encore ${d} jour${d > 1 ? 's' : ''}, ${h} heures et ${mi} minutes`);
+    if (!s) clearInterval(themeTimer);
+  };
+  const run = () => { clearInterval(themeTimer); if (!document.hidden) themeTimer = setInterval(tick, 1000); };
+  tick();
+  run();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); run(); });
+}
+
+/** Tuile Admin (administrateur, hors vue « comme un membre ») : demandes d'assistance ouvertes et idées nouvelles. */
+async function loadAdminTile() {
+  const body = $('#tile-admin .tile-body');
+  if (!body) return;
+  try {
+    const [sup, ide] = await Promise.all([
+      sb.from('hg_support').select('id', { count: 'exact', head: true }).eq('status', 'ouverte'),
+      sb.from('hg_ideas').select('id', { count: 'exact', head: true }).eq('status', 'nouvelle'),
+    ]);
+    if (sup.error) throw sup.error;
+    if (ide.error) throw ide.error;
+    const n = (c, un, plus) => `${c || 0} ${(c || 0) > 1 ? plus : un}`;
+    body.innerHTML = `
+      <p class="tile-kicker">Assistance</p><p class="tile-main">${esc(n(sup.count, 'demande ouverte', 'demandes ouvertes'))}</p>
+      <p class="tile-kicker">Boîte à idées</p><p class="tile-main">${esc(n(ide.count, 'idée nouvelle', 'idées nouvelles'))}</p>`;
+  } catch (e) { body.innerHTML = failBox(e); }
+}
+
+/**
+ * Place le haut de l'accueil : la tuile Admin rejoint la première grille de rubriques ; « Ce jour-là » passe juste
+ * dessous (le carré garde quatre zones au plus) ; avec un thème spécial, thème à gauche et rubriques en carré à droite.
+ * Rappelée après chaque rangement de l'accueil personnalisé (événement hg:home-arrange de home-blocks.js).
+ */
+function placerHaut() {
+  const top = $('.home-top');
+  const groupes = [...app.querySelectorAll('.home-tiles')].filter((g) => !g.classList.contains('home-tiles-suite'));
+  const tiles = groupes.find((g) => g.querySelector('#tile-ss, #tile-irl, #tile-hist')) || groupes[0];
+  const admin = $('#tile-admin'), day = $('#tile-day'), theme = $('#tile-theme');
+  if (tiles && admin && admin.parentElement !== tiles) tiles.append(admin);
+  if (tiles && day && tiles.contains(day)) {
+    let suite = $('.home-tiles-suite');
+    if (!suite) { suite = document.createElement('section'); suite.className = 'grid home-tiles home-tiles-suite'; suite.setAttribute('aria-label', 'Ce jour-là'); }
+    suite.append(day);
+    (top || tiles).after(suite);
+  }
+  app.querySelectorAll('.home-tiles').forEach((g) => { if (!g.children.length) g.remove(); });
+  const avecTheme = theme && !theme.hidden && tiles?.isConnected;
+  if (avecTheme) {
+    const box = top || Object.assign(document.createElement('div'), { className: 'home-top' });
+    if (!box.contains(tiles)) tiles.before(box); // après un rangement, le haut suit la grille des rubriques
+    box.append(theme, tiles);
+    tiles.classList.add('is-carre');
+    $('.home-tiles-suite') && box.after($('.home-tiles-suite'));
+  } else if (top) {
+    if (tiles) { tiles.classList.remove('is-carre'); top.before(tiles); }
+    if (theme) top.before(theme);
+    top.remove();
+  }
+  majCarre();
+}
+
+let carreObs;
+/**
+ * Carré des rubriques : seules les zones visibles comptent, et elles se partagent tout le carré
+ * (4 : deux par deux ; 3 : la dernière sur toute la largeur ; 2 : une par rangée ; 1 : tout le carré).
+ */
+function majCarre() {
+  const carre = $('.home-tiles.is-carre');
+  if (!carre) return;
+  const vis = [...carre.children].filter((el) => !el.hidden);
+  vis.forEach((el, i) => {
+    const pos = vis.length === 1 ? 'tout' : (vis.length === 2 || (vis.length === 3 && i === 2)) ? 'ligne' : '';
+    if (pos) el.dataset.pos = pos; else delete el.dataset.pos;
+  });
+  carre.dataset.n = String(vis.length);
+  if (!carreObs) {
+    carreObs = new MutationObserver(() => majCarre());
+  }
+  carreObs.disconnect();
+  carreObs.observe(carre, { childList: true, subtree: false, attributes: true, attributeFilter: ['hidden'] });
+  for (const el of carre.children) carreObs.observe(el, { attributes: true, attributeFilter: ['hidden'] });
 }
 
 /* ---------- Tuile IRL ---------- */
@@ -640,6 +776,8 @@ if (!me) {
   hideForbiddenTiles();
   // Accueil personnalisable (idée P9) : ordre, blocs masqués (retirés avant tout chargement) et blocs ajoutés
   const home = await import('./home-blocks.js').then((m) => m.applyHomeLayout(app, me)).catch((e) => { console.warn('[accueil perso]', e?.message || e); return null; });
+  placerHaut();
+  app.addEventListener('hg:home-arrange', placerHaut);
   if ($('#idea-form')) bindIdeas();
   // Boîte à idées demandée par le lien : montrée tout de suite, puis de nouveau une fois les blocs du dessus chargés
   // (sinon leur contenu la repousse plus bas et le lien semble ne rien faire).
@@ -647,6 +785,7 @@ if (!me) {
   window.addEventListener('hashchange', () => allerAuxIdees(true));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
+    loadTheme(), tileOn('tile-admin') ? loadAdminTile() : null,
     $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
     home?.loadOwn(),
     tileOn('tile-day') ? import('./accueil-ce-jour.js').then((m) => m.loadOnThisDay($('#tile-day'), me)) : null, // module chargé seulement si la tuile existe

@@ -281,15 +281,28 @@ function coverHtml(ev) {
 }
 /**
  * Carte de la prochaine sortie (grande carte). Si la sortie a commencé, son album s'affiche aussi.
+ * Sans prochaine sortie : grande tuile « 0 sortie calée » et, s'il existe, le dernier rendez-vous (il y a N jours).
  * @param {object|null} ev la prochaine sortie, ou null
+ * @param {object|null} [last] la dernière sortie passée (état vide seulement)
  * @returns {string} HTML
  */
-function renderNext(ev) {
+function renderNext(ev, last = null) {
   if (!ev) {
-    return `<div class="card card-irl feat-empty">
-      <p class="display feat-empty-title">Rien de calé pour l'instant.</p>
-      <p class="muted">Un resto, une rando, un karaoké raté : propose quelque chose et le gang suivra.</p>
-      <div><button type="button" class="btn btn-primary" data-act="new">+ Proposer une sortie</button></div>
+    const ago = last ? -daysUntil(last.starts_at) : null;
+    const lastHtml = last ? `<div class="feat-last">
+        <p class="small muted">Le dernier rendez-vous, c'était :</p>
+        <p class="feat-last-title">${esc(last.title)}</p>
+        ${meta(last, { creator: false })}
+        ${ago > 0 ? `<p class="feat-ago"><span>Il y a</span> <strong>${ago}</strong> <span>${ago > 1 ? 'jours' : 'jour'}</span></p>` : ''}
+      </div>` : '';
+    return `<div class="card card-irl featured feat-empty">
+      <div class="feat-cover feat-cover-block feat-zero" aria-hidden="true"><span class="fc-day">0</span><span class="fc-month">sortie calée</span></div>
+      <div class="feat-body stack">
+        <p class="display feat-empty-title">Rien de calé pour l'instant.</p>
+        <p class="muted">Un resto, une rando, un karaoké raté : propose quelque chose et le gang suivra.</p>
+        ${lastHtml}
+        <div><button type="button" class="btn btn-primary" data-act="new">+ Proposer une sortie</button></div>
+      </div>
     </div>`;
   }
   const started = new Date(ev.starts_at).getTime() <= Date.now();
@@ -421,7 +434,7 @@ async function render() {
 
   const focusKey = S.focusKey || document.activeElement?.dataset?.key;
   S.focusKey = null;
-  $('#next').innerHTML = renderNext(next);
+  $('#next').innerHTML = renderNext(next, past[0] || null);
   $('#polls-section').hidden = !polls.length;
   $('#polls').innerHTML = polls.map(renderPoll).join('');
   $('#upcoming-section').hidden = !upcoming.length;

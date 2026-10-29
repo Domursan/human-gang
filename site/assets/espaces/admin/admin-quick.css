@@ -113,3 +113,8 @@
   .qk-seg { display: flex; width: 100%; }
   .qk-seg button { flex: 1 1 0; padding: 0 8px; }
 }
+
+/* Refonte « Pixel Pop » (29/10/2026) : ombre noire franche, coins de 14 px, bouton de fermeture carré */
+.qk-dlg { border-radius: 14px; box-shadow: 8px 8px 0 #000; }
+.qk-x { border-radius: 12px; border-width: 2px; }
+.qk-label { font-family: var(--font-pixel); font-weight: 400; font-size: 11px; letter-spacing: 1.5px; }

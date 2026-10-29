@@ -79,3 +79,18 @@ input[type="datetime-local"], input[type="date"] { color-scheme: dark; }
 .lb-react { padding: 0 16px 16px; display: flex; justify-content: center; }
 .lb-react[hidden] { display: none; }
 .lb-react .react-bar { margin-top: 0; justify-content: center; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : bordures 2 px, ombres franches, couleur de l'espace (--esp) au survol et au focus ===== */
+.hg-dialog { border: 2px solid var(--border-strong); border-radius: 14px; box-shadow: 8px 8px 0 #000; }
+html[data-mode="clair"] .hg-dialog { box-shadow: 8px 8px 0 #1B1A1F; }
+.hg-dialog input[type="file"]::file-selector-button { border-width: 2px; border-radius: 10px; }
+.thumb { border-radius: 8px; border: 2px solid var(--border); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+@media (hover: hover) { .thumb:hover { transform: translate(-2px, -2px); border-color: #000; box-shadow: 4px 4px 0 var(--esp); } }
+.thumb-more { font-family: var(--font-pixel); border: 2px dashed var(--border-strong); }
+.lb-count { font-family: var(--font-pixel); }
+.lb-nav { border: 2px solid var(--border-strong); border-radius: 12px; box-shadow: var(--px-shadow); }
+.react-btn { border-width: 2px; border-radius: 10px; }
+.react-btn.is-on { border-color: var(--esp); background: color-mix(in srgb, var(--esp) 18%, transparent); }
+.react-count { font-family: var(--font-pixel); }
+@media (prefers-reduced-motion: reduce) { .thumb { transition: none; } .thumb:hover { transform: none !important; } }
+html[data-fx="off"] .thumb { transition: none; transform: none !important; }

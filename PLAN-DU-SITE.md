@@ -31,13 +31,13 @@ flowchart TD
 
 ## Barre de menus
 
-La barre comporte cinq entrées : « Le jeu de cartes », « IRL », « Jeux », « Calendrier » et « Autres ». « Le jeu de cartes » et « IRL » ouvrent un menu déroulant. « Jeux » et « Calendrier » sont des liens directs. « Autres » est rempli automatiquement. Un lien n'apparaît que si le membre a accès à sa page, et un menu vide disparaît. Sur téléphone (760 px et moins), un bouton « Menu » déplie les menus en accordéon.
+La barre comporte cinq entrées : « Le jeu de cartes », « IRL », « Jeux », « Calendrier » et « Autres ». « Le jeu de cartes », « IRL » et « Jeux » ouvrent un menu déroulant. « Calendrier » est un lien direct. « Autres » est rempli automatiquement. Un lien n'apparaît que si le membre a accès à sa page, et un menu vide disparaît. Sur téléphone (760 px et moins), un bouton « Menu » déplie les menus en accordéon.
 
 | Menu | Entrées (adresse) |
 | --- | --- |
 | Le jeu de cartes | Ouverture (`/pages/cartes/cartes.html#ouverture`), Inventaire (`#inventaire`), Boutique (`#boutique`), Mes cartes (`#collection`), Classement (`#classement`), Échanges (`#echanges`), Arène (`#arene`) |
 | IRL | Secret Santa (`/pages/irl/secret-santa.html`), IRL (`/pages/irl/irl.html`), Historique (`/pages/irl/historique.html`) |
-| Jeux | Lien direct vers `/pages/jeux/jeux.html`. Les jeux sont rangés en onglets dans cette page (voir plus bas). |
+| Jeux | Tous les jeux (`/pages/jeux/jeux.html#tous`), Jeux quotidiens (`#quotidien`), Jeux flash (`#flash`), Duels / multijoueurs (`#multi`), Jeux spéciaux (`#speciaux`). Chaque ancre de section ouvre la vue « Tous les jeux » et y fait défiler ; une section n'est proposée que si le membre y voit au moins un jeu. Entrées définies dans `header.js` (`JEUX_ITEMS`), titre du menu réglé comme l'ancien lien direct. Les jeux sont rangés en onglets dans cette page (voir plus bas). |
 | Calendrier | Lien direct vers `/pages/irl/calendrier.html` |
 | Autres | Pages du menu (réglage `in_nav` de la base) accessibles et non rangées ailleurs, dans l'ordre de la base. Libellés courts : Annuaire (`membre.html`), Récap de l'année (`recap.html`). |
 
@@ -97,7 +97,7 @@ Les chemins de code sont relatifs à `site/assets/espaces/` (« espace » = un d
 
 | Page (adresse) | Accès | Contenu principal | Code (espaces/…) |
 | --- | --- | --- | --- |
-| `/pages/jeux/jeux.html` | Membre (selon Accès aux pages) | Onglet « Missions quotidiennes » (`#aujourdhui`, programme du jour et Paillettes gagnées), puis un onglet par jeu (liste des anchors plus bas). La vue « Tous les jeux » range les cartes en sections : Jeux quotidiens (une partie par jour), Jeux flash (à volonté), Jeux multijoueurs, Jeux spéciaux | `jeux/jeux.js`, `jeux/onglets.js`, `jeux/<id>.js` |
+| `/pages/jeux/jeux.html` | Membre (selon Accès aux pages) | Onglet « Missions quotidiennes » (`#aujourdhui`, programme du jour et Paillettes gagnées), puis un onglet par jeu (liste des anchors plus bas). La vue « Tous les jeux » range les cartes en sections : Jeux quotidiens (une partie par jour), Jeux flash (à volonté), Jeux multijoueurs, Jeux spéciaux (ancres `#quotidien`, `#flash`, `#multi`, `#speciaux` : défilement jusqu'à la section), avec le classement du jour à côté | `jeux/jeux.js`, `jeux/onglets.js`, `jeux/<id>.js` |
 | `/pages/jeux/quiz.html` | Selon Accès aux pages | Questions du gang : réponses (une tentative par question), explication après réponse, Paillettes gagnées, historique | `quiz/quiz.js` |
 | `/pages/jeux/duels.html` | Membre (à confirmer) | Duels entre deux membres : bataille, dames, échecs, morpion, Puissance 4, Othello, Mastermind, pierre-feuille-ciseaux, Qui est-ce ? | `duels/duels.js`, `duels/vues/` |
 | `/pages/jeux/uno.html` | Membre (à confirmer) | Uno en ligne, 2 à 20 joueurs ; lien d'invitation `?code=` ou `#rejoindre/<code>` | `uno/uno.js`, `uno/vues/` |

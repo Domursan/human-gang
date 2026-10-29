@@ -72,3 +72,89 @@ html[data-mode="clair"] body.duels-page {
 
 @media (prefers-reduced-motion: reduce) { .duels-app * { animation: none !important; transition: none !important; } }
 body.duels-calme .duels-app * { animation: none !important; transition: none !important; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : habillage des pages communes des duels =====
+   Accueil, salle d'attente, rejoindre et chrono : bordures 2 px, ombres franches, police pixel pour les codes,
+   compteurs et étiquettes. Couleur d'espace --esp (vert des jeux), --esp-ink pour le texte, --esp-text posé sur --esp.
+   Les plateaux (p4.css, morpion.css…) ne sont pas touchés. Mouvements coupés par data-fx="off", duels-calme et le mouvement réduit. */
+
+/* Fil d'Ariane en petit titre pixel, titre de page très gros */
+.duels-fil { font-family: var(--font-pixel); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--esp-ink); }
+.duels-fil a { color: var(--text); text-underline-offset: 3px; }
+.duels-acc-titre .duels-titre { font-size: clamp(48px, 9vw, 96px); line-height: .95; letter-spacing: -1px; text-transform: uppercase; }
+.duels-acc-intro { max-width: 640px; line-height: 1.5; }
+.duels-code { font-family: var(--font-pixel); font-weight: 400; letter-spacing: 2px; }
+.duels-invite-tag { border-width: 2px; border-radius: 6px; font-family: var(--font-pixel); text-transform: uppercase; letter-spacing: .5px; }
+.duels-dev { border: 2px solid #000; border-radius: 6px; background: var(--sand); color: #08080B; font-family: var(--font-pixel); font-weight: 400;
+  font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+.duels-acc .btn-ghost, .duels-salle .btn-ghost, .duels-rejoindre .btn-ghost { border-color: var(--esp-ink); }
+
+/* Cartes : titre précédé d'un petit carré plein */
+.duels-acc-titre-carte { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+.duels-acc-titre-carte::before { content: ''; flex: none; width: 10px; height: 10px; background: var(--esp); }
+.duels-acc-nb { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; color: var(--esp-text); background: var(--esp); border: 2px solid #000; border-radius: 6px; padding: 1px 8px; }
+
+/* Champs : bordure 2 px, ombre franche de la couleur d'espace au focus, code en police pixel */
+.duels-acc-champ-nom { font-family: var(--font-pixel); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.duels-acc-code, .duels-acc-recherche, .duels-chat-champ { border-width: 2px; border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+.duels-acc-code { font-family: var(--font-pixel); font-size: 18px; letter-spacing: 2px; text-transform: uppercase; }
+.duels-acc-code::placeholder { color: var(--muted); }
+.duels-acc-code:focus, .duels-acc-recherche:focus, .duels-chat-champ:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+.duels-acc-code[aria-invalid="true"] { border-color: var(--rose); box-shadow: 4px 4px 0 var(--rose); }
+
+/* Les jeux : tuiles à bordure 2 px qui montent en diagonale avec une ombre franche verte */
+.duels-acc-jeu { position: relative; border: 2px solid var(--border); border-radius: 14px; transition: transform .18s cubic-bezier(.2, .8, .2, 1), box-shadow .18s ease, border-color .15s ease; }
+.duels-acc-jeu .duels-vignette { border-bottom: 2px solid var(--border); transition: transform .4s cubic-bezier(.2, .8, .2, 1); }
+.duels-acc-jeu-nom { font-weight: 800; }
+.duels-acc-jeu:focus-within { border-color: var(--esp); }
+@media (hover: hover) {
+  .duels-acc-jeu:hover { transform: translate(-3px, -3px); border-color: #000; box-shadow: 6px 6px 0 var(--esp); }
+  .duels-acc-jeu:hover .duels-vignette { transform: scale(1.05); }
+}
+
+/* Listes de duels : tuiles ; « à toi de jouer » mis en avant en aplat de la couleur d'espace */
+.duels-acc-ligne { border: 2px solid var(--border); border-radius: 12px; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+@media (hover: hover) { .duels-acc-ligne:hover { transform: translate(-3px, -3px); border-color: var(--border-strong); box-shadow: var(--px-shadow-up); } }
+.duels-acc-ligne.is-tour { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); background: color-mix(in srgb, var(--esp) 10%, var(--surface-2)); }
+@media (hover: hover) { .duels-acc-ligne.is-tour:hover { box-shadow: 6px 6px 0 var(--esp); } }
+.duels-acc-etiquette { gap: 6px; padding: 2px 8px; border: 2px solid #000; border-radius: 6px; background: var(--esp); color: var(--esp-text);
+  font-family: var(--font-pixel); font-weight: 400; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+.duels-acc-etiquette::before { content: ''; width: 6px; height: 6px; background: currentColor; animation: duels-px-blink 1s steps(2, end) infinite; }
+@keyframes duels-px-blink { 50% { opacity: .2; } }
+.duels-acc-lien { color: var(--esp-ink); text-underline-offset: 3px; }
+/* Texte de ligne : base de 180 px pour que les boutons passent dessous sur téléphone au lieu d'écraser le texte */
+.duels-acc-ligne-texte { flex: 1 1 180px; }
+.duels-acc-membres .duels-acc-membre { border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+.duels-acc-membres .duels-acc-membre:last-child { border-bottom: 0; }
+
+/* Statistiques : chiffres et libellés en police pixel */
+.duels-acc-tuile { border: 2px solid var(--border); border-radius: 10px; }
+.duels-acc-tuile.is-vert { border-color: var(--sage-text); }
+.duels-acc-tuile.is-or { border-color: var(--sand); }
+html[data-mode="clair"] .duels-acc-tuile.is-or { color: var(--esp-ink); border-color: var(--border-strong); }
+.duels-acc-chiffre { font-family: var(--font-pixel); font-weight: 400; font-size: 28px; }
+.duels-acc-tuile-nom { font-family: var(--font-pixel); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: 1; }
+
+/* Salle d'attente et rejoindre : titre fort, code de partie en grand dans la police pixel */
+.duels-salle .duels-titre, .duels-rejoindre .duels-titre, .duels-erreur .duels-titre { text-transform: uppercase; letter-spacing: -.5px; }
+.duels-salle-code { font-family: var(--font-pixel); font-weight: 400; font-size: clamp(28px, 7vw, 48px); letter-spacing: 3px; color: var(--esp-ink);
+  background: var(--bg); border: 2px solid var(--esp); border-radius: 12px; box-shadow: 4px 4px 0 var(--esp); }
+.duels-salle-reglages, .duels-salle-reglages > div { border-width: 2px; }
+.duels-salle-reglages dt { font-family: var(--font-pixel); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.duels-pleine { border-radius: 12px; }
+.duels-salle .btn:focus-visible, .duels-rejoindre .btn:focus-visible { outline: 3px solid var(--esp-ink); outline-offset: 2px; }
+.duels-decompte { font-family: var(--font-pixel); font-weight: 400; color: var(--esp-ink); letter-spacing: 1px; }
+.duels-invitation strong { color: var(--esp-ink); }
+.duels-rejoindre .small a { color: var(--esp-ink); }
+.duels-reglages-pastilles li { border-width: 2px; border-radius: 8px; }
+.duels-invite-form .input:focus-visible { outline: 0; }
+
+/* Chrono : chiffres en police pixel ; avatar « à son tour » cerclé de la couleur d'espace */
+.duels-chrono { font-family: var(--font-pixel); font-weight: 400; }
+.duels-av.is-tour { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--esp); }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) { .duels-acc-jeu:hover, .duels-acc-ligne:hover, .duels-acc-jeu:hover .duels-vignette { transform: none !important; } }
+html[data-fx="off"] .duels-app * { animation: none !important; transition: none !important; }
+html[data-fx="off"] .duels-acc-jeu:hover, html[data-fx="off"] .duels-acc-ligne:hover, html[data-fx="off"] .duels-acc-jeu:hover .duels-vignette { transform: none !important; }
+body.duels-calme .duels-acc-jeu:hover, body.duels-calme .duels-acc-ligne:hover { transform: none !important; }

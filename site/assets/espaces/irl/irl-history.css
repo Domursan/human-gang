@@ -130,3 +130,66 @@
 .pick > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick .avatar { font-size: 11px; }
 .picker-none { margin: 0; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) ===== */
+/* Onglets : pavés à bord 2 px, l'onglet actif en aplat orange (texte noir) */
+.irl-tabs { gap: 10px; padding: 4px 6px 6px 0; border-bottom: 0; }
+.irl-tab { min-height: 48px; padding: 0 18px; border: 2px solid var(--border); border-radius: 12px; margin-bottom: 0; background: var(--surface);
+  color: var(--muted); transition: transform .15s ease, color .15s ease, border-color .15s ease; }
+@media (hover: hover) { .irl-tab:hover { color: var(--text); border-color: var(--esp); transform: translateY(-2px); } }
+.irl-tab[aria-selected="true"] { background: var(--esp); border-color: #000; color: var(--esp-text); box-shadow: var(--px-shadow); font-weight: 800; }
+
+/* Filtres : années en pastilles carrées, compteurs en pixel */
+.hx-filters { background: var(--surface); border-color: var(--border); }
+.hx-chip { border: 2px solid var(--border-strong); border-radius: 10px; }
+.hx-chip span { font-family: var(--font-pixel); font-weight: 400; font-size: 12px; }
+.hx-chip[aria-pressed="true"] { background: var(--esp); border-color: #000; color: var(--esp-text); box-shadow: var(--px-shadow); }
+.hx-chip[aria-pressed="true"] span { color: var(--esp-text); opacity: .75; }
+
+/* Statistiques : chiffres en pixel, barres à bord franc */
+.hx-stat, .hx-top-card { border-width: 2px; border-radius: 12px; }
+.hx-stat-me { background: var(--surface); border-color: var(--esp); }
+.hx-big { font-family: var(--font-pixel); font-size: 36px; color: var(--esp-ink); }
+.hx-stat-txt .hx-big { font-family: var(--font-display); font-size: 20px; }
+.hx-lbl { font-family: var(--font-pixel); font-size: 12px; letter-spacing: .5px; text-transform: uppercase; }
+.hx-bar, .hx-rbar { border-radius: 2px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--border); }
+.hx-bar { height: 10px; }
+.hx-bar > span, .hx-rbar > span { border-radius: 0; background: var(--esp); }
+.hx-h3 { font-family: var(--font-pixel); font-weight: 400; color: var(--esp-ink); }
+.hx-h3 svg { color: var(--esp-ink); }
+.hx-rk, .hx-rn { font-family: var(--font-pixel); font-weight: 400; }
+.hx-rn { color: var(--esp-ink); }
+
+/* Carte des lieux */
+.hx-map { border: 2px solid var(--border-strong); border-radius: 12px; }
+.hx-pin span { border-radius: 4px; background: var(--esp); color: #08080B; box-shadow: 3px 3px 0 #000; font-family: var(--font-pixel); font-weight: 400; }
+.hx-map-note a { color: var(--esp-ink); }
+
+/* Frise : rail et repères carrés, années en très gros */
+.hx-year::before { width: 4px; left: 6px; border-radius: 0; background: repeating-linear-gradient(var(--esp) 0 8px, transparent 8px 12px); opacity: .6; }
+.hx-year-title { font-size: clamp(34px, 5vw, 52px); color: var(--text); }
+.hx-year-title::before { border-radius: 0; background: var(--esp); box-shadow: 3px 3px 0 #000; }
+.hx-year-title span { font-family: var(--font-pixel); color: var(--muted); }
+.hx-card { border-width: 2px; border-radius: 14px; transition: transform .18s cubic-bezier(.2, .8, .2, 1), box-shadow .18s ease, border-color .18s ease; }
+@media (hover: hover) { .hx-card:hover { transform: translate(-3px, -3px); border-color: #000; box-shadow: 6px 6px 0 var(--esp); } }
+.hx-thumb { border-radius: 8px; border: 2px solid var(--border); }
+.hx-thumb-date { background: #08080B; color: #B8B4C0; font-family: var(--font-pixel); font-size: 11px; }
+.hx-thumb-date strong { font-family: var(--font-pixel); color: var(--esp); }
+.hx-pcount { border-radius: 4px; font-family: var(--font-pixel); font-weight: 400; }
+.hx-line time { font-family: var(--font-pixel); font-weight: 400; color: var(--esp-ink); opacity: 1; }
+.hx-retro { border-radius: 6px; border-width: 2px; font-family: var(--font-pixel); text-transform: uppercase; }
+.hx-place svg { color: var(--esp-ink); }
+.hx-faces .avatar { border-radius: 8px; }
+.hx-more { border-radius: 8px; font-family: var(--font-pixel); font-weight: 400; }
+.hx-link { color: var(--esp-ink); }
+
+/* Sélecteur de participants */
+.picker-list { border-width: 2px; }
+.pick:has(input:checked) { background: color-mix(in srgb, var(--esp) 18%, transparent); box-shadow: inset 4px 0 0 var(--esp); }
+.pick input { accent-color: var(--esp); }
+
+@media (prefers-reduced-motion: reduce) {
+  .irl-tab, .hx-card { transition: none; }
+  .irl-tab:hover, .hx-card:hover { transform: none !important; }
+}
+html[data-fx="off"] :is(.irl-tab, .hx-card) { transition: none; transform: none !important; }
