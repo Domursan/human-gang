@@ -71,7 +71,7 @@ function siegeHtml(s) {
   const corps = mains.length
     ? `<div class="bj-mains">${mains.map((m, i) => mainHtml({ ...m, totalMains: mains.length }, i + 1)).join('')}</div>`
     : `<p class="bj-attente small">${s.sorti ? 'Sorti du jeu' : s.parti ? 'A quitté la partie' : s.mise ? `Mise ${esc(jetons(s.mise))} jetons` : 'Pas encore de mise'}</p>`;
-  return `<li class="${classes.join(' ')}"${s.tour ? ' aria-current="step"' : ''}>
+  return `<li class="${classes.join(' ')}" data-joueur="${esc(s.id)}"${s.tour ? ' aria-current="step"' : ''}>
       <header class="bj-siege-tete">
         <span class="bj-pastille" style="background:${esc(couleur)}" aria-hidden="true">${esc(s.initiale || '?')}</span>
         <span class="bj-siege-nom">

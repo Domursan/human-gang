@@ -150,6 +150,43 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
   .bj-cartes-banque .cd { --cd-l: 40px; --cd-h: 58px; }
 }
 
+/* ---------- Animations (effets.js) : tour à moi, distribution, carte retournée, jetons, gagnant ----------
+   Chaque animation dure moins de 3 s. Les jetons sont en position fixe, hors du tapis (ajoutés au body). */
+.bj-table .bj-anim-a-toi { position: relative; }
+.bj-table .bj-anim-pouls { animation: bjAnimPouls 1.2s ease-in-out 2; }
+@keyframes bjAnimPouls { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); } }
+.bj-table .bj-anim-puce {
+  position: absolute; z-index: 70; left: 50%; top: -12px; transform: translateX(-50%); pointer-events: none;
+  background: var(--bj-or); color: #0B0A10; font: 800 11px Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap; animation: bjAnimBulle 1.4s ease-in-out 2;
+}
+@keyframes bjAnimBulle { 50% { transform: translate(-50%, -3px); } }
+.bj-table .bj-anim-distrib { animation: bjAnimDistrib .55s cubic-bezier(.2, .7, .3, 1) var(--bj-delai, 0s) both; }
+@keyframes bjAnimDistrib { from { opacity: 0; transform: translate(-40px, -60px) scale(.6) rotate(-12deg); } to { opacity: 1; transform: none; } }
+.bj-table .bj-anim-retourne { position: relative; }
+.bj-table .bj-anim-retourne::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: repeating-linear-gradient(45deg, #1B2340 0 8px, #222C52 8px 16px); border: 2px solid var(--bj-or);
+  animation: bjAnimFace .8s ease-in-out forwards;
+}
+@keyframes bjAnimFace { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(0); opacity: 0; } }
+.bj-table .bj-anim-gagne { animation: bjAnimGagne 1.2s ease-in-out 2; }
+@keyframes bjAnimGagne { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); transform: scale(1.03); } }
+.bj-table .bj-anim-panneau { animation: bjAnimPanneau 1.2s ease-in-out 2; }
+@keyframes bjAnimPanneau { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .5); } }
+.bj-anim-jeton {
+  position: fixed; z-index: 60; width: 22px; height: 22px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #E5484D 0 45%, #fff 46% 52%, #E5484D 53%); border: 2px dashed #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .5); transition: transform .8s cubic-bezier(.3, .7, .3, 1), opacity .8s;
+}
+/* Calque de la banque : la carte cachée se ferme (.bj-anim-ferme) puis s'ouvre sur sa face (.bj-anim-ouvre). Ajouté au body. */
+.bj-anim-calque { position: fixed; z-index: 50; pointer-events: none; margin: 0; }
+.bj-anim-ferme { animation: bjAnimFerme .4s ease-in forwards; }
+@keyframes bjAnimFerme { to { transform: scaleX(0); } }
+.bj-anim-ouvre { animation: bjAnimOuvre .4s ease-out both; }
+@keyframes bjAnimOuvre { from { transform: scaleX(0); } }
+body.plat-calme .bj-table *, body.plat-calme .bj-table *::before, body.plat-calme .bj-table *::after { animation: none !important; transition: none !important; }
+
 /* ---------- Animations coupées ---------- */
 @media (prefers-reduced-motion: reduce) {
   .bj-table *, .bj-table *::before, .bj-table *::after { animation: none !important; transition: none !important; }
