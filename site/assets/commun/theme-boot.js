@@ -15,6 +15,17 @@ try {
   r.style.colorScheme = m === 'clair' ? 'light' : 'dark';
 } catch (e) {}
 
+/* Espace de la page (refonte Pixel Pop) : posé sur <html> en data-espace, il donne à chaque espace sa couleur de la
+   traînée arc-en-ciel du logo (variable --c de base.css). Premier dossier ou nom de page reconnu, sinon « accueil ». */
+(function () {
+  var p = location.pathname, e = 'accueil';
+  var t = [['/pages/admin/', 'admin'], ['/loup-garou', 'lg'], ['/secret-santa', 'ss'], ['/calendrier', 'calendrier'],
+    ['/messages', 'messages'], ['/membre', 'compte'], ['/compte.html', 'compte'], ['/pages/cartes/', 'cartes'],
+    ['/pages/jeux/', 'jeux'], ['/pages/irl/', 'irl'], ['/pages/infos/', 'infos']];
+  for (var i = 0; i < t.length; i++) if (p.indexOf(t[i][0]) !== -1) { e = t[i][1]; break; }
+  document.documentElement.setAttribute('data-espace', e);
+})();
+
 /* Anti-encadrement (clickjacking) : GitHub Pages ne permet pas d'envoyer l'en-tête frame-ancestors, et la balise
    <meta> CSP l'ignore. Si la page est affichée dans un cadre d'un autre site, elle est masquée, rendue inerte,
    et le navigateur est invité à l'ouvrir en pleine fenêtre. Les cadres du même site restent permis (affiches dans l'Aide, simulateur de téléphone). */

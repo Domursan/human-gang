@@ -17,7 +17,7 @@ import { getPrefs } from './prefs-state.js';
 export const DEFAULT_THEME = Object.freeze({
   slug: 'classique', name: 'Classique', is_default: true, active: true, start_md: null, end_md: null, priority: 0,
   logo_url: null, emojis: ['❤️', '🌈', '✨'], effect: 'etoiles',
-  colors: { accent: '#9E3543', bg: '#0E0E10', surface: '#17171A', text: '#F2EFEA', muted: '#ABA7A0', highlight: '#E2C77E' },
+  colors: { accent: '#B70127', bg: '#08080B', surface: '#121216', text: '#F4F1EA', muted: '#B8B4C0', highlight: '#FBD32D' },
 });
 /** Effets visuels proposés dans l'éditeur de thèmes, avec leur libellé. */
 export const THEME_EFFECTS = { aucun: 'Aucun', pluie: "Pluie d'emojis", neige: 'Neige', 'neige-emojis': 'Neige et emojis qui tombent', etoiles: 'Étoiles scintillantes', fromage: 'Fromage fondu et gourmandises', braises: 'Braises qui montent' };

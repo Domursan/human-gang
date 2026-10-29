@@ -10,6 +10,8 @@
   src: url('/assets/fonts/inter-latin-500.woff2') format('woff2'); }
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
   src: url('/assets/fonts/inter-latin-700.woff2') format('woff2'); }
+@font-face { font-family: 'Silkscreen'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/assets/fonts/silkscreen-400.woff2') format('woff2'); }
 
 :root {
   /* Couleurs de marque (bande arc-en-ciel uniquement, en pleine saturation) */
@@ -18,18 +20,18 @@
   --rb-1: #FE3104; --rb-2: #FCA301; --rb-3: #FBD32D; --rb-4: #159946; --rb-5: #2B5AE2; --rb-6: #4E2398;
 
   /* Interface désaturée */
-  --bg: #0E0E10;
-  --surface: #17171A;
-  --surface-2: #1F1F23;
-  --border: #2A2A2F;
-  --border-strong: #3A3A40;
+  --bg: #08080B;
+  --surface: #121216;
+  --surface-2: #18181D;
+  --border: #24242B;
+  --border-strong: #34343D;
   --field-border: #6E6E78;    /* bordure des champs : 3:1 minimum sur --bg et --surface (WCAG 1.4.11) */
-  --text: #F2EFEA;
-  --muted: #ABA7A0;
+  --text: #F4F1EA;
+  --muted: #B8B4C0;
 
-  --accent: #9E3543;          /* rouge désaturé : action principale */
+  --accent: #B70127;          /* rouge du cœur du logo : action principale (Pixel Pop) */
   --accent-text: #ffffff;
-  --sand: #E2C77E;            /* jaune désaturé */
+  --sand: #FBD32D;            /* jaune de la traînée arc-en-ciel : mises en avant */
   --amber: #D8A75E;
   --rust: #CF7055;
   --sage: #6FA37F; --sage-soft: #18241C; --sage-text: #8FC39F;
@@ -46,6 +48,7 @@
   --radius-sm: 12px;
   --font-display: 'Archivo Black', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
+  --font-pixel: 'Silkscreen', ui-monospace, Menlo, Consolas, monospace;
   --maxw: 1200px;
 }
 
@@ -264,7 +267,7 @@ a.nav-icon { text-decoration: none; }
 .mode-txt small { font-size: 13px; color: var(--muted); line-height: 1.3; }
 .mode-swatch { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-strong); }
 .mode-swatch i { flex: 1; }
-.sw-sombre i:nth-child(1) { background: #0E0E10; } .sw-sombre i:nth-child(2) { background: #2A2A2F; } .sw-sombre i:nth-child(3) { background: #9E3543; }
+.sw-sombre i:nth-child(1) { background: #08080B; } .sw-sombre i:nth-child(2) { background: #24242B; } .sw-sombre i:nth-child(3) { background: #B70127; }
 .sw-clair i:nth-child(1) { background: #F5F2ED; } .sw-clair i:nth-child(2) { background: #FFFFFF; } .sw-clair i:nth-child(3) { background: #8E2F3C; }
 .sw-daltonien i:nth-child(1) { background: #0E0E10; } .sw-daltonien i:nth-child(2) { background: #3A72C2; } .sw-daltonien i:nth-child(3) { background: #F2A65A; }
 .prefs-switches { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
@@ -815,3 +818,96 @@ kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; m
 .cpt-badge[hidden] { display: none; }
 .nav-item > .cpt-badge { margin-left: auto; }
 html[data-mode="clair"] .cpt-badge { color: #FFFFFF; }
+
+/* ===== Refonte « Pixel Pop » (29/10/2026) : la charte du logo, plus vive et plus franche =====
+   - Couleur d'espace --esp : chaque espace prend une couleur de la traînée arc-en-ciel du logo (data-espace sur <html>,
+     posé par theme-boot.js). --esp-ink : la même couleur, lisible en texte (assombrie en mode clair).
+   - Bordures de 2 px, ombres franches noires décalées (pas de flou), petits titres et compteurs en police pixel Silkscreen.
+   - Mouvements courts (survol, appui, changement de page), coupés par data-fx="off" et le mouvement réduit. */
+:root { --esp: #FE3104; --esp-text: #08080B; --esp-ink: var(--esp); --px-shadow: 4px 4px 0 #000; --px-shadow-up: 6px 6px 0 #000; }
+html[data-espace="cartes"], html[data-espace="admin"] { --esp: #FBD32D; }
+html[data-espace="jeux"] { --esp: #2FD16B; }
+html[data-espace="lg"], html[data-espace="compte"] { --esp: #8B5CF6; }
+html[data-espace="irl"] { --esp: #FCA301; }
+html[data-espace="ss"] { --esp: #FF3B5C; }
+html[data-espace="calendrier"], html[data-espace="messages"], html[data-espace="infos"] { --esp: #3D7BFF; }
+html[data-mode="clair"] { --esp-ink: color-mix(in srgb, var(--esp) 45%, #000); }
+html[data-mode="daltonien"] { --esp: var(--sand); }
+
+/* Fond : grille de pixels discrète (modes sombres) */
+html:not([data-mode="clair"]) body {
+  background-image: linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px);
+  background-size: 16px 16px; }
+::selection { background: var(--sand); color: #08080B; }
+
+/* En-tête */
+.site-header { border-bottom-width: 2px; }
+.nav-top { border-width: 2px; border-radius: 12px; transition: transform .15s ease, background .15s ease, box-shadow .15s ease; }
+@media (hover: hover) { .nav-top:hover { transform: translateY(-2px); } }
+.nav-top[aria-current="page"], .nav-top.is-current { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+.nav-top[aria-current="page"] .nav-chev, .nav-top.is-current .nav-chev { color: var(--esp-text); }
+.nav-group.is-open > .nav-top { border-color: var(--esp); color: var(--text); }
+.nav-group.is-open > .nav-top .nav-chev { color: var(--esp-ink); }
+.nav-menu, .nav-submenu { border-width: 2px; border-radius: 14px; box-shadow: var(--px-shadow-up); }
+.nav-item { border-radius: 10px; }
+.nav-item[aria-current="page"], .nav-item.is-current, .nav-sub.is-open > .nav-sub-btn { color: var(--esp-ink); box-shadow: inset 4px 0 0 var(--esp); }
+.nav-badge, .nav-me-badge, .cpt-badge { font-family: var(--font-pixel); font-weight: 400; border-radius: 6px; }
+.nav-icon { border-width: 2px; border-radius: 12px; }
+.nav-account.is-guest { border: 2px solid #000; border-radius: 12px; box-shadow: var(--px-shadow); }
+.fan-item { border-width: 2px; box-shadow: var(--px-shadow); }
+@media (max-width: 760px) {
+  .site-header.nav-open .nav-top { border-radius: 0; box-shadow: none; transform: none; }
+  .site-header.nav-open .nav-top.is-current, .site-header.nav-open .nav-top[aria-current="page"] { background: transparent; color: var(--text); box-shadow: inset 4px 0 0 var(--esp); }
+  .nav-menu, .nav-submenu { box-shadow: none; }
+}
+.site-footer { border-top-width: 2px; }
+.footer-prefs { border-width: 2px; border-radius: 12px; }
+
+/* Titres de page : petit titre pixel dans la couleur d'espace, grand titre très gros */
+.eyebrow { font-family: var(--font-pixel); font-size: 14px; letter-spacing: 2px; color: var(--esp-ink); }
+.page-title { font-size: clamp(40px, 8vw, 88px); line-height: .95; letter-spacing: -1px; }
+
+/* Cartes et listes */
+.card { border-width: 2px; border-radius: 14px; }
+.empty { border-width: 2px; border-radius: 12px; }
+.list-row { border-bottom-width: 2px; }
+
+/* Boutons : l'action principale (rouge du cœur) porte une ombre noire franche et s'enfonce à l'appui */
+.btn { border-width: 2px; border-radius: 12px; transition: transform .12s ease, box-shadow .12s ease, background .15s ease, border-color .15s ease; }
+.btn-primary, .btn-sand, .btn-light { border-color: #000; box-shadow: var(--px-shadow); }
+@media (hover: hover) {
+  .btn-primary:not([disabled]):hover, .btn-sand:not([disabled]):hover, .btn-light:not([disabled]):hover { transform: translate(-2px, -2px); box-shadow: var(--px-shadow-up); filter: none; }
+  .btn-ghost:not([disabled]):hover { border-color: var(--esp); transform: translateY(-2px); }
+}
+.btn-primary:not([disabled]):active, .btn-sand:not([disabled]):active, .btn-light:not([disabled]):active { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+.btn-ghost:not([disabled]):active { transform: translateY(1px); }
+
+/* Champs : bordure et ombre franche de la couleur d'espace au focus */
+.input, .field input, .field select, .field textarea { border-width: 2px; border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+.input:focus, .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--esp); box-shadow: 4px 4px 0 var(--esp); }
+
+/* Barres de progression : bord pixel */
+.progress { border-radius: 2px; box-shadow: inset 0 0 0 2px var(--border); }
+.progress > span { border-radius: 0; }
+
+/* Toasts et fenêtres : ombre franche */
+.toast { border-width: 2px; border-radius: 12px; box-shadow: var(--px-shadow-up); animation: px-pop .25s cubic-bezier(.2, 1.4, .4, 1) both; }
+.prefs-dialog, .conn-error { border-width: 2px; box-shadow: 8px 8px 0 #000; }
+@keyframes px-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* Changement de page : la nouvelle page arrive en balayage par crans, comme la traînée du logo
+   (l'en-tête, les raccourcis Staff et le menu « En ligne » ont leur propre view-transition-name et ne bougent pas) */
+@keyframes px-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: px-wipe .32s steps(8, end) both; }
+
+/* Mouvement réduit ou effets coupés : rien ne bouge */
+@media (prefers-reduced-motion: reduce) {
+  .nav-top, .btn, .input, .field input, .field select, .field textarea { transition: none; }
+  .nav-top:hover, .btn:hover, .btn:active { transform: none !important; }
+  .toast { animation: none; }
+  ::view-transition-new(root) { animation: none; }
+}
+html[data-fx="off"] .toast { animation: none; }
+html[data-fx="off"] ::view-transition-new(root) { animation: none; }
+html[data-mode="clair"] { --px-shadow: 4px 4px 0 #1B1A1F; --px-shadow-up: 6px 6px 0 #1B1A1F; }

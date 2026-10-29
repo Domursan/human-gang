@@ -22,7 +22,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v149';
+const CACHE_VERSION = 'v150';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -55,6 +55,7 @@ const PRECACHE = [
   '/assets/images/marque/logo-96.webp', '/assets/images/marque/logo-192.webp',
   // Polices (hébergées dans assets/fonts, plus de Google Fonts)
   '/assets/fonts/archivo-black-latin.woff2', '/assets/fonts/inter-latin-400.woff2', '/assets/fonts/inter-latin-500.woff2', '/assets/fonts/inter-latin-700.woff2',
+  '/assets/fonts/silkscreen-400.woff2',
 ];
 
 // Bibliothèque versionnée (épinglée) : mise en cache si le réseau le permet, sans bloquer l'installation.
