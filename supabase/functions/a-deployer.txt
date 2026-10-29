@@ -1,3 +1,3 @@
 # Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
-# 2026-10-29 : excuse pour le retard dans les MP rattrapés du Secret Santa
+# 2026-10-29 : rattrapage Secret Santa, conversation jamais ouverte (last_read_at -infinity)
 hg-cron

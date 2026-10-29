@@ -499,7 +499,9 @@ async function ssRattrapage(out: Counters, attempts: Attempt[]) {
     let echec = false;
     for (const mb of (membres ?? []).filter((x: any) => x.conversation_id === c.id) as { user_id: string; last_read_at: string | null }[]) {
       // Messages des autres, pas encore lus par ce membre
-      const nonLus = nos.filter((m: any) => m.sender_id !== mb.user_id && (!mb.last_read_at || new Date(mb.last_read_at).getTime() < new Date(m.created_at).getTime()));
+      // « -infinity » (jamais lu) ou date absente : tout est non lu.
+      const lu = mb.last_read_at ? new Date(mb.last_read_at).getTime() : NaN;
+      const nonLus = nos.filter((m: any) => m.sender_id !== mb.user_id && (!Number.isFinite(lu) || lu < new Date(m.created_at).getTime()));
       if (!nonLus.length) continue;
       const dest = gensM.get(mb.user_id);
       if (!aDiscord(dest)) continue;
