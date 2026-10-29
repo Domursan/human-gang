@@ -8,7 +8,7 @@
  *   Un tour de roue fait apparaître une grande roue qui s'arrête sur la vraie valeur, le pion saute case par case
  *   jusqu'à sa nouvelle case, une carte Événement tirée se retourne, l'argent qui change compte jusqu'à sa valeur.
  *   La mise en page est dans assets/espaces/plateaux/destins.css ; ici, le contenu, les actions et les animations.
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe),
  *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, POSITIONS, LIBELLES, legendeHtml, ...).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
@@ -18,6 +18,7 @@ import { esc, initials, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml, legendeHtml, POSITIONS, LIBELLES, NOM_ZONE, zoneDeCase, caseSuivante, pasEntre } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -181,6 +182,7 @@ export function creer(root, ctx) {
   const argentAff = {};                    // argent affiché (suit le compte)
   const sautants = new Set();              // pions en train de sauter (classe is-saut)
   const file = [];                         // scènes à jouer, dans l'ordre
+  const PLAFOND_FILE = 12;                 // nombre maximal de scènes en attente (évite une file qui grossit sans fin)
   let enJeu = false;
   let animGrande = null;                   // animation de la grande roue
   const minuteries = new Map();            // minuterie -> résolution de son attente
@@ -227,8 +229,8 @@ export function creer(root, ctx) {
       vu = snap;
       return;
     }
-    // Une animation déjà en attente est périmée : on ne joue que le dernier changement (les pions se posent tout de suite).
-    if (file.length) file.length = 0;
+    // Les scènes déjà en attente sont conservées (une carte Événement ou une roue ne doit pas disparaître) ;
+    // la file est plafonnée plus bas. Les pions et l'argent se recalent sur l'état réel à la fin (synchroniser).
     const moiUid = monId();
     const mouvements = [];
     Object.keys(snap.cases).forEach((uid) => {
@@ -268,6 +270,7 @@ export function creer(root, ctx) {
         argentAff[uid] = snap.argent[uid];
       }
     });
+    if (file.length > PLAFOND_FILE) file.splice(0, file.length - PLAFOND_FILE);   // au-delà, on abandonne les plus anciennes
     vu = snap;
     if (file.length) jouerFile();
     else if (!enJeu) synchroniser();
@@ -798,6 +801,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -820,6 +825,7 @@ export function creer(root, ctx) {
         dernierTour = tour;
       }
       chat.maj(e);
+      signal.maj(monTour());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -829,6 +835,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono et les animations, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       detruit = true;
       minuteries.forEach((res, t) => { clearTimeout(t); res(); });
       minuteries.clear();

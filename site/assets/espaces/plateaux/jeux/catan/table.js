@@ -6,7 +6,7 @@
  *   Seuls les emplacements permis sont cliquables sur le plateau (sommets, arêtes, tuiles) : calculés ici, avec les
  *   mêmes règles que le serveur. Tout se fait au clavier (Entrée ou Espace ; Échap annule un mode).
  *   La mise en page est dans assets/espaces/plateaux/catan.css ; ici, le contenu et les actions.
- * Dépendances : core.js (esc, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml, brancherChrono,
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml, brancherChrono,
  *   journalHtml, envoyer, moiJoueur, estMonTour, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
@@ -17,6 +17,7 @@ import { esc, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, estMonTour, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauSvg, RESSOURCES, nomTuile } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
@@ -621,6 +622,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -641,6 +644,7 @@ export function creer(root, ctx) {
         dernierTour = tour;
       }
       chat.maj(e);
+      signal.maj(monTour());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -650,6 +654,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

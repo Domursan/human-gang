@@ -80,7 +80,9 @@ export function tableHtml(joueurs, o = {}) {
       ? `<button type="button" class="${classes.join(' ')}" style="${style}" data-cible="${esc(j.user_id)}" aria-label="${esc(etiquette)}" aria-pressed="${o.cible === j.user_id}">${inner}</button>`
       : `<div class="${classes.join(' ')}" style="${style}" role="img" aria-label="${esc(etiquette)}">${inner}</div>`;
   }).join('');
-  return `<section class="lg-table" aria-label="Table de jeu autour du feu" style="--lg-anneau:${esc(o.anneau || '#7E93C9')}">
+  // Beaucoup de joueurs : sièges plus petits pour que les voisins ne se chevauchent pas (CSS : .lg-table--dense / --serre).
+  const taille = n > 20 ? ' lg-table--serre' : n > 12 ? ' lg-table--dense' : '';
+  return `<section class="lg-table${taille}" aria-label="Table de jeu autour du feu" style="--lg-anneau:${esc(o.anneau || '#7E93C9')}">
     <img class="lg-table-feu" src="${feu}" alt="">
     <div class="lg-table-lueur" aria-hidden="true"></div>
     ${sieges}

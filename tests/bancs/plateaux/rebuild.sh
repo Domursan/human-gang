@@ -17,6 +17,8 @@ done
 for m in 131_plateaux_robots 136_nouveaux_jeux_socle 137_nj_devine 140_nj_grilles 141_duels_nouveaux 143_plateaux_cartes 144_catan 145_pictionary 165_plateaux_droits 166_plateaux_droits_internes; do
   psql -d $B -X -q -f $D/../../../supabase/migrations/$m.sql >/dev/null 2>&1
 done
+# Corrections de règles (Blackjack, Pictionary, Monopoly) relevées par l'audit de jouabilité.
+$P -d $B -f $D/../../../supabase/migrations/172_jeux_regles_audit.sql 2>&1 | grep -E "ERROR|LINE"
 $P -d $B -f $D/helpers.sql 2>&1 | grep -E "ERROR"
 # Robot de test du Risk (fonction t_rk_tour, utilisée par s3) : seulement sa définition (lignes 1 à 38 de t_risk.sql),
 # pas les simulations de t_risk.sql, qui durent plusieurs minutes.

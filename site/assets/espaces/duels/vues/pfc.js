@@ -224,7 +224,8 @@ export function creer(root, ctx) {
     maj(e) {
       st.etat = e;
       st.attente = false;
-      cadre.maj(e);
+      // Pierre-feuille-ciseaux : j'ai à agir tant que je n'ai pas choisi mon geste (les deux jouent en même temps).
+      cadre.maj(e, !!e.moi?.joue && e.partie.statut === 'en_cours' && !e.pfc?.mon_choix);
 
       if (!cadre.cote.querySelector('[data-historique]')) {
         cadre.cote.innerHTML = `<h2 class="duels-h3">Lancers</h2>

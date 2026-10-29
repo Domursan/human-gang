@@ -5,19 +5,21 @@
  * quand on meurt. Le HTML n'est réécrit que si son contenu change (pas de saut de page toutes les 4 s).
  * Thème du rôle (version « Horizon ») : couleur d'accent, emblème en filigrane derrière la table, motif dans le panneau
  *   d'action, devise sur la carte du rôle et paysage dessiné en bas de page (themes.js).
- * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte).
+ * Signal « à toi de jouer » (son + titre d'onglet) : commun/tour-signal.js, branché sur doitAgir (actions.js).
+ * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte), commun/tour-signal.js.
  * Exporte : monter.
  */
 import { esc } from '../../../commun/core.js';
 import { icone, pseudo, vignetteRole, pastilleCamp, chrono, libellePhase, estNuit, libelleCause, notifier } from '../ui.js';
 import { tableHtml } from '../table.js';
 import { monterChat } from '../chat.js';
+import { creerSignalTour } from '../../../commun/tour-signal.js';
 import { roleById } from '../roles.js';
 import { themeDe, imagesTheme } from '../themes.js';
 import { erreurTexte } from '../api.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import {
-  typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS,
+  typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS, doitAgir,
 } from './actions.js';
 
 const TITRE_MORT = {
@@ -233,6 +235,7 @@ export function monter(root, s) {
   let surTouche = null;
 
   const chat = monterChat(refs.chat, s, { canaux: canauxPour, titre: 'Discussion' });
+  const signal = creerSignalTour();
 
   /** Thème du rôle : posé une fois par rôle (le Voleur ou le Chien-loup peuvent en changer). */
   function appliquerTheme(role) {
@@ -282,6 +285,7 @@ export function monter(root, s) {
     marquerSieges();
     remplacer(refs.annonce, htmlAnnonce(e));
     remplacer(refs.action, panneauAction(e, st.sel, st.envoi));
+    signal.maj(doitAgir(e));
     remplacer(refs.role, htmlRole(e));
     remplacer(refs.restants, htmlRestants(e));
     rendreJournal(e);
@@ -461,6 +465,7 @@ export function monter(root, s) {
     message(msg) { chat.message(msg); },
     detruire() {
       clearInterval(timer);
+      signal.arreter();
       fermerSang(false);
       if (fondEl) { fondEl.remove(); fondEl = null; }
       document.body.classList.remove('lg-spectateur');

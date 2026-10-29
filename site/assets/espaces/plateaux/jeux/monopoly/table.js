@@ -8,7 +8,7 @@
  *   Animations (dés qui roulent, carte qui apparaît, achat) : seulement quand l'état change, jamais au rafraîchissement.
  *   La mise en page est dans assets/espaces/plateaux/monopoly.css ; ici, le contenu, les actions et les animations.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les saisies restent en place).
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe, pseudoHtml, texteSur),
  *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, pointCase), ../../../../commun/grille-clavier.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
@@ -18,6 +18,7 @@ import { esc, initials, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe, pseudoHtml, texteSur } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml, pointCase } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
@@ -806,6 +807,8 @@ export function creer(root, ctx) {
 
   /* ---------- Chat et contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -833,6 +836,7 @@ export function creer(root, ctx) {
       premiere = false;
       if (avant !== undefined && e.jeu?.actif !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
+      signal.maj(monTour());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -842,6 +846,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, les déplacements et le chat ; retire la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       clearTimeout(minuteurTitre);
       pions.forEach((p) => { p.marche = true; });

@@ -6,7 +6,7 @@
  *   Séparer) pour la main active ; résultats de la dernière manche, classement aux jetons, journal, chat
  *   (à droite sur ordinateur, en tiroir sur téléphone). Mise en page : assets/espaces/plateaux/blackjack.css.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et le curseur restent en place).
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml,
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml,
  *   brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
@@ -15,6 +15,7 @@ import { esc, initials, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { tapisHtml, valeurCarte } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -363,6 +364,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -381,6 +384,7 @@ export function creer(root, ctx) {
         dernierTour = tour;
       }
       chat.maj(e);
+      signal.maj(monTour());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -390,6 +394,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

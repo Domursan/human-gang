@@ -7,14 +7,17 @@
  *   La mise en page est dans assets/espaces/nom-de-code/table.css ; ici, seulement le contenu et les actions.
  *   La grille est construite une fois : chaque mise à jour change les classes et le texte des cartes existantes
  *   (le focus reste sur la même carte).
+ * Signal « à toi de jouer » (son + titre d'onglet) : commun/tour-signal.js, quand je dois agir (espion qui donne l'indice,
+ *   agent qui cherche).
  * Dépendances : core.js (esc, initials, toast), nom-de-code/api.js (ndc, erreurTexte, EQUIPES),
- *   ./chat.js (creerChat).
+ *   ./chat.js (creerChat), commun/tour-signal.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi } ; suivi = retour de suivrePartie (rafraichir, secondesRestantes, etat).
  */
 import { esc, initials, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
+import { creerSignalTour } from '../../../commun/tour-signal.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 
 const RAYON = 16;
@@ -544,6 +547,7 @@ export function creer(root, ctx) {
   peindreNonLus();
   peindreChat();
   const minuterie = setInterval(tic, 250);
+  const signal = creerSignalTour();
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -563,6 +567,8 @@ export function creer(root, ctx) {
       }
       dernierTour = tour;
       chat.maj(e);
+      // J'ai à agir : espion au tour de donner l'indice, ou agent au tour de chercher (pas si je suis parti).
+      signal.maj(!jeAiParti() && e.partie.statut === 'en_cours' && (estEspionAuTour() || estAgentAuTour()));
       tic();
     },
     /** Message du chat (ancien ou nouveau). */
@@ -573,6 +579,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono et retire la table de la page. */
     detruire() {
       clearInterval(minuterie);
+      signal.arreter();
       chat.detruire();
       el.remove();
     },

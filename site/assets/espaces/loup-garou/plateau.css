@@ -126,6 +126,13 @@
 .lg-pl-restants { order: 7; }
 .lg-pl-journal { order: 8; }
 
+/* Téléphone : le panneau d'action (vote, cible, pouvoir) passe avant la table, sinon il reste hors de l'écran. */
+@media (max-width: 899px) {
+  .lg-pl-action-zone { order: 2; }
+  .lg-pl-table { order: 3; }
+  .lg-pl-annonce-zone { order: 4; }
+}
+
 /* ---------- Ordinateur : table à gauche, colonne de droite, chat et journal dessous ---------- */
 @media (min-width: 900px) {
   .lg-pl {

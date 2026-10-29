@@ -117,6 +117,11 @@ button.lg-siege:disabled { cursor: default; }
 button.lg-siege:focus-visible { outline: none; }
 button.lg-siege:focus-visible .lg-siege-av { outline: 3px solid var(--sand); outline-offset: 2px; }
 @container (max-width: 420px) { .lg-siege-sous { display: none; } }
+/* Plus de 12 joueurs : sièges plus étroits (les voisins sur le cercle se touchent sinon). Plus de 20 : plus serrés encore. */
+.lg-table--dense .lg-siege { width: 13%; --lg-av: clamp(32px, 7.5cqi, 40px); }
+.lg-table--dense .lg-siege-sous { display: none; }
+.lg-table--serre .lg-siege { width: 10%; --lg-av: clamp(26px, 6cqi, 32px); }
+.lg-table--serre .lg-siege-buche { padding-left: 3px; padding-right: 3px; }
 
 /* ---------- Écran ensanglanté (mort) ---------- */
 .lg-sang { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; overflow: auto;

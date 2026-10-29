@@ -65,6 +65,18 @@ export function typeAction(e) {
   return e?.moi?.action?.type || null;
 }
 
+/**
+ * Vrai si un panneau d'action m'attend maintenant : vote pas encore donné, ou action (nuit, étape) pas encore faite.
+ * Sert au signal « à toi de jouer » (vues/plateau.js). Même règle que panneauAction (formulaire ou « C'est noté »).
+ */
+export function doitAgir(e) {
+  const t = typeAction(e);
+  if (!t || !e?.moi) return false;
+  if (t === 'vote') return peutVoter(e) && !comptesVote(e).dernier.has(e.moi.user_id);
+  const a = e.moi.action;
+  return !!a && !!FICHE[t] && !a.fait;
+}
+
 /** Votes du jour de la manche courante (le dernier vote de chacun compte). */
 export function comptesVote(e) {
   const manche = e?.partie?.manche;

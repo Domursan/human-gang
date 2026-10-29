@@ -7,7 +7,7 @@
  *   Une carte Vision reçue s'affiche dans une fenêtre (maquette OmbresVisionTel).
  *   La mise en page est dans assets/espaces/plateaux/shadow.css ; les dessins dans ./plateau.js.
  *   Chaque zone n'est reconstruite que si son HTML change (le focus et les listes restent en place).
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau,
  *   envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
@@ -17,6 +17,7 @@ import { esc } from '../../../../commun/core.js';
 import { plat, nomDe, imageExiste } from '../../api.js';
 import { avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { LIEUX, GROUPES, PV_MAX, CAMP_LIBELLE, campDe, voisinsDe, plateauHtml, pisteHtml, medaillonsHtml, persoVisuelHtml } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -893,6 +894,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -934,6 +937,7 @@ export function creer(root, ctx) {
       if (blesses.length) refs.annonce.textContent = texteBlesses(blesses) + '.';
       if (avant !== undefined && e.partie.tour !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
+      signal.maj(monTour() || (phase() === 'vision' && !!monId() && jeu().vision?.pour === monId() && partieEnCours()));
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -943,6 +947,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       arretDes?.();
       grand.removeEventListener('change', surEcran);

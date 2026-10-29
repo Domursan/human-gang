@@ -10,7 +10,7 @@
  *   bloquent jamais une action. Rien ne bouge si l'on demande moins de mouvement (prefers-reduced-motion).
  *   Les zones ne sont reconstruites que si leur contenu change. Les choix (territoires, dés, curseurs, cartes)
  *   se mettent à jour sur place, pour garder le focus et les saisies en cours.
- * Dépendances : core.js (esc, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml,
  *   pseudoHtml), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, marquer, fleche, animations),
  *   ../../../../commun/grille-clavier.js (voisinSpatial).
@@ -21,6 +21,7 @@ import { esc, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml, pseudoHtml } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml, marquer, fleche, animerMouvement, animerChutes, animerCompteur } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
@@ -1129,6 +1130,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -1160,6 +1163,7 @@ export function creer(root, ctx) {
       if (dernierActif !== null && actif !== dernierActif && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       dernierActif = actif;
       chat.maj(e);
+      signal.maj(monTour());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -1169,6 +1173,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

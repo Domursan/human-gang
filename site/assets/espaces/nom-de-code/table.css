@@ -216,7 +216,8 @@
   .ndc-carte-etiq { font-size: 12px; padding: 1px 4px; letter-spacing: 0; }
   .ndc-carte-etiq svg { display: none; }
   .ndc-carte-icone svg { width: 18px; height: 18px; }
-  .ndc-carte-tokens { top: 2px; right: 2px; }
+  /* Jetons : ils passent à la ligne dans la carte (au lieu de déborder et d'être coupés au bord). */
+  .ndc-carte-tokens { top: 2px; right: 2px; max-width: calc(100% - 4px); flex-wrap: wrap; justify-content: flex-end; }
   .ndc-jeton { width: 24px; height: 24px; font-size: 12px; letter-spacing: -.3px; border-width: 1px; }
   .ndc-jeton + .ndc-jeton { margin-left: -8px; }
   .ndc-jeton.is-moi { width: 26px; height: 26px; }

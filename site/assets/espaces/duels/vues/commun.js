@@ -4,12 +4,14 @@
  * bandeau de fin de manche, avatars et chrono. Les tables (vues/p4.js, vues/morpion.js, vues/mastermind.js) s'en servent
  * pour avoir le même cadre ; elles ne dessinent que leur plateau.
  * Classes CSS : assets/espaces/duels/table.css (cadre), assets/espaces/duels/duels.css (avatar, chrono, chat).
- * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite), ./chat.js (creerChat).
+ * Signal « à toi de jouer » (son + titre d'onglet) : commun/tour-signal.js, branché sur le cadre (maj / detruire).
+ * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite), ./chat.js (creerChat), ../../../commun/tour-signal.js.
  * Exporte : avatarHtml, couleurJoueur, nomJoueur, creerCadre.
  */
 import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, estInvite } from '../api.js';
 import { creerChat } from './chat.js';
+import { creerSignalTour } from '../../../commun/tour-signal.js';
 
 /** Couleur d'affichage d'un joueur : couleur de profil, gris pour un invité ou le robot. */
 export function couleurJoueur(j) {
@@ -46,6 +48,7 @@ const CIRC = 2 * Math.PI * RAYON;
  * @param {{classe?: string}} [o] classe ajoutée au cadre (ex. 'duels-p4').
  * @returns {{plateau: HTMLElement, cote: HTMLElement, maj(etat): void, message(msg): void, detruire(): void,
  *   joueurMoi(etat): object|null, adversaire(etat): object|null, monTour(etat): boolean}}
+ *   maj(etat, aAgir?) : aAgir (booléen) dit si j'ai à agir maintenant ; par défaut, c'est mon tour (partie.tour === moi).
  *   plateau : où la vue dessine son jeu ; cote : colonne sous le journal pour des infos propres au jeu.
  */
 export function creerCadre(root, ctx, { classe = '' } = {}) {
@@ -81,6 +84,7 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
     ouvrirChat: q('[data-ouvrir-chat]'), nonlus: q('[data-nonlus]'), abandon: q('[data-abandon]'), chatBoite: q('[data-chat-boite]'),
   };
   const chat = creerChat(q('[data-chat]'), { code: ctx.code, moi: ctx.moi });
+  const signal = creerSignalTour();
   const st = { etat: null, mancheVue: null, nonlus: 0, panneauOuvert: false, timerManche: null };
 
   const joueurMoi = (e) => (e?.joueurs || []).find((j) => j.user_id === e?.moi?.user_id) || null;
@@ -137,7 +141,7 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
     cote: el.cote,
     joueurMoi, adversaire, monTour,
     /** Met à jour la barre, le statut, le journal et le chat. */
-    maj(e) {
+    maj(e, aAgir = monTour(e)) {
       st.etat = e;
       const p = e.partie;
       const js = e.joueurs || [];
@@ -166,6 +170,7 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
       chat.maj(e);
       peindreChrono();
       montrerManche(e);
+      signal.maj(!!aAgir);
     },
     /** Texte de statut sous la barre (lu par les lecteurs d'écran). */
     statut(t) { el.statut.textContent = t || ''; },
@@ -177,6 +182,7 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
     },
     detruire() {
       clearInterval(tic); clearTimeout(st.timerManche);
+      signal.arreter();
       try { chat.detruire(); } catch { /* sans effet */ }
       root.innerHTML = '';
     },

@@ -200,14 +200,21 @@ export function imagePlateau(jeuId, nom) {
   return `/assets/images/plateaux/${jeuId}/${nom}.webp`;
 }
 
+/** Suivis (une table = un suivi) dont un envoi ou sa relecture est en cours : pas de second envoi. */
+const envoisEnCours = new WeakSet();
+
 /**
- * Désactive le bouton, exécute fn, affiche une erreur en toast, réactive le bouton, puis relit l'état.
+ * Désactive le bouton, exécute fn, affiche une erreur en toast, puis relit l'état et n'autorise un nouvel envoi
+ * qu'une fois la relecture terminée (sinon la table serait reconstruite depuis un état périmé).
+ * Un envoi déjà en cours sur la même table est ignoré.
  * @param {HTMLButtonElement} bouton bouton à désactiver pendant l'envoi.
  * @param {Function} fn action asynchrone (appel plat.*).
  * @param {{ rafraichir: Function }} suivi objet renvoyé par suivrePartie.
- * @returns {Promise<boolean>} vrai si l'action a réussi.
+ * @returns {Promise<boolean>} vrai si l'action a réussi (faux aussi si l'envoi a été ignoré).
  */
 export async function envoyer(bouton, fn, suivi) {
+  if (suivi && envoisEnCours.has(suivi)) return false;
+  if (suivi) envoisEnCours.add(suivi);
   if (bouton) bouton.disabled = true;
   let ok = true;
   try {
@@ -216,8 +223,12 @@ export async function envoyer(bouton, fn, suivi) {
     ok = false;
     toast(erreurTexte(e), 'error');
   } finally {
-    if (bouton) bouton.disabled = false;
-    suivi?.rafraichir?.();
+    try {
+      await suivi?.rafraichir?.();
+    } finally {
+      if (suivi) envoisEnCours.delete(suivi);
+      if (bouton) bouton.disabled = false;
+    }
   }
   return ok;
 }

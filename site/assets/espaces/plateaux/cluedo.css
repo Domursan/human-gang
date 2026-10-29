@@ -182,8 +182,9 @@ button.ch-room { font: inherit; }
   .ch-panneau { position: sticky; bottom: 0; z-index: 20; max-height: 42vh; overflow-y: auto; box-shadow: 0 -10px 24px rgba(0, 0, 0, .45); }
   .ch-panneau.is-montrer { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 78vh; overflow-y: auto; border-radius: 20px 20px 0 0; z-index: 60; }
   .ch-pied .ch-btn { flex: 1 1 140px; }
-  .ch-choix { flex-wrap: nowrap; overflow-x: auto; }
-  .ch-carte-choix { flex: 0 0 110px; }
+  /* Téléphone : les 3 cartes proposées se partagent la largeur du panneau (sinon la 3e est cachée). */
+  .ch-choix { flex-wrap: wrap; }
+  .ch-carte-choix { flex: 1 1 0; min-width: 0; max-width: 110px; width: auto; }
   .ch-tiroir-chat { display: block; }
   .ch-chat-zone { display: none; }
   .ch-bloc-titre { font-size: 15px; }

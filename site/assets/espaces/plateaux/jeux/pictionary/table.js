@@ -9,7 +9,7 @@
  *   le mot du tour précédent et son dessin s'affichent quelques secondes.
  *   Bandeau (manche, dessinateur, chrono), scores (points ; coche pour ceux qui ont trouvé), chat à droite
  *   (en tiroir sur téléphone). Mise en page : assets/espaces/plateaux/pictionary.css.
- * Dépendances : core.js (esc, toast, sb), ../../api.js (plat, erreurTexte), ../../vues/commun.js (avatarHtml, pseudoHtml,
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast, sb), ../../api.js (plat, erreurTexte), ../../vues/commun.js (avatarHtml, pseudoHtml,
  *   joueurDe, moiJoueur, brancherChrono, envoyer), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (toile, palette).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
@@ -21,6 +21,7 @@ import { esc, toast, sb } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { avatarHtml, pseudoHtml, joueurDe, moiJoueur, brancherChrono, envoyer } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { LARGEUR, HAUTEUR, FOND, PALETTE, EPAISSEURS, GOMME, tracerToile, indiceHtml, nombreCachees, arrondi, borne, couleurValide } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -621,7 +622,10 @@ export function creer(root, ctx) {
     refs.quitter.disabled = !moiJoueur(etat);
     verifierRevele();
     chat?.maj(etat);
+    signal.maj(peutDessiner());
   }
+
+  const signal = creerSignalTour();
 
   return {
     maj,
@@ -630,6 +634,7 @@ export function creer(root, ctx) {
       chat?.message(m);
     },
     detruire() {
+      signal.arreter();
       clearInterval(tEnvoi);
       clearInterval(tSauvegarde);
       clearTimeout(timerRevele);

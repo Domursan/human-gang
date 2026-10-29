@@ -857,7 +857,11 @@ export function creer(root, ctx) {
     /** Nouvel état : barre et chat via le cadre, puis la vue de la phase. */
     maj(e) {
       st.etat = e;
-      cadre.maj(e);
+      // Bataille : en placement, j'ai à agir tant que ma flotte n'est pas prête ; en jeu, c'est mon tour de tirer.
+      const aAgir = e.partie.phase === 'placement'
+        ? !!e.moi?.joue && e.partie.statut === 'en_cours' && !moiJ(e)?.pret
+        : undefined;
+      cadre.maj(e, aAgir);
       let vue;
       if (e.partie.phase === 'placement') {
         vue = !e.moi?.joue ? 'spectateur-placement' : (moiJ(e)?.pret ? 'attente' : 'saisie');

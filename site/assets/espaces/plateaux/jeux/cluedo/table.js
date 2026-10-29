@@ -6,7 +6,7 @@
  *   historique des hypothèses, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
  *   La mise en page est dans assets/espaces/plateaux/cluedo.css ; ici, le contenu et les actions.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les listes restent en place).
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml),
  *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
@@ -16,6 +16,7 @@ import { esc, initials, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
+import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
@@ -569,6 +570,8 @@ export function creer(root, ctx) {
 
   /* ---------- Contrat de la vue ---------- */
 
+  const signal = creerSignalTour();
+
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
@@ -585,6 +588,7 @@ export function creer(root, ctx) {
       rendreJournal();
       if (avant !== undefined && e.jeu?.actif !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
+      signal.maj(monTour() || jeMontre());
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -594,6 +598,7 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
+      signal.arreter();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

@@ -6,6 +6,7 @@
  *   terminee / annulee → vues/fin.js. Un spectateur (duel public) voit la même table, sans pouvoir jouer.
  * La vue n'est recréée que si le statut change ; sinon on appelle vue.maj(etat).
  * Les messages du chat (anciens puis nouveaux) sont passés à la vue par vue.message(msg).
+ * Invité (sans temps réel) : les nouveaux messages sont relevés toutes les 4 s (releverMessages).
  * Duel en attente où je ne joue pas (défi reçu, code partagé) : renvoie vers #rejoindre/CODE.
  * Contrat des vues : export function creer(root, ctx) → { maj(etat), message(msg), detruire() },
  *   ctx = { code, naviguer, moi, suivi } (suivi : rafraichir, secondesRestantes, etat).
@@ -69,13 +70,36 @@ export async function afficher(root, { code, naviguer, moi }) {
   let historique = null;         // chargement unique des anciens messages
   const msgs = [];               // tous les messages connus, du plus ancien au plus récent
   const vus = new Set();         // ids déjà passés (évite les doublons temps réel / historique)
+  let plusRecent = 0;            // id du plus récent message reçu (point de départ de la relève invité)
+  let sondage = null;            // relève périodique des messages, pour l'invité (pas de temps réel)
+  let relevant = false;          // une relève est en cours
 
   /** Envoie un message à la vue courante (ou le garde pour la prochaine vue). */
   function ajouterMessage(m) {
     if (!m || vus.has(m.id)) return;
     vus.add(m.id);
     msgs.push(m);
+    plusRecent = Math.max(plusRecent, m.id);
     if (courant && !charge) courant.vue.message?.(m);
+  }
+
+  /** Invité : pas de temps réel, on relève les nouveaux messages toutes les 4 s (même chemin que le temps réel). */
+  async function releverMessages() {
+    const partieId = dernier?.partie?.id;
+    if (fini || relevant || !partieId || document.hidden) return;
+    relevant = true;
+    try {
+      const liste = await messages(partieId, plusRecent, code);
+      if (!fini) [...liste].sort((a, b) => a.id - b.id).forEach(ajouterMessage);
+    } catch (err) {
+      console.warn('[duels] relève des messages', err);
+    } finally {
+      relevant = false;
+    }
+  }
+  function demarrerReleve() {
+    if (sondage || fini || !estInvite()) return;
+    sondage = setInterval(releverMessages, 4000);
   }
 
   /** Charge les anciens messages une seule fois, dès que la partie est connue. */
@@ -124,6 +148,7 @@ export async function afficher(root, { code, naviguer, moi }) {
       if (fini) return;
       dernier = e;
       chargerHistorique(e?.partie?.id);
+      demarrerReleve();
       if (courant && courant.nom === vuePour(e) && e?.moi && !charge) courant.vue.maj(e);
       else aligner();
     },
@@ -135,6 +160,7 @@ export async function afficher(root, { code, naviguer, moi }) {
 
   return () => {
     fini = true;
+    clearInterval(sondage);
     try { suivi.arreter(); } catch { /* sans effet */ }
     try { courant?.vue.detruire?.(); } catch { /* sans effet */ }
   };

@@ -249,7 +249,10 @@ export function creer(root, ctx) {
     /** Nouvel état : barre et chat via le cadre, puis plateau et colonne latérale. */
     maj(e) {
       st.etat = e;
-      cadre.maj(e);
+      // Mastermind : j'ai à agir tant que mon code n'est pas choisi (phase « codes ») ou que je n'ai pas fini ma manche.
+      const aAgir = !!e.moi?.joue && e.partie.statut === 'en_cours'
+        && (e.partie.phase === 'codes' ? !e.mastermind?.mon_code_pret : !termine(e));
+      cadre.maj(e, aAgir);
       if (st.phaseVue !== e.partie.phase) { st.phaseVue = e.partie.phase; st.brouillon = vide(); }
       const peut = !!e.moi?.joue && e.partie.statut === 'en_cours';
       let statut = '';

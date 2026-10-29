@@ -138,9 +138,17 @@ export function creerSalon({
     let derniereLecture = 0;      // instant (Date.now) de la dernière relecture lancée
     let attente = null;           // regroupe les signaux temps réel rapprochés en une seule relecture
 
+    let suivante = null;          // relecture demandée pendant une autre : promesse résolue quand elle est faite
     const rafraichir = async () => {
       if (!actif) return;
-      if (enCours) { relire = true; return enCours; }
+      // Une lecture lancée avant la demande peut être périmée : on attend la relecture qui suit.
+      if (enCours) {
+        relire = true;
+        if (!suivante) {
+          suivante = enCours.then(() => new Promise((ok) => { setTimeout(() => ok(enCours || null), 0); })).then((p) => p);
+        }
+        return suivante;
+      }
       derniereLecture = Date.now();
       enCours = (async () => {
         try {
@@ -156,6 +164,7 @@ export function creerSalon({
           onErreur?.(err);
         } finally {
           enCours = null;
+          suivante = null;
           if (relire && actif) { relire = false; rafraichir(); }
         }
       })();
