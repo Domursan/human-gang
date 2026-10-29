@@ -193,7 +193,7 @@ export function creer(root, ctx) {
     } else if (plusieurs) {
       sous = `Score : ${js.find((j) => j.place === 1)?.manches ?? 0} – ${js.find((j) => j.place === 2)?.manches ?? 0}`;
     }
-    bandeau(d.gagnant ? 'Manche gagnée !' : 'Manche nulle', sous);
+    bandeau(!d.gagnant ? 'Manche nulle' : issue === 'perdant' ? 'Manche perdue' : 'Manche gagnée !', sous);
     if (issue === 'gagnant' && motionAllowed()) confettis();
   }
 
