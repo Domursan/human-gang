@@ -31,7 +31,7 @@ import {
   ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP, ICON_MENU, ICON_SEARCH, ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD,
   ICON_STATUT,
 } from './icons.js';
-import { bindRechercheLien } from './recherche-lien.js';
+import { bindRechercheLien, ouvreRecherche } from './recherche-lien.js';
 import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 import { MENUS, menuKey } from './menu-def.js';
@@ -48,6 +48,9 @@ const NAV_SHORT = { membre: 'Annuaire', recap: 'Récap de l’année' };
 
 /** Vrai si le lien est accessible (sans profil : aucun lien de page). */
 // strict : la page doit être déclarée dans hg_pages (sinon masquée, même si canAccess laisse passer les pages inconnues).
+/** Couleur de la traînée arc-en-ciel de chaque menu (pastille glissante de la barre, refonte Pixel Pop). */
+const MENU_C = { cartes: '#FBD32D', irl: '#FCA301', jeux: '#2FD16B', calendrier: '#3D7BFF', autres: '#8B5CF6' };
+const menuC = (id) => ` style="--menu-c: ${MENU_C[id] || 'var(--esp)'}"`;
 const allowed = (it, profile) => !!profile && (!it.page || canAccess(it.page)) && (!it.strict || !!pageLabel(it.page));
 
 /**
@@ -136,23 +139,49 @@ function navHtml(profile) {
       if (!allowed(m, profile)) return '';
       const inner = JEUX_ITEMS.filter((it) => !it.section || sectionVisible(it.section, profile)).map(linkHtml).join('');
       return `<div class="nav-group" data-menu="${m.id}">
-        <button class="nav-top${isHere(m.href) ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}${ICON_CHEVRON}</button>
+        <button class="nav-top${isHere(m.href) ? ' is-current' : ''}"${menuC(m.id)} type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}${ICON_CHEVRON}</button>
         <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
       </div>`;
     }
     if (m.href) {
       if (!allowed(m, profile)) return '';
-      return `<a class="nav-top" href="${esc(m.href)}"${curAttr(m.href)}>${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}</a>`;
+      return `<a class="nav-top" href="${esc(m.href)}"${menuC(m.id)}${curAttr(m.href)}>${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}</a>`;
     }
     const items = m.auto ? otherItems() : m.items;
     const inner = itemsHtml(items, m.id, profile);
     if (!inner) return '';
     const on = items.some((it) => (it.href && isHere(it.href)) || it.sub?.some((s) => isHere(s.href)));
     return `<div class="nav-group" data-menu="${m.id}">
-        <button class="nav-top${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.id) || m.label)}${ICON_CHEVRON}</button>
+        <button class="nav-top${on ? ' is-current' : ''}"${menuC(m.id)} type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.id) || m.label)}${ICON_CHEVRON}</button>
         <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
       </div>`;
   }).join('');
+}
+
+/* ---------- Pastille glissante (refonte Pixel Pop) ---------- */
+
+/** Entrée de la barre qui correspond à la page affichée (ou null). */
+const navCourant = (header) => header.querySelector('.nav .nav-top.is-current, .nav .nav-top[aria-current="page"]');
+/**
+ * Glisse la pastille de couleur derrière une entrée de la barre (survol, focus), ou derrière l'entrée de la page
+ * affichée ; cachée sans entrée et dans le menu replié du téléphone. Couleur : --menu-c de l'entrée.
+ * @param {HTMLElement} header En-tête.
+ * @param {HTMLElement|null} [el] Entrée visée (par défaut celle de la page affichée).
+ */
+function movePill(header, el = navCourant(header)) {
+  const pill = header.querySelector('.nav-pill');
+  const box = header.querySelector('.container');
+  if (!pill || !box) return;
+  header.querySelectorAll('.nav-top.is-pill').forEach((x) => { if (x !== el) x.classList.remove('is-pill'); });
+  if (!el || !el.offsetParent || matchMedia('(max-width: 760px)').matches) { pill.hidden = true; return; }
+  const r = el.getBoundingClientRect(), c = box.getBoundingClientRect();
+  const montre = pill.hidden;
+  pill.hidden = false;
+  if (montre) pill.classList.add('no-anim'); // première apparition : sur place, sans glisser depuis la gauche
+  Object.assign(pill.style, { left: `${r.left - c.left}px`, top: `${r.top - c.top}px`, width: `${r.width}px`, height: `${r.height}px`,
+    background: getComputedStyle(el).getPropertyValue('--menu-c').trim() || 'var(--esp)' });
+  if (montre) requestAnimationFrame(() => pill.classList.remove('no-anim'));
+  el.classList.add('is-pill');
 }
 
 /* ---------- Menus déroulants ---------- */
@@ -210,6 +239,10 @@ function bindMenus(header) {
   });
   // Survol (ordinateur) : le menu s'ouvre à l'entrée, se ferme peu après la sortie.
   let leaveTimer = 0;
+  // Pastille glissante : suit l'entrée survolée ou qui a le focus, revient sur la page affichée en sortant de la barre
+  nav.addEventListener('pointerover', (e) => { const t = e.target.closest('.nav-top'); if (t) movePill(header, t); });
+  nav.addEventListener('pointerleave', () => movePill(header));
+  nav.addEventListener('focusin', (e) => { const t = e.target.closest('.nav-top'); if (t) movePill(header, t); });
   nav.addEventListener('pointerover', (e) => {
     if (!hoverMode() || e.pointerType !== 'mouse') return;
     const g = e.target.closest('.nav-group');
@@ -256,7 +289,7 @@ function bindWindow() {
   const cur = () => document.querySelector('.site-header');
   // Clic hors de la barre : les menus déroulants se ferment.
   document.addEventListener('click', (e) => { const h = cur(); if (h && !h.querySelector('.nav')?.contains(e.target)) closeMenus(h); });
-  window.addEventListener('resize', () => { const h = cur(); if (h?.classList.contains('fan-open')) layoutFan(h); });
+  window.addEventListener('resize', () => { const h = cur(); if (h?.classList.contains('fan-open')) layoutFan(h); if (h) movePill(h); });
   // Ancre changée sur la même page (ex. /pages/cartes/cartes.html#boutique) : le menu marque l'entrée courante.
   window.addEventListener('hashchange', () => { if (cur()) updateNav(); });
 }
@@ -360,7 +393,9 @@ function setFan(header, open, { focus = false } = {}) {
 
 /** Contenu de la photo : avatar du membre (la pastille des non-lus est à côté), ou « Connexion » pour un visiteur. */
 function meInner(profile) {
-  return `${avatarHtml(profile, 40)}<span class="nav-me-badge" hidden></span>`;
+  // Étiquette « ADMIN » sous la photo (refonte Pixel Pop), hors vue « comme un membre »
+  const tag = profile.is_admin && !viewAsActive() ? '<span class="nav-me-tag" aria-hidden="true">Admin</span>' : '';
+  return `${avatarHtml(profile, 40)}<span class="nav-me-badge" hidden></span>${tag}`;
 }
 
 /* ---------- Mises à jour publiques ---------- */
@@ -389,6 +424,7 @@ export function updateNav(profile = getCachedProfile()) {
   const nav = header?.querySelector('.nav');
   if (!nav) return;
   nav.innerHTML = navHtml(profile);
+  requestAnimationFrame(() => movePill(header));
   const toggle = header.querySelector('.nav-toggle');
   if (toggle) {
     toggle.hidden = !nav.querySelector('.nav-top');
@@ -452,15 +488,18 @@ export function renderHeader(profile, { nav = true } = {}) {
        </span>`
     : `<a class="nav-icon nav-help" href="/pages/infos/aide.html"${curAttr('/pages/infos/aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>
        <a class="nav-account is-guest" href="/pages/compte/compte.html"${curAttr('/pages/compte/compte.html')}>Connexion</a>`;
+  // Recherche en pastille « Rechercher Ctrl K » (ordinateur ; au téléphone elle reste dans le menu de la photo)
+  const search = `<button class="nav-search-pill" type="button" aria-haspopup="dialog" aria-label="Rechercher (Ctrl ou Cmd + K)">${ICON_SEARCH}<span>Rechercher</span><kbd>Ctrl</kbd><kbd>K</kbd></button>`;
   const logo = logoAttrs();
   const header = document.createElement('header');
   header.className = 'site-header';
   header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>
     <div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
+      <span class="nav-pill" aria-hidden="true" hidden></span>
       <a class="brand" href="/pages/compte/accueil.html"><img class="brand-logo" src="${esc(logo.src)}"${logo.srcset ? ` srcset="${esc(logo.srcset)}" sizes="44px"` : ''} width="44" height="44" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
-      <div class="nav-tools">${toggle}${right}</div>
+      <div class="nav-tools">${profile ? search : ''}${toggle}${right}</div>
     </div>`;
   // Cible du lien d'évitement : le contenu principal de la page (tabindex -1 : atteignable par script et par le lien)
   const main = document.getElementById('app');
@@ -477,6 +516,8 @@ export function renderHeader(profile, { nav = true } = {}) {
   });
   bindMenus(header);
   bindWindow();
+  header.querySelector('.nav-search-pill')?.addEventListener('click', ouvreRecherche);
+  requestAnimationFrame(() => movePill(header));
   // Échap : ferme le menu en arc, sinon le menu replié, et rend le focus au bouton qui les a ouverts
   header.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
