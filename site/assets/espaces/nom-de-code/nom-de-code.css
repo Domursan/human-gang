@@ -48,3 +48,50 @@ body.ndc-page {
   .ndc-app *, .ndc-app *::before, .ndc-app *::after { animation: none !important; transition: none !important; }
 }
 body.ndc-calme .ndc-app *, body.ndc-calme .ndc-app *::before, body.ndc-calme .ndc-app *::after { animation: none !important; transition: none !important; }
+
+/* ---------- Effets (vues/effets.js) : calques sur body, hors .ndc-app ----------
+   Posés sans interaction (pointer-events:none), durée inférieure à 3 s, retirés par effets.js.
+   Les calques ne sont pas créés en mouvement réduit ou avec body.ndc-calme ; les règles ci-dessous le redoublent. */
+.ndc-fx-voile { position: fixed; inset: 0; z-index: 8990; pointer-events: none; }
+.ndc-fx-flash { background: rgba(229, 72, 77, .5); animation: ndcFxFlash 1s ease-out forwards; }
+@keyframes ndcFxFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+.ndc-fx-banniere { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 9002; pointer-events: none; white-space: nowrap;
+  font: 400 clamp(26px, 5vw, 52px) 'Archivo Black', Inter, sans-serif; padding: 14px 26px; border-radius: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+  opacity: 0; animation: ndcFxBan 2.4s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.ndc-fx-banniere small { display: block; font: 700 14px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; text-align: center; margin-top: 4px; }
+.ndc-fx-banniere.jaune { background: var(--ndc-jaune); color: #2A1C00; }
+.ndc-fx-banniere.rose { background: var(--ndc-rose); color: #FFFFFF; }
+.ndc-fx-banniere.rouge { background: #E5484D; color: #FFFFFF; }
+@keyframes ndcFxBan {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  30% { transform: translate(-50%, -50%) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.ndc-fx-grand { position: fixed; inset: 0; z-index: 9100; display: grid; place-items: center; padding: 16px; background: rgba(8, 8, 12, .82);
+  pointer-events: none; animation: ndcFxFond 2.6s ease forwards; }
+@keyframes ndcFxFond { 0% { opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.ndc-fx-grand div { text-align: center; font-family: 'Oswald', 'Archivo Black', sans-serif; text-transform: uppercase; color: #F2EFEA; }
+.ndc-fx-grand b { display: block; font-weight: 700; font-size: clamp(36px, 11vw, 150px); line-height: 1.05; white-space: nowrap;
+  text-shadow: 0 6px 30px rgba(226, 199, 126, .5); animation: ndcFxGrossit .5s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes ndcFxGrossit { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.ndc-fx-grand small { display: block; font: 700 clamp(13px, 2vw, 18px) Inter, sans-serif; letter-spacing: .14em; color: #E2C77E; }
+
+.ndc-fx-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none; animation: ndcFxTombe linear forwards; }
+@keyframes ndcFxTombe { to { transform: translateY(105vh) rotate(720deg); } }
+
+.ndc-fx-brille { animation: ndcFxBrille 1.2s ease-in-out 2; }
+@keyframes ndcFxBrille { 50% { text-shadow: 0 0 30px rgba(226, 199, 126, .9); } }
+
+.ndc-fx-choc { animation: ndcFxChoc .5s linear 2; }
+@keyframes ndcFxChoc { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+
+body.ndc-calme .ndc-fx-voile, body.ndc-calme .ndc-fx-banniere, body.ndc-calme .ndc-fx-grand, body.ndc-calme .ndc-fx-conf { display: none !important; }
+body.ndc-calme .ndc-fx-flash, body.ndc-calme .ndc-fx-brille, body.ndc-calme .ndc-fx-choc { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ndc-fx-flash, .ndc-fx-brille, .ndc-fx-choc, .ndc-fx-banniere, .ndc-fx-grand b { animation: none !important; }
+  .ndc-fx-voile, .ndc-fx-banniere, .ndc-fx-grand, .ndc-fx-conf { display: none !important; }
+}

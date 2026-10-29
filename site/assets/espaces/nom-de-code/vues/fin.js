@@ -3,13 +3,17 @@
  * Rôle : titre selon le résultat (et mon équipe), raison de la fin, carte secrète complète 5 × 5 (mots trouvés
  * marqués d'une coche), mes Paillettes et mes badges (membres seulement), historique des indices par équipe,
  * équipes avec rôle, mots trouvés et Paillettes, puis revanche ou retour. Le chat reste ouvert en dessous.
+ * Effets, joués une seule fois quand la partie vient de se terminer pendant que je la suis (la table précédente
+ *   a vu une partie en cours, reçue via ctx.avant) : assassin → flash rouge, secousse, bannière, son ; victoire →
+ *   confettis, titre qui brille, bannière, son, pour l'équipe gagnante (ou un spectateur) seulement.
  * Dépendances : core.js (esc, avatarHtml, toast), nom-de-code/api.js (ndc, erreurTexte, estInvite, EQUIPES),
- *   vues/chat.js (creerChat).
+ *   vues/chat.js (creerChat), vues/effets.js (effets visuels et sons).
  * Exporte : creer.
  */
 import { esc, avatarHtml, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, estInvite, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
+import { son, banniere, flashRouge, secouer, confettis, brille } from './effets.js';
 
 const ICONE_COCHE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F2EFEA" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
 const ICONE_OEIL = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle><path d="M3 3l18 18"></path></svg>';
@@ -46,6 +50,7 @@ function zone(el, html) {
  */
 export function creer(root, ctx) {
   const { code, naviguer, suivi } = ctx;
+  const avant = ctx.avant || null;             // dernier état vu avant la fin (partie.js), null si on arrive directement
   const invite = estInvite();
   let fini = false;
   let busy = false;
@@ -278,7 +283,32 @@ export function creer(root, ctx) {
     chat?.maj(e);
   }
 
-  maj(suivi.etat());
+  /**
+   * Effets de la fin, une seule fois, seulement si la partie vient de se terminer sous mes yeux
+   * (dernier état vu avant = partie en cours). Voir l'en-tête du fichier.
+   * @param {object} e état de la fin.
+   */
+  function effetsFin(e) {
+    if (avant?.partie?.statut !== 'en_cours' || !e?.partie) return;
+    const p = e.partie;
+    const moi = e.moi || {};
+    const v = EQUIPES[p.vainqueur] ? p.vainqueur : null;
+    if (p.raison === 'assassin') {
+      son(4);
+      flashRouge();
+      secouer(root.querySelector('.ndc-fin-cartes'));
+      banniere('Assassin !', 'Partie perdue', 'rouge');
+    } else if (v && (!moi.equipe || moi.equipe === v)) {
+      son(5);
+      confettis();
+      brille(root.querySelector('.ndc-fin-titre'));
+      banniere(`Victoire des ${v === 'rose' ? 'Roses' : 'Jaunes'}`, `Bravo à l’équipe ${nomEq(v).toLowerCase()}`, v);
+    }
+  }
+
+  const etatInitial = suivi.etat();
+  maj(etatInitial);
+  effetsFin(etatInitial);
 
   return {
     maj,

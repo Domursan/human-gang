@@ -6,7 +6,8 @@
  * Les messages du chat (anciens puis nouveaux) sont passés à la vue par vue.message(msg).
  * Quand on n'est pas (encore) inscrit dans une partie en attente, renvoie vers #rejoindre/CODE.
  * Contrat des vues : export function creer(root, ctx) → { maj(etat), message(msg), detruire() },
- *   ctx = { code, naviguer, moi, suivi } (suivi : rafraichir, secondesRestantes, etat).
+ *   ctx = { code, naviguer, moi, suivi, avant } (suivi : rafraichir, secondesRestantes, etat ;
+ *   avant : dernier état vu par la vue précédente, null si aucune — sert à détecter la fin d'une partie).
  * Dépendances : core.js (esc), nom-de-code/api.js (suivrePartie, messages, estInvite).
  * Exporte : afficher.
  */
@@ -55,6 +56,7 @@ export async function afficher(root, { code, naviguer, moi }) {
   let courant = null;            // { nom, vue }
   let suivi = null;              // rempli dès le premier appel de suivrePartie
   let dernier = null;            // dernier état reçu (pour réaligner la vue après un chargement)
+  let vu = null;                 // dernier état donné à la vue affichée : la vue suivante s'en sert pour détecter un changement
   let charge = null;             // chargement de vue en cours (promesse)
   let historique = null;         // chargement unique des anciens messages
   const msgs = [];               // tous les messages connus, du plus ancien au plus récent
@@ -79,6 +81,12 @@ export async function afficher(root, { code, naviguer, moi }) {
       .catch((err) => console.warn('[nom-de-code] messages', err));
   }
 
+  /** Donne un état à la vue affichée et le retient comme « dernier vu ». */
+  function pousser(vue, e) {
+    vu = e;
+    vue.maj(e);
+  }
+
   /** Aligne la vue affichée sur le dernier état connu. */
   async function aligner() {
     if (fini || !dernier || charge) return;
@@ -87,16 +95,17 @@ export async function afficher(root, { code, naviguer, moi }) {
     if (e.partie?.statut === 'attente' && !e.moi.joue) { naviguer(`#rejoindre/${encodeURIComponent(code)}`); return; }
     const nom = vuePour(e);
     if (!nom) return;
-    if (courant?.nom === nom) { courant.vue.maj(e); return; }
+    if (courant?.nom === nom) { pousser(courant.vue, e); return; }
 
     charge = (async () => {
       const mod = await VUES[nom]();
       if (fini) return;
+      const avant = vu;          // dernier état vu par la vue qui s'en va (la fin s'en sert pour ses effets)
       try { courant?.vue.detruire?.(); } catch { /* sans effet */ }
       root.innerHTML = '';
-      const vue = mod.creer(root, { code, naviguer, moi, suivi });
+      const vue = mod.creer(root, { code, naviguer, moi, suivi, avant });
       courant = { nom, vue };
-      vue.maj(dernier || e);
+      pousser(vue, dernier || e);
       msgs.forEach((m) => vue.message?.(m));
     })()
       .catch((err) => {
@@ -114,7 +123,7 @@ export async function afficher(root, { code, naviguer, moi }) {
       if (fini) return;
       dernier = e;
       chargerHistorique(e?.partie?.id);
-      if (courant && courant.nom === vuePour(e) && e?.moi && !charge) courant.vue.maj(e);
+      if (courant && courant.nom === vuePour(e) && e?.moi && !charge) pousser(courant.vue, e);
       else aligner();
     },
     onMessage: (m) => ajouterMessage(m),

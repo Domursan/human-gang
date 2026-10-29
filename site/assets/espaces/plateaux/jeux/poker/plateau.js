@@ -85,7 +85,7 @@ function siegeHtml(s, k, n) {
   if (s.sorti) etiquettes.push('<span class="pk-etiquette">éliminé</span>');
   if (s.parti) etiquettes.push('<span class="pk-etiquette">a quitté</span>');
   const action = ACTIONS[s.action] || '';
-  return `<li class="${classes.join(' ')}" style="--cx:${cx};--cy:${cy}"${s.tour ? ' aria-current="step"' : ''}>
+  return `<li class="${classes.join(' ')}" data-uid="${esc(s.id ?? '')}" style="--cx:${cx};--cy:${cy}"${s.tour ? ' aria-current="step"' : ''}>
       <div class="pk-siege-cartes">${cartesSiege(s)}</div>
       <div class="pk-siege-corps">
         <p class="pk-siege-nom">

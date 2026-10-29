@@ -183,6 +183,51 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
   .pk-mes-cartes .cd { --cd-l: 58px; --cd-h: 84px; }
 }
 
+/* ---------- Effets (jeux/poker/effets.js) : à toi de parler, cartes, mises, pot ---------- */
+.pk-table { position: relative; }
+.pk-calque { position: absolute; inset: 0; pointer-events: none; z-index: 80; }
+/* Pas de !important : une déclaration important l'emporterait sur l'animation et la pulsation ne se verrait pas. */
+.pk-joue { animation: pkPouls 1.2s ease-in-out 4; box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); }
+@keyframes pkPouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.pk-puce {
+  position: absolute;
+  z-index: 70;
+  left: 50%;
+  top: -12px;
+  transform: translateX(-50%);
+  background: var(--pk-or);
+  color: #0B0A10;
+  font: 800 11px Inter, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: pkBulle 1.4s ease-in-out infinite;
+}
+@keyframes pkBulle { 50% { transform: translate(-50%, -3px); } }
+.pk-tourne { position: relative; animation: pkTourne .7s ease-out both; }
+@keyframes pkTourne {
+  0% { transform: perspective(500px) rotateY(180deg); opacity: .2; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.pk-pot-pulse { animation: pkPot 1.4s ease-in-out 2; }
+@keyframes pkPot {
+  50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 30px rgba(226, 199, 126, .75); transform: scale(1.05); }
+}
+.pk-jeton-vol {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2B5AE2 0 45%, #fff 46% 52%, #2B5AE2 53%);
+  border: 2px dashed #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .5);
+  transition: transform .9s cubic-bezier(.3, .7, .3, 1), opacity .9s;
+}
+
 /* ---------- Animations coupées ---------- */
 @media (prefers-reduced-motion: reduce) {
   .pk-table *, .pk-table *::before, .pk-table *::after { animation: none !important; transition: none !important; }

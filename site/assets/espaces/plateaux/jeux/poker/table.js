@@ -6,9 +6,11 @@
  *   d'action : quand c'est ton tour, Se coucher, Suivre ou Parole, Relancer (curseur de relance minimale à ton tapis,
  *   boutons ½ pot et pot) et Tapis. Classement aux jetons, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
  *   Mise en page : assets/espaces/plateaux/poker.css. Les zones sont reconstruites seulement quand leur contenu change.
+ *   Effets de la maquette (à toi de parler, cartes qui se retournent, mises vers le pot, pot au gagnant) : effets.js,
+ *   appelé à chaque nouvel état avec l'état précédent, pour ne jouer que les vrais changements.
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml,
  *   brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat),
- *   ../cartes.js (carteHtml), ./plateau.js (tableHtml, PHASES).
+ *   ../cartes.js (carteHtml), ./plateau.js (tableHtml, PHASES), ./effets.js (creerEffets).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -19,6 +21,7 @@ import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { carteHtml } from '../cartes.js';
 import { tableHtml, PHASES } from './plateau.js';
+import { creerEffets } from './effets.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
@@ -376,11 +379,18 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el, {
+    monTour: (x) => {
+      const u = moiJoueur(x)?.user_id ?? null;
+      return !!u && x.jeu?.actif === u && x.partie?.tour === u;
+    },
+  });
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
       if (!e?.partie) return;
+      const avant = etat;
       etat = e;
       rendreBandeau();
       rendreAlerte();
@@ -396,6 +406,7 @@ export function creer(root, ctx) {
       }
       chat.maj(e);
       signal.maj(monTour());
+      effets.maj(avant, e);
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -406,6 +417,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

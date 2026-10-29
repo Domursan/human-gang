@@ -205,14 +205,14 @@
   .ndc-indice-mot { font-size: 28px; }
   .ndc-indice-essais { font-size: 13px; }
 
-  /* Grille pleine largeur, 5 colonnes serrées. Texte 12 px minimum : un mot qui ne tient pas sur une ligne passe
-     sur deux (césure du navigateur quand elle existe, sinon coupure au bord de la carte), jamais en plus petit. */
+  /* Grille pleine largeur, 5 colonnes serrées. Texte 12 px par défaut ; un mot trop long pour sa case n'est jamais coupé
+     au milieu : table.js réduit sa police jusqu'à 9 px (ajusterMot). Les espaces restent des points de retour à la ligne. */
   .ndc-grille { gap: 6px; }
   .ndc-carte { aspect-ratio: auto; height: 64px; padding: 2px; border-radius: 8px; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); }
   .ndc-carte::before { border-width: 3px; border-radius: 8px; }
   .ndc-carte > .ndc-carte-haut { margin: 2px 2px 0; }
   .ndc-carte .ndc-carte-mot { margin: 2px; height: auto; min-height: 26px; padding: 1px 1px; box-sizing: border-box; font-size: 12px; line-height: 1.05;
-    letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; word-break: normal; hyphens: auto; -webkit-hyphens: auto; text-align: center; }
+    letter-spacing: 0; white-space: normal; overflow-wrap: normal; word-break: normal; hyphens: manual; text-align: center; }
   .ndc-carte-etiq { font-size: 12px; padding: 1px 4px; letter-spacing: 0; }
   .ndc-carte-etiq svg { display: none; }
   .ndc-carte-icone svg { width: 18px; height: 18px; }
@@ -253,6 +253,24 @@
   .ndc-carte.is-tourne { animation: none !important; }
 }
 body.ndc-calme .ndc-carte.is-tourne { animation: none !important; }
+
+/* ---------- Effets de la table (vues/table.js) : tour, « à toi », carte révélée ----------
+   Classes ajoutées puis retirées par le JS ; durée inférieure à 3 s ; coupées par ndc-calme et mouvement réduit. */
+.ndc-bandeau.ndc-fx-equipe { background: var(--ndc-fx-c) !important; border-color: var(--ndc-fx-c) !important; color: var(--ndc-fx-t) !important;
+  transition: background .35s, border-color .35s; }
+.ndc-fx-pouls { border-radius: 14px; animation: ndcFxPouls 1.3s ease-in-out 2; }
+@keyframes ndcFxPouls { 50% { box-shadow: 0 0 0 4px #E2C77E, 0 0 30px rgba(226, 199, 126, .8); } }
+.ndc-carte.ndc-fx-libre { animation: ndcFxLibre 1.3s ease-in-out 2; }
+@keyframes ndcFxLibre { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 6px 14px rgba(0, 0, 0, .35); } }
+.ndc-carte.ndc-fx-retourne { animation: ndcFxRetourne .26s ease-in forwards; }
+@keyframes ndcFxRetourne { to { transform: perspective(600px) rotateX(90deg); } }
+.ndc-carte.ndc-fx-revient { animation: ndcFxRevient .34s ease-out; }
+@keyframes ndcFxRevient { from { transform: perspective(600px) rotateX(-90deg); } to { transform: perspective(600px) rotateX(0); } }
+body.ndc-calme .ndc-fx-pouls, body.ndc-calme .ndc-carte.ndc-fx-libre, body.ndc-calme .ndc-carte.ndc-fx-retourne,
+body.ndc-calme .ndc-carte.ndc-fx-revient { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ndc-fx-pouls, .ndc-carte.ndc-fx-libre, .ndc-carte.ndc-fx-retourne, .ndc-carte.ndc-fx-revient { animation: none !important; }
+}
 /* Insigne « Espion » dans la liste des équipes */
 .ndc-tag-espion { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #121212;
   color: #F2EFEA; font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; vertical-align: middle; }

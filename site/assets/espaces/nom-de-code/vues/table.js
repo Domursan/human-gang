@@ -8,15 +8,20 @@
  *   La grille est construite une fois : chaque mise à jour change les classes et le texte des cartes existantes
  *   (le focus reste sur la même carte).
  * Signal « à toi de jouer » (son + titre d'onglet) : commun/tour-signal.js, quand je dois agir (espion qui donne l'indice,
- *   agent qui cherche).
+ *   agent qui cherche). Ce signal n'est pas dupliqué : l'effet visuel « à toi » (pouls du titre, de l'indice ou des cartes)
+ *   est joué en plus, à chaque passage à « à moi d'agir ».
+ * Effets des vrais changements (jamais au premier état reçu) : bandeau aux couleurs de l'équipe et bannière « Au tour des… »
+ *   au changement de tour ; indice en grand et son à chaque nouvel indice ; carte qui se retourne, son, et flash + secousse
+ *   pour l'assassin. Mise en forme : mot trop long réduit (jamais coupé). Voir vues/effets.js et nom-de-code.css.
  * Dépendances : core.js (esc, initials, toast), nom-de-code/api.js (ndc, erreurTexte, EQUIPES),
- *   ./chat.js (creerChat), commun/tour-signal.js.
+ *   ./chat.js (creerChat), ./effets.js (effets), commun/tour-signal.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi } ; suivi = retour de suivrePartie (rafraichir, secondesRestantes, etat).
  */
 import { esc, initials, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
+import { animationsOk, son, banniere, grandIndice, flashRouge, secouer } from './effets.js';
 import { creerSignalTour } from '../../../commun/tour-signal.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 
@@ -48,6 +53,39 @@ const avatar = (j) => {
 const pseudoHtml = (j) => `<strong class="ndc-pseudo" style="color:${couleurJoueur(j)}">${esc(j?.pseudo || '?')}</strong>${j?.invite ? ' <span class="ndc-invite-tag">invité</span>' : ''}`;
 /** Pastille d'équipe (texte + couleur). */
 const pastille = (eq) => `<span class="ndc-eq is-${eq}">${EQUIPES[eq].nom}</span>`;
+/** Libellé des essais restants d'un indice (« illimité » si le nombre est 0 ou si les 25 essais sont disponibles). */
+const libelleEssais = (ind, essais) => (ind.nombre === 0 || essais === 25 ? 'illimité' : `essais restants : ${essais ?? 0}`);
+/** Plus petite police d'un mot de carte : au-dessous, le mot reste coupé (mots très longs, rare). */
+const POLICE_MIN = 9;
+
+/**
+ * Le texte de l'élément tient-il dans sa largeur utile ? (un mot trop long déborde : il ne passe pas à la ligne au milieu)
+ * @param {HTMLElement} el
+ * @returns {boolean}
+ */
+function tient(el) {
+  const st = getComputedStyle(el);
+  const utile = el.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+  const r = document.createRange();
+  r.selectNodeContents(el);
+  return r.getBoundingClientRect().width <= utile + 0.5;
+}
+
+/**
+ * Mot de carte : police réduite pas à pas (0,5 px) jusqu'à ce que le mot tienne, sans descendre sous POLICE_MIN.
+ * Sans style en ligne quand le mot tient déjà (taille du design conservée).
+ * @param {HTMLElement} el élément .ndc-carte-mot.
+ */
+function ajusterMot(el) {
+  if (!el || !el.clientWidth) return;   // non visible : rien à mesurer
+  el.style.fontSize = '';
+  if (tient(el)) return;
+  let taille = parseFloat(getComputedStyle(el).fontSize);
+  while (!tient(el) && taille > POLICE_MIN) {
+    taille -= 0.5;
+    el.style.fontSize = `${taille}px`;
+  }
+}
 
 /** Squelette statique (les zones variables sont remplies à chaque mise à jour). */
 function squelette(idChat) {
@@ -163,6 +201,9 @@ export function creer(root, ctx) {
   let nonLus = 0;
   let tiroirOuvert = false;
   let dernierTour;
+  let monTourAvant;                                // « à moi d'agir » à l'état précédent (undefined : aucun état)
+  let cleIndiceAvant = '';                         // identité de l'indice affiché (pour détecter un nouvel indice)
+  let detruit = false;
   let voirChat = grand.matches;                    // ordinateur : chat visible au départ ; téléphone : fermé
   let proposition = { code: null, pos: null };     // ma proposition en mode libre (affiche « Valider »)
   let saisieIndice = { mot: '', nombre: '1' };     // garde ce qui est tapé pendant une mise à jour
@@ -217,8 +258,7 @@ export function creer(root, ctx) {
       zone.innerHTML = '<p class="ndc-indice-vide">Pas d\'indice pour le moment.</p>';
       return;
     }
-    const essais = etat.partie.essais;
-    const reste = ind.nombre === 0 || essais === 25 ? 'illimité' : `essais restants : ${essais ?? 0}`;
+    const reste = libelleEssais(ind, etat.partie.essais);
     zone.innerHTML = `
       <p class="ndc-indice-ligne"><span class="ndc-indice-eq">${pastille(ind.equipe)}</span>
         <strong class="ndc-indice-mot">${esc(ind.mot)} · ${ind.nombre === 0 ? '0' : esc(ind.nombre)}</strong></p>
@@ -290,8 +330,46 @@ export function creer(root, ctx) {
     }).join('');
   }
 
+  /** Cases en cours de retournement → dernière carte reçue (elles seront peintes à la fin du retournement). */
+  const enRetournement = new Map();
+
+  /** Son d'une carte révélée : 2 équipe, 3 passant, 4 assassin. */
+  const sonRevelation = (carte) => son(carte.couleur === 'assassin' ? 4 : carte.couleur === 'neutre' ? 3 : 2);
+
+  /**
+   * Retourne une case qui vient d'être révélée : elle se couche (ancien aspect), change de couleur au milieu du mouvement,
+   * puis se relève. Pour l'assassin, flash rouge, secousse de la grille et bannière « Assassin ! » à la fin du mouvement.
+   * @param {HTMLElement} b case.
+   * @param {object} carte carte révélée.
+   */
+  function retournerCase(b, carte) {
+    enRetournement.set(b, carte);
+    b.classList.add('ndc-fx-retourne');
+    setTimeout(() => {
+      if (detruit) return;
+      const c = enRetournement.get(b);
+      enRetournement.delete(b);
+      b.classList.remove('ndc-fx-retourne');
+      b.dataset.revelee = '1';
+      peindreCase(b, c);
+      b.classList.add('ndc-fx-revient');
+      setTimeout(() => b.classList.remove('ndc-fx-revient'), 380);
+      if (c.couleur === 'assassin') {
+        flashRouge();
+        secouer(refs.grille);
+        banniere('Assassin !', 'Partie perdue', 'rouge');
+      }
+    }, 260);
+  }
+
   /** Met à jour une case existante (aucune recréation : le focus reste en place). */
   function peindreCase(b, carte) {
+    if (enRetournement.has(b)) { enRetournement.set(b, carte); return; }
+    // Vraie révélation (la case était cachée à l'état précédent) : son, puis retournement si les animations sont permises.
+    if (carte.revelee && b.dataset.revelee === '0') {
+      sonRevelation(carte);
+      if (animationsOk()) { retournerCase(b, carte); return; }
+    }
     const espion = monEspion() && !jeAiParti();
     const revelee = !!carte.revelee;
     const couleur = carte.couleur;                                  // connue si revelee ou si je suis espion
@@ -308,7 +386,10 @@ export function creer(root, ctx) {
     b.dataset.revelee = revelee ? '1' : '0';
     if (teinte === 'assassin') classes.push('is-assassin');
     if (teinte === 'neutre') classes.push('is-passant');
-    if (b.className !== classes.join(' ')) b.className = classes.join(' ');
+    // Les classes d'effet (ndc-fx-*) en cours sont gardées : un nouvel affichage ne coupe pas une animation.
+    const fx = [...b.classList].filter((c) => c.startsWith('ndc-fx-'));
+    const voulues = [...classes, ...fx].join(' ');
+    if (b.className !== voulues) b.className = voulues;
 
     const cliquable = !revelee && peutCliquer();
     b.disabled = !cliquable;
@@ -335,8 +416,14 @@ export function creer(root, ctx) {
     if (haut.innerHTML !== texteHaut) haut.innerHTML = texteHaut;
 
     const mot = b.querySelector('.ndc-carte-mot');
-    if (mot.textContent !== carte.mot) mot.textContent = carte.mot;
+    if (mot.textContent !== carte.mot) {
+      mot.textContent = carte.mot;
+      ajusterMot(mot);
+    }
   }
+
+  /** Recalcule la police de tous les mots (taille de l'écran ou police web chargée). */
+  const recalculerMots = () => cellules.forEach((b) => ajusterMot(b.querySelector('.ndc-carte-mot')));
 
   function rendreGrille() {
     const cartes = etat.cartes || [];
@@ -546,13 +633,46 @@ export function creer(root, ctx) {
 
   peindreNonLus();
   peindreChat();
+  window.addEventListener('resize', recalculerMots);
+  // La police web peut arriver après le premier calcul : on recalcule quand elle est prête.
+  document.fonts?.ready?.then(recalculerMots);
   const minuterie = setInterval(tic, 250);
   const signal = creerSignalTour();
+
+  /** Changement de tour : bandeau aux couleurs de l'équipe qui joue et bannière « Au tour des… » (2,5 s). */
+  function effetChangementTour(eq) {
+    if (!animationsOk()) return;
+    banniere(`Au tour des ${EQUIPES[eq].nom === 'Rose' ? 'Roses' : 'Jaunes'}`, 'Changement d’équipe', eq);
+    const bandeau = el.querySelector('.ndc-bandeau');
+    if (!bandeau) return;
+    bandeau.style.setProperty('--ndc-fx-c', `var(--ndc-${eq})`);
+    bandeau.style.setProperty('--ndc-fx-t', eq === 'jaune' ? '#2A1C00' : '#FFFFFF');
+    bandeau.classList.add('ndc-fx-equipe');
+    setTimeout(() => {
+      bandeau.classList.remove('ndc-fx-equipe');
+      bandeau.style.removeProperty('--ndc-fx-c');
+      bandeau.style.removeProperty('--ndc-fx-t');
+    }, 2600);
+  }
+
+  /** « À toi » : titre « Au tour… » et formulaire d'indice qui pulsent (espion), ou cartes cachées qui s'éclairent (agent). */
+  function effetATo() {
+    if (!animationsOk()) return;
+    const pulse = (node, cls) => {
+      if (!node) return;
+      node.classList.add(cls);
+      setTimeout(() => node.classList.remove(cls), 2600);
+    };
+    pulse(el.querySelector('.ndc-au-tour'), 'ndc-fx-pouls');
+    if (estEspionAuTour()) pulse(el.querySelector('.ndc-form-indice'), 'ndc-fx-pouls');
+    else el.querySelectorAll('.ndc-carte:not(.is-revelee):not(:disabled)').forEach((b) => pulse(b, 'ndc-fx-libre'));
+  }
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
       if (!e?.partie) return;
+      const prec = etat;                           // état précédent : null au premier état (rien n'est animé)
       etat = e;
       rendreBandeau();
       rendreIndice();
@@ -564,11 +684,22 @@ export function creer(root, ctx) {
       const tour = e.partie.tour_equipe;
       if (tour !== dernierTour && dernierTour !== undefined && tour) {
         refs.annonce.textContent = `Au tour des ${EQUIPES[tour].nom === 'Rose' ? 'Roses' : 'Jaunes'}.`;
+        if (prec) effetChangementTour(tour);
       }
       dernierTour = tour;
       chat.maj(e);
       // J'ai à agir : espion au tour de donner l'indice, ou agent au tour de chercher (pas si je suis parti).
-      signal.maj(!jeAiParti() && e.partie.statut === 'en_cours' && (estEspionAuTour() || estAgentAuTour()));
+      const monTour = !jeAiParti() && e.partie.statut === 'en_cours' && (estEspionAuTour() || estAgentAuTour());
+      signal.maj(monTour);
+      if (prec && monTour && !monTourAvant) effetATo();
+      monTourAvant = monTour;
+      // Nouvel indice (identité : rang dans l'historique + mot, nombre, équipe) : en grand et son, sauf pour l'espion qui l'a donné.
+      const cle = e.indice ? `${(e.indices || []).length}|${e.indice.equipe}|${e.indice.mot}|${e.indice.nombre}` : '';
+      if (prec && cle && cle !== cleIndiceAvant && !monEspion()) {
+        grandIndice(e.indice.mot, libelleEssais(e.indice, e.partie.essais));
+        son(1);
+      }
+      cleIndiceAvant = cle;
       tic();
     },
     /** Message du chat (ancien ou nouveau). */
@@ -578,7 +709,9 @@ export function creer(root, ctx) {
     },
     /** Arrête le chrono et retire la table de la page. */
     detruire() {
+      detruit = true;
       clearInterval(minuterie);
+      window.removeEventListener('resize', recalculerMots);
       signal.arreter();
       chat.detruire();
       el.remove();

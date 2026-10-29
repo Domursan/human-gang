@@ -49,8 +49,10 @@
   font: 700 11px/1.2 Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--camp); text-align: center; }
 .ndc-fin-plaque { flex: none; margin: 0 5px 5px; height: 30px; box-sizing: border-box; border-radius: 6px; background: var(--plaque);
   color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0 3px;
-  font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px; line-height: 1; text-transform: uppercase;
+  font-family: 'Oswald', sans-serif; font-weight: 600; font-size: min(15px, 15cqi); line-height: 1; text-transform: uppercase;
   white-space: nowrap; overflow: hidden; }
+/* La plaque suit la largeur de sa carte : les mots longs rétrécissent au lieu d'être coupés. */
+.ndc-fin-mot { container-type: inline-size; }
 /* Coche des mots trouvés pendant la partie */
 .ndc-fin-coche { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%;
   background: #121212; border: 2px solid #F2EFEA; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
@@ -108,7 +110,7 @@
   .ndc-fin-mot-in { border-radius: 5px; }
   .ndc-fin-camp { font-size: 9px; padding-top: 4px; gap: 2px; }
   .ndc-fin-camp svg { width: 10px; height: 10px; }
-  .ndc-fin-plaque { height: 26px; margin: 0 3px 3px; font-size: 11px; padding: 0 2px; }
+  .ndc-fin-plaque { height: 26px; margin: 0 3px 3px; font-size: min(11px, 15cqi); padding: 0 2px; }
   .ndc-fin-coche { width: 18px; height: 18px; top: -5px; right: -5px; }
   .ndc-fin-coche svg { width: 9px; height: 9px; }
   .ndc-fin-panneau { padding: 16px; }
