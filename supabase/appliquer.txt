@@ -37,3 +37,4 @@ supabase/migrations/168_series_pays_capitales_streaming.sql
 supabase/migrations/171_uno_jouabilite.sql
 supabase/migrations/172_jeux_regles_audit.sql
 supabase/migrations/173_ss_nouveau_tirage.sql
+supabase/migrations/174_bot_file_attente.sql

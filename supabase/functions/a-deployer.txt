@@ -1,5 +1,4 @@
 # Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
-# 2026-10-29 : copie aux admins de chaque message du bot (_shared/presence.ts)
+# 2026-10-29 : Secret Santa toujours sur Discord, rattrapage dès 8 h, liste d'attente des annonces de cartes
 hg-notify
 hg-cron
-hg-birthdays

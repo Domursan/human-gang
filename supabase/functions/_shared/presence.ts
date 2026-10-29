@@ -8,7 +8,9 @@
 // Une copie ratée ne bloque jamais l'envoi au membre.
 // Dépendances : ./discord.ts (sendDM, isSnowflake) ; RPC hg_en_ligne_interne, hg_site_notif ; tables hg_profiles,
 //   hg_settings (clé service).
-// Exporte : dmOuSite, enLigne, notifDepuisMessage, copierAuxAdmins.
+// Secret Santa (demande d'Ethan, 29.10.2026) : dmToujours envoie le MP Discord dans tous les cas (en ligne ou non), en plus
+//   de la notification du site, sans tenir compte des préférences du membre.
+// Exporte : dmOuSite, dmToujours, enLigne, notifDepuisMessage, copierAuxAdmins.
 import { isSnowflake, sendDM, type UploadFile } from './discord.ts';
 
 /** Client minimal attendu (supabase-js avec la clé service). */
@@ -132,5 +134,29 @@ export async function dmOuSite(db: Db, userId: string, discordId: string, messag
   }
   await sendDM(discordId, message, files);
   await copierAuxAdmins(db, userId, discordId, message, 'discord', cat, files);
+  return 'discord';
+}
+
+/**
+ * Notifie un membre sur le site ET par MP Discord, même s'il est en ligne (Secret Santa : pas de choix possible).
+ * Lève l'erreur de Discord comme sendDM. La copie aux admins suit.
+ * @param {Db} db client avec la clé service
+ * @param {string} userId membre (hg_profiles.id)
+ * @param {string} discordId identifiant Discord du membre
+ * @param {Record<string, unknown>} message message Discord
+ * @param {string} cat catégorie de la notification du site
+ * @returns {Promise<'discord'>}
+ */
+export async function dmToujours(db: Db, userId: string, discordId: string, message: Record<string, unknown>, cat: string): Promise<'discord'> {
+  const n = notifDepuisMessage(message);
+  try {
+    const { error } = await db.rpc('hg_site_notif', { p_user: userId, p_cat: cat, p_titre: n.titre, p_texte: n.texte || null,
+      p_lien: n.lien, p_par_discord: true });
+    if (error) console.warn('[presence] notification du site non écrite', error.message);
+  } catch (e) {
+    console.warn('[presence] notification du site non écrite', e);
+  }
+  await sendDM(discordId, message);
+  await copierAuxAdmins(db, userId, discordId, message, 'discord', cat);
   return 'discord';
 }

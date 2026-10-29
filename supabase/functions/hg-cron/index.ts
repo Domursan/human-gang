@@ -34,6 +34,12 @@
 //      et rappel une heure avant (salon bot.channels.cine, sinon salon d'annonces). Désactivé si bot.notify.cine === false.
 //   8. Annonces saisonnières (migration 096, ../_shared/saisons-cron.ts) : case du jour du calendrier de l'Avent, bonus
 //      collectif, soirée déballage (tout reçu, rappel 1 h avant, tour de passage si bot.notify.unwrap), anniversaire du gang.
+//   9. Rattrapage du Secret Santa (29.10.2026), de 8 h à 22 h (heure suisse) : cadeau envoyé ou reçu dont le MP n'est pas
+//      parti (gift_notified_at / received_notified_at null) → MP à la cible ou au Santa ; messages des conversations Secret
+//      Santa sans MP (dm_notified_at null, plus de 2 min) et pas encore lus → un MP par destinataire et par conversation
+//      (nombre de messages et extrait du dernier), le Santa jamais nommé. MP toujours envoyé (sans choix du membre).
+//  10. Liste d'attente des annonces (migration 174) : annonces refusées par Discord (« trop de requêtes ») envoyées une par
+//      une, 1,5 s d'écart, 15 au plus par passage, 5 essais au plus.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
@@ -43,10 +49,10 @@
 //   hg_ss_assignments, hg_bot_log.
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
-import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_shared/templates.ts';
+import { loadTemplates, renderTemplate, embedFrom, mdSafe, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
-import { hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
-import { dmOuSite } from '../_shared/presence.ts';
+import { DiscordError, hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
+import { dmOuSite, dmToujours } from '../_shared/presence.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
@@ -81,7 +87,7 @@ type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 
 /** Profil lu par la fonction. remind_irl est facultatif (absent pour les rappels de cadeau). */
 type Prof = { id: string; pseudo: string; discord_id: string | null; bot_optin: boolean; remind_irl?: boolean };
 /** Compteurs d'un passage, renvoyés dans la réponse et résumés dans le journal. */
-type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; quiz_daily: number; scheduled: number; season: number; errors: number };
+type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; ss_rattrapage: number; file: number; quiz_daily: number; scheduled: number; season: number; errors: number };
 /* ---------- Réservation des envois (idempotence) ---------- */
 
 /**
@@ -389,6 +395,156 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
   }
 }
 
+/* ---------- 9 : rattrapage du Secret Santa ---------- */
+
+/** Heure suisse (0 à 23). */
+const zurichHour = () => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', hour12: false }).format(new Date())) % 24;
+/** Secret Santa : MP dès qu'il y a un identifiant Discord valide (sans tenir compte du choix du membre). */
+const aDiscord = (p: { discord_id: string | null } | null | undefined) => !!p && isSnowflake(p.discord_id);
+
+/**
+ * Rattrapage des MP du Secret Santa qui ne sont pas partis : cadeaux envoyés ou reçus, messages anonymes non lus.
+ * Seulement de 8 h à 22 h (heure suisse) : rien ne part la nuit.
+ * @param {Counters} out compteurs (ss_rattrapage, errors)
+ * @param {Attempt[]} attempts détail pour le journal
+ */
+async function ssRattrapage(out: Counters, attempts: Attempt[]) {
+  const h = zurichHour();
+  if (h < 8 || h >= 22) return;
+  const { data: eds, error } = await db.from('hg_ss_editions').select('id, year, exchange_date').in('status', ['envoi', 'revelation']);
+  if (error) throw new Error(error.message);
+  if (!eds?.length) return;
+  const editions = new Map<string, { id: string; year: number; exchange_date: string | null }>(eds.map((e: any) => [e.id, e]));
+  const ids = [...editions.keys()];
+  const tpl: Templates = await loadTemplates(db);
+  const page = link('pages/irl/secret-santa.html');
+  const profils = async (uids: string[]) => {
+    if (!uids.length) return new Map<string, Prof>();
+    const { data } = await db.from('hg_profiles').select('id, pseudo, discord_id, bot_optin').in('id', [...new Set(uids)]);
+    return new Map<string, Prof>((data ?? []).map((p: Prof) => [p.id, p] as [string, Prof]));
+  };
+  const envoyer = async (uid: string, person: Prof, message: Record<string, unknown>, label: string) => {
+    try {
+      await dmToujours(db, uid, person.discord_id!, message, 'santa');
+      out.ss_rattrapage++;
+      attempts.push({ user_id: uid, pseudo: person.pseudo, ok: true, status: 'sent', reason: label });
+      return true;
+    } catch (e) {
+      out.errors++;
+      attempts.push({ user_id: uid, pseudo: person.pseudo, ok: false, status: 'failed', reason: `${label} : ${String((e as Error).message).slice(0, 160)}` });
+      return false;
+    }
+  };
+
+  // Cadeaux envoyés ou reçus sans MP
+  const [{ data: parts, error: e2 }, { data: asg, error: e3 }] = await Promise.all([
+    db.from('hg_ss_participants').select('edition_id, user_id, sent_at, received_at, gift_notified_at, received_notified_at').in('edition_id', ids)
+      .or('and(sent_at.not.is.null,gift_notified_at.is.null),and(received_at.not.is.null,received_notified_at.is.null)'),
+    db.from('hg_ss_assignments').select('edition_id, giver_id, receiver_id').in('edition_id', ids),
+  ]);
+  if (e2 || e3) throw new Error((e2 || e3)!.message);
+  const pairs = (asg ?? []) as { edition_id: string; giver_id: string; receiver_id: string }[];
+  const gens = await profils([...(parts ?? []).map((p: any) => p.user_id), ...pairs.map((a) => a.giver_id), ...pairs.map((a) => a.receiver_id)]);
+  for (const p of (parts ?? []) as any[]) {
+    const ed = editions.get(p.edition_id)!;
+    const base = { annee: ed.year, date_echange: ed.exchange_date ? fmtZurichDay(ed.exchange_date) : '', lien: page ?? '' };
+    for (const kind of ['sent', 'received'] as const) {
+      if (kind === 'sent' ? !(p.sent_at && !p.gift_notified_at) : !(p.received_at && !p.received_notified_at)) continue;
+      const a = pairs.find((x) => x.edition_id === p.edition_id && (kind === 'sent' ? x.giver_id : x.receiver_id) === p.user_id);
+      if (!a) continue;
+      const otherId = kind === 'sent' ? a.receiver_id : a.giver_id;
+      const other = gens.get(otherId);
+      if (!aDiscord(other)) continue;
+      const col = kind === 'sent' ? 'gift_notified_at' : 'received_notified_at';
+      const keys = { edition_id: p.edition_id, user_id: p.user_id };
+      if (!(await claimRow('hg_ss_participants', keys, col))) continue;
+      // ss_gift_sent part chez la cible : rien ne nomme le Santa.
+      const rendered = kind === 'sent'
+        ? renderTemplate('ss_gift_sent', { ...base, pseudo: mdSafe(other!.pseudo) }, tpl)
+        : renderTemplate('ss_gift_received', { ...base, pseudo: mdSafe(other!.pseudo), cible: mdSafe(gens.get(p.user_id)?.pseudo ?? '') }, tpl);
+      const ok = await envoyer(otherId, other!, embed({ ...embedFrom(rendered), url: page, color: COLOR.ss }), kind === 'sent' ? 'rattrapage : cadeau envoyé' : 'rattrapage : cadeau reçu');
+      if (!ok) await releaseRow('hg_ss_participants', keys, col);
+    }
+  }
+
+  // Messages anonymes sans MP : un MP par destinataire et par conversation
+  const { data: convs, error: e4 } = await db.from('hg_conversations').select('id, santa_id').eq('kind', 'santa').in('edition_id', ids);
+  if (e4) throw new Error(e4.message);
+  if (!convs?.length) return;
+  const avant = new Date(Date.now() - 2 * 60_000).toISOString();
+  const { data: msgs, error: e5 } = await db.from('hg_messages').select('id, conversation_id, sender_id, body, created_at')
+    .in('conversation_id', convs.map((c: any) => c.id)).is('dm_notified_at', null).eq('system', false).is('hidden_at', null)
+    .lt('created_at', avant).order('id');
+  if (e5) throw new Error(e5.message);
+  if (!msgs?.length) return;
+  const { data: membres } = await db.from('hg_conversation_members').select('conversation_id, user_id, last_read_at')
+    .in('conversation_id', [...new Set(msgs.map((m: any) => m.conversation_id))]);
+  const gensM = await profils([...(membres ?? []).map((m: any) => m.user_id), ...msgs.map((m: any) => m.sender_id)]);
+  for (const c of convs as { id: string; santa_id: string }[]) {
+    const liste = msgs.filter((m: any) => m.conversation_id === c.id);
+    if (!liste.length) continue;
+    // Réservation de tous ces messages (un seul passage les traite).
+    const { data: pris, error: e6 } = await db.from('hg_messages').update({ dm_notified_at: new Date().toISOString() })
+      .in('id', liste.map((m: any) => m.id)).is('dm_notified_at', null).select('id');
+    if (e6) throw new Error(e6.message);
+    const prisIds = new Set((pris ?? []).map((r: any) => r.id));
+    const nos = liste.filter((m: any) => prisIds.has(m.id));
+    if (!nos.length) continue;
+    const url = link(`pages/compte/messages.html?c=${encodeURIComponent(c.id)}`);
+    let echec = false;
+    for (const mb of (membres ?? []).filter((x: any) => x.conversation_id === c.id) as { user_id: string; last_read_at: string | null }[]) {
+      // Messages des autres, pas encore lus par ce membre
+      const nonLus = nos.filter((m: any) => m.sender_id !== mb.user_id && (!mb.last_read_at || new Date(mb.last_read_at).getTime() < new Date(m.created_at).getTime()));
+      if (!nonLus.length) continue;
+      const dest = gensM.get(mb.user_id);
+      if (!aDiscord(dest)) continue;
+      const dernier = nonLus[nonLus.length - 1];
+      const raw = String(dernier.body ?? '').replace(/\s+/g, ' ').trim();
+      const extrait = mdSafe(`${nonLus.length > 1 ? `(${nonLus.length} messages) ` : ''}${raw.length > 200 ? `${raw.slice(0, 199)}…` : raw}`);
+      const anonyme = dernier.sender_id === c.santa_id; // le Santa n'est JAMAIS nommé
+      const rendered = anonyme
+        ? renderTemplate('message_new_santa', { pseudo: mdSafe(dest!.pseudo), extrait: extrait || '(message vide)', lien: url ?? '' }, tpl)
+        : renderTemplate('message_new', { pseudo: mdSafe(dest!.pseudo), expediteur: mdSafe(gensM.get(dernier.sender_id)?.pseudo ?? ''), extrait: extrait || '(message vide)', lien: url ?? '' }, tpl);
+      const ok = await envoyer(mb.user_id, dest!, embed({ ...embedFrom(rendered), url, color: COLOR.ss,
+        ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}) }), 'rattrapage : message anonyme');
+      if (!ok) echec = true;
+    }
+    // Échec Discord : les messages redeviennent « à prévenir » pour le passage suivant.
+    if (echec) await db.from('hg_messages').update({ dm_notified_at: null }).in('id', nos.map((m: any) => m.id));
+  }
+}
+
+/* ---------- 10 : liste d'attente des annonces (migration 174) ---------- */
+
+/**
+ * Envoie les annonces en attente, une par une, espacées de 1,5 s (15 au plus par passage, 5 essais au plus).
+ * @param {Counters} out compteurs (file, errors)
+ * @param {ChannelLogEntry[]} chanLog détail par salon, pour le journal
+ */
+async function fileAttente(out: Counters, chanLog: ChannelLogEntry[]) {
+  const { data: rows, error } = await db.from('hg_bot_file').select('id, channel_id, message, titre, essais')
+    .is('sent_at', null).lt('essais', 5).order('created_at').limit(15);
+  if (error) throw new Error(error.message);
+  for (const r of (rows ?? []) as { id: number; channel_id: string; message: Record<string, unknown>; titre: string | null; essais: number }[]) {
+    const { data: pris } = await db.from('hg_bot_file').update({ pris_at: new Date().toISOString(), essais: r.essais + 1 })
+      .eq('id', r.id).is('sent_at', null).eq('essais', r.essais).select('id');
+    if (!pris?.length) continue;
+    try {
+      await sendChannel(r.channel_id, r.message);
+      await db.from('hg_bot_file').update({ sent_at: new Date().toISOString(), error: null }).eq('id', r.id);
+      out.file++;
+      chanLog.push({ id: r.channel_id, ok: true, ref: r.titre ?? 'liste d\'attente' } as ChannelLogEntry);
+    } catch (e) {
+      out.errors++;
+      const msg = e instanceof DiscordError ? e.message : String((e as Error)?.message ?? e);
+      await db.from('hg_bot_file').update({ error: msg.slice(0, 300) }).eq('id', r.id);
+      chanLog.push({ id: r.channel_id, ok: false, error: msg.slice(0, 160), ref: r.titre ?? 'liste d\'attente' } as ChannelLogEntry);
+      if (e instanceof DiscordError && e.status === 429) break; // Discord sature : on reprendra au passage suivant
+    }
+    await new Promise((ok) => setTimeout(ok, 1500));
+  }
+}
+
 /* ---------- 5 : question du jour (D2) ---------- */
 
 /** Données renvoyées par hg_quiz_daily_bot (migration 084). */
@@ -465,7 +621,7 @@ async function quizDaily(out: Counters, bot: ChannelBot & MentionBot, chanLog: C
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
-  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, scheduled: 0, season: 0, errors: 0 };
+  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, ss_rattrapage: 0, file: 0, quiz_daily: 0, scheduled: 0, season: 0, errors: 0 };
   const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   let polls = 0; // sondages clôturés à ce passage
@@ -486,6 +642,13 @@ Deno.serve(async (req) => {
     if (canSend && bot.notify?.gift !== false) {
       try { await ssReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels cadeau', e); out.errors++; }
+    }
+    // 9 et 10 : rattrapage du Secret Santa (toujours actif) et liste d'attente des annonces.
+    if (canSend) {
+      try { await ssRattrapage(out, attempts); }
+      catch (e) { console.error('[hg-cron] rattrapage Secret Santa', e); out.errors++; }
+      try { await fileAttente(out, chanLog); }
+      catch (e) { console.error('[hg-cron] liste d\'attente', e); out.errors++; }
     }
     // Sondages libres échus (migration 090) : clôture et ligne de résultat dans le fil, une seule fois (result_posted).
     try {
@@ -511,14 +674,14 @@ Deno.serve(async (req) => {
     }
 
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.scheduled + out.season + out.errors + cine.cine_posts;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.ss_rattrapage + out.file + out.quiz_daily + out.scheduled + out.season + out.errors + cine.cine_posts;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
-        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}${cine.cine_posts ? `, ${cine.cine_posts} annonce(s) du ciné-club` : ''}${out.season ? `, ${out.season} annonce(s) de saison` : ''}`,
+        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.ss_rattrapage ? `, ${out.ss_rattrapage} MP Secret Santa rattrapé(s)` : ''}${out.file ? `, ${out.file} annonce(s) de la liste d'attente` : ''}${out.quiz_daily ? ', question du jour publiée' : ''}${cine.cine_posts ? `, ${cine.cine_posts} annonce(s) du ciné-club` : ''}${out.season ? `, ${out.season} annonce(s) de saison` : ''}`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
-        channel: out.starts + out.ends + out.quiz_daily + out.season > 0,
+        channel: out.starts + out.ends + out.quiz_daily + out.season + out.file > 0,
       }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }

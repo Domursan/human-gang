@@ -79,7 +79,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, mdSafe, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
-import { dmOuSite } from '../_shared/presence.ts';
+import { dmOuSite, dmToujours } from '../_shared/presence.ts';
 import { mentionFor, mentionMode, mentionWith, MENTION_TYPES, type MentionBot, type MentionType } from '../_shared/mentions.ts';
 import {
   channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, CHANNEL_LABEL, type ChannelResult,
@@ -150,6 +150,13 @@ const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Hum
  * @returns {boolean} Vrai si le MP peut partir.
  */
 const canDM = (p: Profile | null | undefined): p is Profile => !!p && p.bot_optin && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
+/**
+ * Secret Santa : le MP part dès que le membre a un identifiant Discord valide, sans tenir compte de son choix
+ * (« bot_optin », catégories coupées) : décision d'Ethan du 29.10.2026.
+ * @param {Profile | null | undefined} p Profil.
+ * @returns {boolean}
+ */
+const aDiscord = (p: Profile | null | undefined): p is Profile => !!p && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
 /** Raison renvoyée quand le membre a coupé la catégorie sur Discord (idée Q6, migration 095). */
 const CAT_OFF = 'Catégorie coupée';
 /**
@@ -362,14 +369,14 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
  */
 async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: 'sent' | 'received', tpl: Templates) {
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
-  if (bot.notify?.gift === false) return { skipped: 'désactivé' };
+  // Toujours actif (pas de réglage bot.notify.gift ici) : envoi et réception sont toujours prévenus sur Discord.
   const { data: part } = await db.from('hg_ss_participants').select('sent_at, received_at, gift_notified_at, received_notified_at')
     .eq('edition_id', p.edition_id).eq('user_id', me.id).maybeSingle();
   if (!part) throw new HttpError(403, 'Tu ne participes pas à cette édition');
   const ts = kind === 'sent' ? part.sent_at : part.received_at;
   if (!ts) throw new HttpError(409, kind === 'sent' ? 'Envoi non enregistré' : 'Réception non enregistrée');
   // Un MP n'est envoyé que si l'action est récente (anti-répétition).
-  if (!recent(ts)) return { skipped: 'action trop ancienne' };
+  if (!recent(ts)) return { skipped: 'action trop ancienne (rattrapage par hg-cron)' };
   if (kind === 'sent' ? part.gift_notified_at : part.received_notified_at) return { skipped: 'déjà notifié' };
 
   // Service role : on lit l'attribution côté serveur, sans jamais la renvoyer au client.
@@ -380,9 +387,7 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   if (!a) return { skipped: 'pas d\'attribution' };
   const { data: ed } = await db.from('hg_ss_editions').select('year, exchange_date').eq('id', p.edition_id).maybeSingle();
   const other = await getProfile(kind === 'sent' ? a.receiver_id : a.giver_id);
-  if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
-  // La catégorie change seulement si on envoie, jamais ce qu'on envoie : la raison ne nomme personne.
-  if (!(await dmAllowed(other.id, 'santa'))) return { dm: false, reason: CAT_OFF };
+  if (!aDiscord(other)) return { dm: false, reason: 'destinataire sans Discord' };
 
   // ss_gift_sent part chez la cible : aucune variable ne désigne le Santa. ss_gift_received part chez le Santa : {cible} = me.
   const base = { pseudo: mdSafe(other.pseudo), annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('pages/irl/secret-santa.html') ?? '' };
@@ -395,7 +400,7 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   const col = kind === 'sent' ? 'gift_notified_at' : 'received_notified_at';
   const keys = { edition_id: p.edition_id, user_id: me.id };
   if (!(await claim('hg_ss_participants', col, keys))) return { skipped: 'déjà notifié' };
-  const dm = await trySend(() => dmOuSite(db, other.id, other.discord_id!, message, 'santa'), `MP cadeau ${kind}`);
+  const dm = await trySend(() => dmToujours(db, other.id, other.discord_id!, message, 'santa'), `MP cadeau ${kind}`);
   if (!dm) await release('hg_ss_participants', col, keys);
   return { dm };
 }
@@ -468,10 +473,12 @@ const MSG_QUIET_MS = 10 * 60_000;  // pas de MP si le message précédent de la 
  */
 async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.conversation_id)) throw new HttpError(400, 'conversation_id manquant');
-  if (bot.notify?.messages === false) return { skipped: 'désactivé' };
   const convId = p.conversation_id;
   const { data: conv } = await db.from('hg_conversations').select('id, kind, santa_id, target_id').eq('id', convId).maybeSingle();
   if (!conv) throw new HttpError(404, 'Conversation introuvable');
+  // Secret Santa : un MP Discord à chaque message, sans réglage ni pause « discussion en cours » (décision du 29.10.2026).
+  const santa = conv.kind === 'santa';
+  if (!santa && bot.notify?.messages === false) return { skipped: 'désactivé' };
   if (conv.kind === 'group') return { skipped: 'groupe : pas de MP Discord' }; // migration 090 : notifications push seulement
   const { data: members } = await db.from('hg_conversation_members').select('user_id').eq('conversation_id', convId);
   const ids: string[] = (members ?? []).map((m: { user_id: string }) => m.user_id);
@@ -484,7 +491,7 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   if (!latest || latest.sender_id !== me.id) return { skipped: 'pas de message récent de ta part' };
   const latestAt = new Date(latest.created_at).getTime();
   if (Date.now() - latestAt > MSG_FRESH_MS) return { skipped: 'message trop ancien' };
-  if (previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
+  if (!santa && previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
   if (latest.dm_notified_at) return { skipped: 'déjà notifié' };
 
   // Dans un Secret Santa, le Santa (l'expéditeur) reste anonyme pour sa cible.
@@ -502,16 +509,17 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const msgPrefs = await loadNotifPrefs(db, ids.filter((id) => id !== me.id));
   for (const uid of ids.filter((id) => id !== me.id)) {
     const other = await getProfile(uid);
-    if (!canDM(other) || !notifAllowed(msgPrefs.get(uid), 'messages', 'discord')) { skipped++; continue; }
+    if (santa ? !aDiscord(other) : (!canDM(other) || !notifAllowed(msgPrefs.get(uid), 'messages', 'discord'))) { skipped++; continue; }
     // message_new_santa : l'expéditeur (le Santa) n'est JAMAIS passé dans les variables.
     const rendered = anonymous
       ? renderTemplate('message_new_santa', { pseudo: mdSafe(other.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
       : renderTemplate('message_new', { pseudo: mdSafe(other.pseudo), expediteur: mdSafe(me.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl);
-    const ok = await trySend(() => dmOuSite(db, uid, other.discord_id!, embed({
+    const msgDm = embed({
       ...embedFrom(rendered), url,
       color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
       ...(url ? { fields: [{ name: ZWSP, value: `[Répondre sur le site](${url})` }] } : {}),
-    }), 'messages'), `MP message ${uid}`);
+    });
+    const ok = await trySend(() => (santa ? dmToujours(db, uid, other.discord_id!, msgDm, 'santa') : dmOuSite(db, uid, other.discord_id!, msgDm, 'messages')), `MP message ${uid}`);
     ok ? dms++ : failed++;
   }
   if (!dms && failed) await release('hg_messages', 'dm_notified_at', { id: latest.id });
@@ -804,11 +812,20 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
     ...embed({ ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
   };
   const channels = await sendToChannels(pullChannels, (id) => sendChannel(id, annonce), 'annonce carte', friendlyDiscordError);
-  await logAnnounce(me, 'auto:carte', `Annonce de carte : ${carte} (${me.pseudo})`, channels, false);
+  // Salons en échec (souvent « trop de requêtes » quand plusieurs cartes sortent d'un coup) : liste d'attente (migration 174),
+  // envoyée une par une par hg-cron. La réservation de l'exemplaire est gardée : l'annonce partira par la file.
+  const rates = channels.filter((c) => !c.ok);
+  let enAttente = 0;
+  if (rates.length) {
+    const { error } = await db.from('hg_bot_file').insert(rates.map((c) => ({
+      kind: 'carte', channel_id: c.id, message: annonce, titre: `Annonce de carte : ${carte} (${me.pseudo})` })));
+    if (error) console.error('[hg-notify] liste d\'attente', error); else enAttente = rates.length;
+  }
+  if (!enAttente) await logAnnounce(me, 'auto:carte', `Annonce de carte : ${carte} (${me.pseudo})`, channels, false);
   const channel = channels.some((c) => c.ok);
-  // Aucun salon n'a reçu l'annonce : on retire la réservation pour que la prochaine ouverture puisse réessayer.
-  if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id);
-  return { channel, channels };
+  // Aucun salon n'a reçu l'annonce et rien n'est en attente : on retire la réservation pour réessayer plus tard.
+  if (!channel && !enAttente) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id);
+  return { channel, channels, en_attente: enAttente };
 }
 
 /**
