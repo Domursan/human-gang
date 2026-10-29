@@ -205,3 +205,55 @@ button.ch-room { font: inherit; }
 .ch-plan--image .ch-room { background: transparent; border-color: transparent; box-shadow: none; }
 .ch-plan--image .ch-name { font-size: 12px; }
 .ch-plan--image .ch-passage { font-size: 11px; }
+
+/* ---------- Effets visuels (maquette « vrais écrans ») : ajouts, sans changer le design ---------- */
+/* Classes ajoutées et retirées par effets.js ; aucune ne capte le clic (pointer-events: none). */
+.ch-anim-joue { animation: ch-anim-pouls 1.2s ease-in-out 4; }
+@keyframes ch-anim-pouls {
+  0%, 100% { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); }
+  50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); }
+}
+.ch-anim-sel { animation: ch-anim-sel 1.2s ease-in-out 3; }
+@keyframes ch-anim-sel {
+  50% { box-shadow: inset 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .6); }
+}
+.ch-anim-surligne { animation: ch-anim-cadre 1.3s ease-in-out 3; }
+@keyframes ch-anim-cadre {
+  50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 34px rgba(226, 199, 126, .6); }
+}
+
+/* Carte montrée : elle se retourne face cachée (dos « Secret », puis la carte choisie). */
+.ch-anim-vol { position: fixed; z-index: 9000; pointer-events: none; perspective: 700px; border-radius: 12px; }
+.ch-anim-vol > i, .ch-anim-face { position: absolute; inset: 0; margin: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transition: transform .6s ease; }
+.ch-anim-dos { display: grid; place-items: center; box-sizing: border-box; background: repeating-linear-gradient(45deg, #1B2340 0 8px, #222C52 8px 16px);
+  color: #E2C77E; border: 2px solid #E2C77E; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); font: 700 13px Inter, sans-serif; text-align: center; }
+.ch-anim-face { transform: rotateY(180deg); width: 100%; height: 100%; box-sizing: border-box; }
+.ch-anim-vol.tourne .ch-anim-dos { transform: rotateY(180deg); }
+.ch-anim-vol.tourne .ch-anim-face { transform: rotateY(0); }
+.ch-anim-tampon { position: fixed; z-index: 9001; transform: translate(-50%, -50%) rotate(-10deg) scale(2); opacity: 0; font: 900 20px Inter, sans-serif;
+  color: #E2C77E; border: 4px solid #E2C77E; border-radius: 8px; padding: 2px 12px; background: rgba(12, 10, 6, .8); letter-spacing: .08em;
+  white-space: nowrap; pointer-events: none; animation: ch-anim-tampon .5s ease forwards; }
+@keyframes ch-anim-tampon { to { opacity: 1; transform: translate(-50%, -50%) rotate(-10deg) scale(1); } }
+
+/* Fin : bandeau « Enquête résolue » et confettis. */
+.ch-anim-ban { position: fixed; left: 50%; top: 70%; transform: translate(-50%, -50%) scale(.5); opacity: 0; z-index: 9002; pointer-events: none; white-space: nowrap;
+  font: 400 clamp(26px, 4.5vw, 52px) 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: ch-anim-ban 2.6s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.ch-anim-ban small { display: block; text-align: center; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes ch-anim-ban {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.ch-anim-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none;
+  animation-name: ch-anim-tombe; animation-timing-function: linear; animation-fill-mode: forwards; }
+@keyframes ch-anim-tombe { to { transform: translateY(105vh) rotate(720deg); } }
+
+/* Mouvement réduit : rien ne pulse ni ne glisse (effets.js n'ajoute rien non plus). */
+body.plat-calme .ch-anim-joue, body.plat-calme .ch-anim-sel, body.plat-calme .ch-anim-surligne { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ch-anim-joue, .ch-anim-sel, .ch-anim-surligne, .ch-anim-conf { animation: none !important; }
+}

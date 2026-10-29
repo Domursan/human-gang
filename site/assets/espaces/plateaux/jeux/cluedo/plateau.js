@@ -67,6 +67,21 @@ const zoneStyleGrille = ({ c, r, h }) =>
   `left:${((MARGE + c * PAS_X) / LARGEUR) * 100}%;top:${((MARGE + r * PAS_Y) / HAUTEUR) * 100}%;` +
   `width:${(L_CASE / LARGEUR) * 100}%;height:${((H_CASE + (h - 1) * PAS_Y) / HAUTEUR) * 100}%`;
 
+/**
+ * Centre d'une pièce, en % du plan, dans la disposition demandée (image ou grille). Sert à animer un pion qui arrive :
+ * on part du centre de son ancienne pièce, dans la disposition où le plan est affiché maintenant.
+ * @returns {{x: number, y: number}|null} null si la pièce est inconnue.
+ */
+export function centrePiece(piece, image) {
+  const z = PIECES[piece];
+  if (!z) return null;
+  const avant = avecImage;
+  avecImage = !!image;
+  const c = centre(z.c, z.r, z.h, piece);
+  avecImage = avant;
+  return c;
+}
+
 /** Pions déjà posés dans une même pièce : décalés pour rester lisibles. */
 function decalage(index, total) {
   if (total <= 1) return { dx: 0, dy: 0 };
@@ -117,7 +132,7 @@ export function plateauHtml({ image = null, noms = {}, pions = [], armes = [], v
     return liste.map((p, i) => {
       const { dx, dy } = decalage(i, liste.length);
       const tag = p.pseudo ? `<span class="ch-tag">${esc(p.pseudo)}</span>` : '';
-      return `<div class="ch-pawn" style="left:calc(${base.x}% + ${dx}px);top:calc(${base.y}% + ${dy}px)" role="img" aria-label="${esc(p.nom)}${p.pseudo ? `, pion de ${esc(p.pseudo)}` : ''}">` +
+      return `<div class="ch-pawn" data-suspect="${esc(p.suspect)}" data-piece="${esc(piece)}" style="left:calc(${base.x}% + ${dx}px);top:calc(${base.y}% + ${dy}px)" role="img" aria-label="${esc(p.nom)}${p.pseudo ? `, pion de ${esc(p.pseudo)}` : ''}">` +
         `<span class="ch-disc" style="background:${esc(p.couleur)}" aria-hidden="true">${esc(p.initiale)}</span>${tag}</div>`;
     });
   }).join('');

@@ -6,9 +6,10 @@
  *   historique des hypothèses, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
  *   La mise en page est dans assets/espaces/plateaux/cluedo.css ; ici, le contenu et les actions.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les listes restent en place).
+ *   Effets visuels (« à toi », pion qui glisse, carte montrée, accusation fausse) : ./effets.js, appelé après chaque rendu.
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml),
- *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml).
+ *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml), ./effets.js (creerEffets).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -18,6 +19,7 @@ import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJou
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml } from './plateau.js';
+import { creerEffets } from './effets.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -571,6 +573,7 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el, code);
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -589,6 +592,7 @@ export function creer(root, ctx) {
       if (avant !== undefined && e.jeu?.actif !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
       signal.maj(monTour() || jeMontre());
+      try { effets.maj(e, monId()); } catch (err) { console.warn('[cluedo] effets visuels', err); }
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -599,6 +603,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();

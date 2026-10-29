@@ -2,13 +2,15 @@
 /*
  * Rôle : HTML de l'écran de fin du Cluedo (l'enveloppe révélée, les accusations, les mains de chacun).
  *   Le classement et les récompenses sont à part, dans l'écran de fin commun.
- * Dépendances : core.js (esc), ../../api.js (nomDe).
+ *   Effets de la solution (retournement, bandeau, confettis) : ./effets.js (animerFin), lancés après l'insertion de l'encart.
+ * Dépendances : core.js (esc), ../../api.js (nomDe), ./effets.js (animerFin).
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.jeu.enveloppe = {suspect, arme, piece} ; etat.jeu.accusations = [{par, suspect, arme, piece, juste}] ;
  *   etat.jeu.mains = {user_id: ['s:<suspect>' | 'a:<arme>' | 'p:<pièce>']}.
  */
 import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
+import { animerFin } from './effets.js';
 
 const LISTE = { s: 'suspects', a: 'armes', p: 'pieces' };
 
@@ -70,6 +72,9 @@ export function recap(etat, contenus) {
     <h2 id="ch-fin-mains" class="ch-bloc-titre">Les mains</h2>
     <ul class="ch-liste-mains">${lignesMains || '<li class="ch-vide">Mains non révélées.</li>'}</ul>
   </section>`;
+
+  // Effets de fin après l'insertion de l'encart (tâche suivante) : seulement si la partie vient de finir sous mes yeux.
+  setTimeout(() => { try { animerFin(etat); } catch (err) { console.warn('[cluedo] effets de fin', err); } }, 0);
 
   return `<div class="ch-fin">${enveloppe}${accusations}${maines}</div>`;
 }
