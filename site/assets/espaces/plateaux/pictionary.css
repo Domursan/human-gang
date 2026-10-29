@@ -162,6 +162,32 @@ body.plat-pictionary { --plat-teinte: #3A2A16; --plat-or: #E8CC85; }
   .pi-actions-dessin .pi-btn { flex: 1 1 auto; }
 }
 
+/* ---------- Effets : « à toi », lettre dévoilée, « Trouvé ! » (classes ajoutées par table.js) ---------- */
+/* Les animations durent moins de 3 s et ne bloquent aucun clic (pointer-events: none sur les puces). */
+.pi-devine, .pi-toile-zone { position: relative; }
+.pi-devine.is-joue { animation: pi-pouls-saisie 1.2s ease-in-out 2; }
+.pi-toile.is-joue { animation: pi-pouls-saisie 1.2s ease-in-out 2; }
+@keyframes pi-pouls-saisie {
+  50% { box-shadow: 0 0 0 3px var(--pi-or), 0 0 22px rgba(232, 204, 133, .6); }
+}
+.pi-puce { position: absolute; z-index: 5; right: 10px; top: -12px; pointer-events: none; background: var(--pi-or); color: #1B1A1F;
+  font: 800 11px Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  animation: pi-puce-entree .3s ease-out both; }
+@keyframes pi-puce-entree { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.pi-case.is-revele { animation: pi-case-revele .7s ease-out both; }
+@keyframes pi-case-revele {
+  0% { transform: scale(1.5); color: var(--pi-or); background: rgba(232, 204, 133, .25); }
+  100% { transform: none; }
+}
+.pi-score.is-eclaire { animation: pi-score-eclaire .9s ease-in-out 2; }
+@keyframes pi-score-eclaire {
+  50% { background: #2A2A1F; box-shadow: inset 0 0 0 1px var(--pi-or); }
+}
+.pi-bravo.is-anime { animation: pi-bravo-lueur 1.2s ease-in-out 2; }
+@keyframes pi-bravo-lueur {
+  50% { box-shadow: 0 0 0 3px var(--pi-vert), 0 0 26px rgba(143, 195, 159, .5); transform: scale(1.02); }
+}
+
 /* ---------- Mouvement réduit ---------- */
 @media (prefers-reduced-motion: reduce) {
   .pi-table *, .pi-table *::before, .pi-table *::after { transition: none !important; animation: none !important; }

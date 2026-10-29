@@ -9,7 +9,14 @@
  *   le mot du tour précédent et son dessin s'affichent quelques secondes.
  *   Bandeau (manche, dessinateur, chrono), scores (points ; coche pour ceux qui ont trouvé), chat à droite
  *   (en tiroir sur téléphone). Mise en page : assets/espaces/plateaux/pictionary.css.
- * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast, sb), ../../api.js (plat, erreurTexte), ../../vues/commun.js (avatarHtml, pseudoHtml,
+ *   Effets (sur les vrais changements d'état, jamais au premier état reçu) : « À toi de dessiner » (toile qui pulse,
+ *   puce) pour le dessinateur au début du dessin, « À toi de deviner » (champ qui pulse, puce) pour les devineurs ;
+ *   une lettre de l'indice qui se dévoile ; « Trouvé ! » (ligne de score qui s'éclaire, et bandeau pour moi, son) ;
+ *   « Temps écoulé » (son) quand le temps finit sans que tout le monde ait trouvé ; son « Mot choisi » pour les devineurs ;
+ *   son « Trait de crayon » à chaque trait posé. Le signal « à toi de jouer » reste celui de commun/tour-signal.js.
+ *   Animations coupées si le mouvement réduit est demandé (motionAllowed) ; sons par commun/sons-jeux.js.
+ * Dépendances : commun/tour-signal.js (creerSignalTour), commun/sons-jeux.js (jouerSonJeu), core.js (esc, toast, sb,
+ *   motionAllowed), ../../api.js (plat, erreurTexte), ../../vues/commun.js (avatarHtml, pseudoHtml,
  *   joueurDe, moiJoueur, brancherChrono, envoyer), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (toile, palette).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
@@ -17,11 +24,12 @@
  *   'trait' { n, s, c, e, k, p } (points p à partir du rang k du trait s), 'annuler' { n, s }, 'effacer' { n }.
  *   n est le numéro du tour : un message d'un tour plus ancien est ignoré ; un tour plus récent remet la toile à zéro.
  */
-import { esc, toast, sb } from '../../../../commun/core.js';
+import { esc, toast, sb, motionAllowed } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { avatarHtml, pseudoHtml, joueurDe, moiJoueur, brancherChrono, envoyer } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
+import { jouerSonJeu } from '../../../../commun/sons-jeux.js';
 import { LARGEUR, HAUTEUR, FOND, PALETTE, EPAISSEURS, GOMME, tracerToile, indiceHtml, nombreCachees, arrondi, borne, couleurValide } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -166,7 +174,8 @@ export function creer(root, ctx) {
   let dernierRevele = undefined; // tour dont le mot précédent a déjà été montré
   let timerRevele = null;
   let choixCourants = [];
-  let cleChoix = '', cleBandeau = '', cleScores = '', cleFil = '';
+  let cleChoix = '', cleBandeau = '', cleScores = '', cleFil = '', cleIndice = '';
+  const minuteries = new Set();  // délais des effets visuels (annulés à la destruction de la table)
 
   /* ---------- Chat : colonne (ordinateur) ou tiroir (téléphone) ---------- */
 
@@ -384,6 +393,7 @@ export function creer(root, ctx) {
   function surPointerFin() {
     if (!courant) return;
     courant = null;
+    jouerSonJeu('pictionary', 1);  // trait de crayon posé
   }
 
   /** Annule le dernier trait (le retrait part sur le canal, puis la toile est enregistrée). */
@@ -455,7 +465,12 @@ export function creer(root, ctx) {
     if (dess) refs.motGrand.textContent = j.mot || '';
     refs.indiceZone.hidden = dess;
     if (!dess) {
-      refs.indice.innerHTML = indiceHtml(j.indice);
+      // Reconstruit seulement quand l'indice change : les animations des lettres ne doivent pas repartir à chaque mise à jour.
+      const cle = `${j.tour_n}|${j.indice}`;
+      if (cle !== cleIndice) {
+        cleIndice = cle;
+        refs.indice.innerHTML = indiceHtml(j.indice);
+      }
       refs.indice.setAttribute('aria-label', `Indice : ${nombreCachees(j.indice)} lettre(s) à trouver`);
     }
     refs.dessinateur.textContent = dess ? 'Tu dessines.' : `${pseudoDe(j.dessinateur) || 'Un joueur'} dessine.`;
@@ -493,7 +508,7 @@ export function creer(root, ctx) {
     const cle = JSON.stringify([joueurs.map((x) => [x.user_id, x.points, x.pseudo]), trouves, j.dessinateur, j.phase, monId()]);
     if (cle === cleScores) return;
     cleScores = cle;
-    refs.scores.innerHTML = joueurs.length ? `<ol class="pi-scores">${joueurs.map((x, i) => `<li class="pi-score${x.user_id === j.dessinateur && j.phase === 'dessin' ? ' is-dessin' : ''}${x.user_id === monId() ? ' is-moi' : ''}">
+    refs.scores.innerHTML = joueurs.length ? `<ol class="pi-scores">${joueurs.map((x, i) => `<li data-uid="${esc(x.user_id)}" class="pi-score${x.user_id === j.dessinateur && j.phase === 'dessin' ? ' is-dessin' : ''}${x.user_id === monId() ? ' is-moi' : ''}">
         <span class="pi-rang" aria-hidden="true">${i + 1}</span>
         ${avatarHtml(x, 28)}
         <span class="pi-score-nom">${pseudoHtml(x)}</span>
@@ -605,12 +620,126 @@ export function creer(root, ctx) {
   const tEnvoi = setInterval(vider, PAS_ENVOI);
   const tSauvegarde = setInterval(enregistrer, PAS_SAUVEGARDE);
 
+  /* ---------- Effets visuels et sonores ---------- */
+
+  /** Programme une action dans quelques millisecondes ; annulée si la table est détruite. */
+  function plus(fn, ms) {
+    const t = setTimeout(() => { minuteries.delete(t); fn(); }, ms);
+    minuteries.add(t);
+  }
+
+  /** Rejoue une classe d'animation sur un élément (la retire, force le recalcul, la remet, puis la retire après duree ms). */
+  function animer(el, classe, duree) {
+    if (!el) return;
+    el.classList.remove(classe);
+    void el.offsetWidth;
+    el.classList.add(classe);
+    plus(() => el.classList.remove(classe), duree);
+  }
+
+  /** Puce « À toi de … » posée dans un bloc : ne bloque aucun clic, disparaît après quelques secondes. */
+  function puce(parent, texte) {
+    if (!parent) return;
+    parent.querySelector(':scope > .pi-puce')?.remove();
+    const p = document.createElement('span');
+    p.className = 'pi-puce';
+    p.textContent = texte;
+    parent.append(p);
+    plus(() => p.remove(), 4500);
+  }
+
+  /**
+   * Ce qui a changé entre l'état précédent (avant) et le nouvel (etat, déjà posé). Vide quand il n'y a pas d'état
+   * précédent : le premier état reçu, à l'ouverture de la page, n'annonce rien.
+   */
+  function changements(avant) {
+    const ev = { cloche: false, aDessiner: false, aDeviner: false, indice: [], trouves: [], temps: false };
+    if (!avant) return ev;
+    const a = avant.jeu || {};
+    const n = jeu();
+    const memeTour = a.tour_n != null && a.tour_n === n.tour_n;
+
+    // Début du dessin : le dessinateur voit « À toi de dessiner », les devineurs « À toi de deviner ».
+    if (a.phase !== 'dessin' && n.phase === 'dessin') {
+      ev.aDessiner = estDessinateur();
+      ev.aDeviner = peutDeviner();
+      // Le mot est choisi : cloche pour les devineurs (le dessinateur entend déjà son signal de tour).
+      if (memeTour && a.phase === 'choix') ev.cloche = !estDessinateur();
+    }
+
+    // Fin du temps : le dessin finit sans que tous les devineurs aient trouvé.
+    if (a.phase === 'dessin' && n.phase !== 'dessin') {
+      const devineurs = (avant.joueurs || []).filter((x) => !x.parti && x.user_id !== a.dessinateur).length;
+      ev.temps = (a.trouves || []).length < devineurs;
+    }
+
+    // Nouvelle lettre de l'indice (pour les devineurs, pendant le même dessin).
+    if (memeTour && a.phase === 'dessin' && n.phase === 'dessin' && !estDessinateur() && a.indice && n.indice) {
+      const avantMots = String(a.indice).split(' ');
+      const maintenant = String(n.indice).split(' ');
+      if (avantMots.length === maintenant.length) {
+        let k = 0;  // rang de la case (les espaces entre les mots ne sont pas des cases)
+        maintenant.forEach((c, i) => {
+          if (c === '') return;
+          if (avantMots[i] === '_' && c !== '_') ev.indice.push(k);
+          k++;
+        });
+      }
+    }
+
+    // Nouveaux joueurs qui ont trouvé pendant ce dessin.
+    if (n.phase === 'dessin') {
+      const deja = memeTour ? (a.trouves || []) : [];
+      ev.trouves = (n.trouves || []).filter((u) => !deja.includes(u));
+    }
+    return ev;
+  }
+
+  /** Joue les effets d'un changement (après le rendu, pour que les éléments à animer existent). */
+  function appliquerEffets(ev) {
+    const anime = motionAllowed();
+    if (ev.cloche) jouerSonJeu('pictionary', 5);
+    if (ev.aDessiner) {
+      puce(refs.toile.closest('.pi-toile-zone'), 'À toi de dessiner');
+      if (anime) animer(refs.toile, 'is-joue', 2400);
+    }
+    if (ev.aDeviner) {
+      puce(refs.devine, 'À toi de deviner');
+      if (anime) animer(refs.devine, 'is-joue', 2400);
+    }
+    if (ev.indice.length) {
+      jouerSonJeu('pictionary', 2);
+      if (anime) {
+        const cases = refs.indice.querySelectorAll('.pi-case');
+        ev.indice.forEach((k, i) => plus(() => {
+          const c = cases[k];
+          if (!c) return;
+          c.classList.add('is-revele');
+          plus(() => c.classList.remove('is-revele'), 800);
+        }, i * 120));
+      }
+    }
+    if (ev.trouves.length) {
+      const lignes = [...refs.scores.querySelectorAll('[data-uid]')];
+      for (const u of ev.trouves) {
+        const li = lignes.find((x) => x.dataset.uid === String(u));
+        if (li && anime) animer(li, 'is-eclaire', 1800);
+      }
+      // « Trouvé ! » sonne pour tout le monde (choix d'Ethan) ; le bandeau « Bravo » seulement pour celui qui a trouvé.
+      jouerSonJeu('pictionary', 3);
+      if (ev.trouves.includes(monId()) && anime) animer(refs.bravo, 'is-anime', 2400);
+    }
+    if (ev.temps) jouerSonJeu('pictionary', 4);
+  }
+
   /* ---------- Mise à jour depuis l'état ---------- */
 
-  /** Nouvel état : tour, canal, zones, scores, fil, et mot précédent au début d'un tour. */
+  /** Nouvel état : tour, canal, zones, scores, fil, mot précédent au début d'un tour, puis effets des changements. */
   function maj(nouvel) {
     if (!nouvel) return;
+    const avant = etat;
     etat = nouvel;
+    const ev = changements(avant);
     synchroniserTour();
     if (!estDessinateur() && phase() === 'dessin') fusionner(jeu().traits);
     if (etat.partie?.statut === 'en_cours' && jeu().canal) ouvrirCanal(jeu().canal);
@@ -621,8 +750,10 @@ export function creer(root, ctx) {
     rendreFil();
     refs.quitter.disabled = !moiJoueur(etat);
     verifierRevele();
+    appliquerEffets(ev);
     chat?.maj(etat);
-    signal.maj(peutDessiner());
+    // « À toi » : le dessinateur qui dessine, et aussi ceux qui devinent (choix d'Ethan).
+    signal.maj(peutDessiner() || peutDeviner());
   }
 
   const signal = creerSignalTour();
@@ -638,6 +769,8 @@ export function creer(root, ctx) {
       clearInterval(tEnvoi);
       clearInterval(tSauvegarde);
       clearTimeout(timerRevele);
+      for (const t of minuteries) clearTimeout(t);
+      minuteries.clear();
       if (rafId) cancelAnimationFrame(rafId);
       arretChrono?.();
       fermerCanal();
