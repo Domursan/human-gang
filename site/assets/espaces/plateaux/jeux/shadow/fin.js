@@ -3,8 +3,9 @@
  * Rôle : HTML de l'encart de fin de Shadow Hunters, façon maquette shadow-s7 : grand titre du camp gagnant,
  *   une carte par personnage (portrait, camp, vivant ou mort, PV, victoire, gagnant), et le bilan de la partie.
  *   Le classement et les récompenses sont dans l'écran de fin commun (plateaux/vues/fin.js).
+ *   Au passage, la victoire est jouée (bandeau, confettis, son) par ./effets.js, une seule fois, si la table a suivi la partie.
  * Dépendances : core.js (esc), ../../api.js (nomDe), ../../vues/commun.js (imagePlateau),
- *   ./plateau.js (campDe, CAMP_LIBELLE, couleurCamp, PV_MAX, persoVisuelHtml).
+ *   ./plateau.js (campDe, CAMP_LIBELLE, couleurCamp, PV_MAX, persoVisuelHtml), ./effets.js (jouerVictoire).
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.joueurs[i] = { user_id, pseudo, elimine, gagne, etat: { revele, perso, camp, degats } } ;
  *   etat.partie.raison = 'hunters' | 'shadows' | 'neutre' (camp qui a gagné, fixé par le serveur).
@@ -13,6 +14,7 @@ import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 import { imagePlateau } from '../../vues/commun.js';
 import { campDe, CAMP_LIBELLE, couleurCamp, PV_MAX, persoVisuelHtml } from './plateau.js';
+import { jouerVictoire } from './effets.js';
 
 /** Titre et couleur du camp qui a gagné la partie (fixés par le serveur). */
 const ISSUE = {
@@ -23,6 +25,7 @@ const ISSUE = {
 
 /** Encart de fin : grand titre, une carte par personnage, bilan. */
 export function recap(etat, contenus) {
+  try { jouerVictoire(etat); } catch (err) { console.warn('[shadow] victoire', err); }
   const issue = ISSUE[etat?.partie?.raison] || { titre: 'Les personnages', couleur: '#B7C4DA' };
   const vivants = (etat?.joueurs || []).filter((j) => !j.parti);
   const cartes = vivants.map((j, i) => {

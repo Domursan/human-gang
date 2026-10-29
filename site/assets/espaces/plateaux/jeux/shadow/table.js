@@ -7,6 +7,7 @@
  *   Une carte Vision reçue s'affiche dans une fenêtre (maquette OmbresVisionTel).
  *   La mise en page est dans assets/espaces/plateaux/shadow.css ; les dessins dans ./plateau.js.
  *   Chaque zone n'est reconstruite que si son HTML change (le focus et les listes restent en place).
+ *   Effets visuels et sons (à toi, dés, blessures, attaque ratée, Vision) : ./effets.js, après chaque rendu.
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau,
  *   envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
@@ -19,6 +20,7 @@ import { avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, image
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { LIEUX, GROUPES, PV_MAX, CAMP_LIBELLE, campDe, voisinsDe, plateauHtml, pisteHtml, medaillonsHtml, persoVisuelHtml } from './plateau.js';
+import { creerEffets } from './effets.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
@@ -895,6 +897,7 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el);
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -938,6 +941,7 @@ export function creer(root, ctx) {
       if (avant !== undefined && e.partie.tour !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
       signal.maj(monTour() || (phase() === 'vision' && !!monId() && jeu().vision?.pour === monId() && partieEnCours()));
+      try { effets.maj(e, monId()); } catch (err) { console.warn('[shadow] effets visuels', err); }
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -948,6 +952,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       arretChrono?.();
       arretDes?.();
       grand.removeEventListener('change', surEcran);
