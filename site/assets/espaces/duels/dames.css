@@ -53,3 +53,20 @@
 .duels-dames-actions:empty { display: none; }
 .duels-dames-annuler, .duels-dames-jouer { min-height: 44px; }
 .duels-dames-regle { margin: 0 0 8px; font-size: 14px; color: var(--muted, #B9B2A8); }
+
+/* ===== Effets des vrais coups (vues/dames.js) : pulsations, bandeau, pions qui disparaissent =====
+   Ajouts seulement : coupés par le réglage calme des duels et par le mouvement réduit (le JS ne les lance pas non plus). */
+.zz-joue { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6) !important; animation: zzPouls 1.2s ease-in-out 4; }
+@keyframes zzPouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.zz-libre { animation: zzLibre 1.3s ease-in-out 3; }
+@keyframes zzLibre { 50% { box-shadow: inset 0 0 0 3px #E2C77E, 0 0 18px rgba(226, 199, 126, .7); } }
+.zz-fantome { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; pointer-events: none; }
+.zz-fantome-pion { position: relative; width: 76%; aspect-ratio: 1; border-radius: 50%; box-sizing: border-box; display: grid; place-items: center;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 2px 4px rgba(0, 0, 0, .35); }
+.zz-fantome-pion.is-1 { background: radial-gradient(circle at 35% 30%, #FFFBF1, #E9DCC0 70%); border: 3px solid #8C7A5A; }
+.zz-fantome-pion.is-2 { background: radial-gradient(circle at 35% 30%, #C25A43, #8E3424 72%); border: 3px solid #4D1A12; }
+.zz-fantome-pion.is-2::before { content: ''; position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #F3EAD6; box-shadow: 0 0 0 2px #4D1A12; }
+.zz-fantome-pion .duels-dames-couronne { width: 56%; height: 56%; fill: #E8B04B; stroke: #3B2A12; stroke-width: 0.9; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .zz-joue, .zz-libre { animation: none !important; } }
+body.duels-calme .zz-joue, body.duels-calme .zz-libre { animation: none !important; }

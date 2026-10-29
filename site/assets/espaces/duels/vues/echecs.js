@@ -9,10 +9,18 @@
  * Clavier : flèches pour se déplacer d'une case, Entrée ou Espace pour choisir (bouton natif), Échap pour annuler.
  * Dernier coup surligné ; roi en échec en rouge ; « Échec ! » annoncé (aria-live) ; pièces prises de chaque côté.
  * Coordonnées a-h et 1-8 sur les bords. Les cases sont des boutons : une seule case est dans l'ordre de tabulation.
- * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
+ * Effets (maquette validée) : à mon tour, mon nom pulse et les pièces qui peuvent prendre s'éclairent ; un nouveau coup fait
+ *   glisser la pièce de sa case de départ à son arrivée, la pièce prise disparaît, la ligne « Pris par… » pulse, et un échec
+ *   fait clignoter le roi et afficher le bandeau « Échec ! » (sons « Pièce posée », « Pièce prise », « Échec »). Une pièce
+ *   choisie s'éclaire, avec « Annuler la sélection ». Déclenché par la comparaison avec l'état précédent (même partie,
+ *   nb_coups qui augmente) ; le premier état n'anime rien. Pas d'animation si le mouvement est réduit ou si les duels sont
+ *   en mode calme. Le son « à toi de jouer » reste celui de commun/tour-signal.js. Le « Échec et mat » et la « Nulle » de fin
+ *   de partie sont affichés par vues/fin.js, hors de ce fichier (la table ne voit plus l'état terminé).
+ * Dépendances : core.js (toast, motionAllowed), sons-jeux.js (jouerSonJeu), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { toast } from '../../../commun/core.js';
+import { toast, motionAllowed } from '../../../commun/core.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 import { duel, erreurTexte } from '../api.js';
 import { chargerCss } from '../plateau-commun.js';
 import { creerCadre, nomJoueur } from './commun.js';
@@ -128,6 +136,37 @@ function listePris(libelleTxt, types, couleur) {
   return s;
 }
 
+/** Pièce d'effet (pièce prise qui s'efface) : hors du rendu, paint() ne la reprend pas ni ne la retire. */
+function fantome(ch) {
+  const f = document.createElement('span');
+  f.className = 'zz-fantome';
+  f.setAttribute('aria-hidden', 'true');
+  const s = document.createElement('span');
+  s.className = `zz-fantome-piece is-${estBlanc(ch) ? 'blanc' : 'noir'}`;
+  s.textContent = SYMBOLE[ch.toLowerCase()];
+  f.append(s);
+  return f;
+}
+
+/** Bandeau bref au centre de l'écran (« Échec ! »), sans interaction. */
+function bandeau(titre, sous) {
+  const b = document.createElement('div');
+  b.className = 'zz-ban';
+  b.textContent = titre;
+  const s = document.createElement('small');
+  s.textContent = sous;
+  b.append(s);
+  document.body.append(b);
+  setTimeout(() => b.remove(), 2300);
+}
+
+/** Ajoute une classe d'effet un instant, puis la retire. */
+function passager(el, classe, ms) {
+  if (!el) return;
+  el.classList.add(classe);
+  setTimeout(() => el.classList.remove(classe), ms);
+}
+
 /**
  * Monte la table des Échecs dans root.
  * @param {HTMLElement} root conteneur de la vue (vidé par le cadre commun).
@@ -157,7 +196,7 @@ export function creer(root, ctx) {
     etat: null, flip: null, cases: new Array(64).fill(null), curseur: 52,
     sel: null, coups: null, cle: null,
     attente: false, timer: null, promo: null, glisse: null, glisseFait: false,
-    annonce: '', actionsHtml: '', regle: false, vivant: true,
+    annonce: '', actionsHtml: '', regle: false, vivant: true, aTo: false,
   };
 
   /** Coups jouables depuis une case (vide si ce n'est pas mon tour ou si la liste n'est pas encore reçue). */
@@ -215,6 +254,7 @@ export function creer(root, ctx) {
       toast(erreurTexte(err), 'error');
     }
     paint();
+    prisesVues();
   }
 
   /** Dessine les cases, la légende, les pièces prises, l'annonce d'échec et les boutons. */
@@ -275,6 +315,82 @@ export function creer(root, ctx) {
     if (actions !== st.actionsHtml) { st.actionsHtml = actions; el.actions.innerHTML = actions; }
   }
 
+  /** Son de la table (aucun son après le départ de la page). */
+  const son = (n) => { if (st.vivant) jouerSonJeu('echecs', n); };
+  /** Animations permises : préférence « effets », mouvement réduit et réglage calme des duels. */
+  const animer = () => st.vivant && motionAllowed() && !document.body.classList.contains('duels-calme');
+
+  /** Pièce choisie : sa case s'éclaire, « Annuler la sélection » pulse, son de sélection. */
+  function effetChoix(i) {
+    son(2);
+    if (!animer()) return;
+    passager(st.cases[i], 'zz-libre', 3000);
+    passager(el.actions.querySelector('[data-annuler]'), 'zz-joue', 4000);
+  }
+
+  /** Mon tour : mon nom pulse ; les pièces qui peuvent prendre s'éclairent dès que la liste des coups est reçue. */
+  function effetATo() {
+    if (!animer()) return;
+    passager(root.querySelector('.duels-face-j.is-tour'), 'zz-joue', 5000);
+    st.aTo = true;
+    prisesVues();
+  }
+
+  /** Éclaire les pièces qui peuvent prendre (une seule fois, quand les coups sont connus). */
+  function prisesVues() {
+    if (!st.aTo || !st.coups) return;
+    st.aTo = false;
+    if (!animer()) return;
+    const g = grilleDe(st.etat);
+    const depuis = new Set(st.coups.filter((m) => g[m.a] !== '.').map((m) => m.de));
+    depuis.forEach((i) => passager(st.cases[i], 'zz-libre', 4000));
+  }
+
+  /** Coup joué : la pièce glisse de sa case de départ à son arrivée ; la pièce prise disparaît au contact. */
+  function animerCoup(prevG, de, a, roi) {
+    // Prise : pièce sur l'arrivée, ou pion pris en passant (case voisine, vide après le coup).
+    const pion = prevG[de].toLowerCase() === 'p';
+    const pris = prevG[a] !== '.' ? a : (pion && de % 8 !== a % 8 ? Math.floor(de / 8) * 8 + (a % 8) : -1);
+    const capture = pris >= 0 && prevG[pris] !== '.';
+    const duree = 900;
+    if (animer()) {
+      const ca = st.cases[a], cd = st.cases[de];
+      const pc = ca?.querySelector('.duels-echecs-piece');
+      if (pc && cd && ca) {
+        const r1 = cd.getBoundingClientRect(), r2 = ca.getBoundingClientRect();
+        pc.animate([{ transform: `translate(${r1.left - r2.left}px,${r1.top - r2.top}px)` }, { transform: 'translate(0,0)' }],
+          { duration: duree, easing: 'ease-in-out', fill: 'backwards' });
+      }
+      if (capture && st.cases[pris]) {
+        const f = fantome(prevG[pris]);
+        st.cases[pris].append(f);
+        f.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.3)' }], { duration: 450, delay: duree, fill: 'both' });
+        setTimeout(() => f.remove(), duree + 500);
+        passager(root.querySelector('.duels-echecs-pris'), 'zz-joue', 4000);
+      }
+    }
+    setTimeout(() => son(capture ? 1 : 2), duree);
+    if (roi >= 0) {
+      setTimeout(() => {
+        son(3);
+        if (!animer()) return;
+        passager(st.cases[roi], 'zz-roi', 3800);
+        bandeau('Échec !', 'Le roi doit s’échapper');
+      }, duree + 300);
+    }
+  }
+
+  /** Vrais changements seulement : nouveau coup (même partie, nb_coups augmenté) et début de mon tour. */
+  function effets(prec, e) {
+    if (!prec || !st.vivant || !e.partie) return;
+    const p = e.partie, q = prec.partie;
+    if (p.id === q.id && p.nb_coups > q.nb_coups) {
+      const dz = derniere(e);
+      if (dz) animerCoup(grilleDe(prec), dz.de, dz.a, roiEnEchec(e));
+    }
+    if (p.statut === 'en_cours' && cadre.monTour(e) && !cadre.monTour(prec)) effetATo();
+  }
+
   /** Statut sous la barre : à moi, au tour de l'autre, ou le robot. */
   function statut(e) {
     if (!e.moi?.joue) return;
@@ -320,6 +436,7 @@ export function creer(root, ctx) {
     }
     st.sel = estMien(i) && coupsDe(i).length ? i : null;
     paint();
+    if (st.sel !== null) effetChoix(st.sel);
   }
 
   /** Vrai si la case contient une pièce du camp joué par le membre connecté. */
@@ -469,6 +586,7 @@ export function creer(root, ctx) {
   return {
     /** Met à jour la table avec l'état du duel. */
     maj(e) {
+      const prec = st.etat;
       st.etat = e;
       st.attente = false;
       clearTimeout(st.timer);
@@ -486,6 +604,7 @@ export function creer(root, ctx) {
       chargerCoups(e);
       statut(e);
       paint();
+      effets(prec, e);
     },
     message(m) { cadre.message(m); },
     detruire() {

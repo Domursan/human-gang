@@ -10,10 +10,17 @@
  *   qui peuvent prendre sont marquées. Pendant une rafle, les pièces sautées sont surlignées.
  * Clavier : flèches vers la case la plus proche dans la direction (les arrivées de la sélection d'abord), Entrée ou Espace pour choisir, Échap pour annuler.
  * Dernier coup surligné (départ et arrivée). Une seule case est dans l'ordre de tabulation.
- * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
+ * Effets (maquette validée) : à mon tour, mon nom pulse et les pièces qui peuvent prendre s'éclairent ; un nouveau coup fait
+ *   glisser la pièce case après case (rafle comprise) et disparaître chaque pièce prise après son saut, avec les sons
+ *   « Glissement » et « Pièce prise » ; une pièce choisie s'éclaire, avec le bouton « Annuler la sélection ». Déclenché par la
+ *   comparaison avec l'état précédent (même partie, nb_coups qui augmente) ; le premier état n'anime rien. Pas d'animation
+ *   si le mouvement est réduit ou si les duels sont en mode calme. Le son « à toi de jouer » reste celui de commun/tour-signal.js.
+ *   La fin de partie (victoire, nulle) est affichée par vues/fin.js, hors de ce fichier.
+ * Dépendances : core.js (toast, motionAllowed), sons-jeux.js (jouerSonJeu), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { toast } from '../../../commun/core.js';
+import { toast, motionAllowed } from '../../../commun/core.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 import { duel, erreurTexte } from '../api.js';
 import { chargerCss } from '../plateau-commun.js';
 import { creerCadre, nomJoueur } from './commun.js';
@@ -78,6 +85,34 @@ function libelle(i, ch, mienne, cible) {
   return t;
 }
 
+/** Pion d'effet (pion qui saute ou pion pris) : hors du rendu, paint() ne le reprend pas ni ne le retire. */
+function fantome(ch) {
+  const f = document.createElement('span');
+  f.className = 'zz-fantome';
+  f.setAttribute('aria-hidden', 'true');
+  const p = document.createElement('span');
+  p.className = `zz-fantome-pion is-${camp(ch)}`;
+  if (estDame(ch)) p.innerHTML = COURONNE;
+  f.append(p);
+  return f;
+}
+
+/** Chemin joué, case après case (l'action vaut « chemin:a,b,c »), ou null. */
+function cheminDu(e) {
+  const dz = derniere(e);
+  if (!dz) return null;
+  const act = e.partie.dernier.action;
+  const c = typeof act === 'string' && act.startsWith('chemin:') ? act.slice('chemin:'.length).split(',').map(Number) : [dz.de, dz.a];
+  return c.length >= 2 && c.every(Number.isInteger) ? c : null;
+}
+
+/** Ajoute une classe d'effet un instant, puis la retire. */
+function passager(el, classe, ms) {
+  if (!el) return;
+  el.classList.add(classe);
+  setTimeout(() => el.classList.remove(classe), ms);
+}
+
 /**
  * Monte la table des Dames dans root.
  * @param {HTMLElement} root conteneur de la vue (vidé par le cadre commun).
@@ -101,7 +136,7 @@ export function creer(root, ctx) {
     /** Coups jouables : tableaux de cases (chemins), ou null pendant le chargement. */
     coups: null, cle: null,
     sel: null, trajet: [], attente: false, timer: null, glisseFait: false,
-    infoTxt: '', actionsHtml: '', regle: false, vivant: true,
+    infoTxt: '', actionsHtml: '', regle: false, vivant: true, aTo: false,
   };
 
   /** Chemins possibles (tableaux de cases) reçus du serveur. */
@@ -164,6 +199,7 @@ export function creer(root, ctx) {
       toast(erreurTexte(err), 'error');
     }
     paint();
+    prisesVues();
   }
 
   /** Envoie la rafle (ou le déplacement) : départ et chemin complet. */
@@ -207,7 +243,7 @@ export function creer(root, ctx) {
       }
       if (i === st.sel) { annuler(); return; }
     }
-    if (departs().has(i)) { st.sel = i; st.trajet = [i]; paint(); }
+    if (departs().has(i)) { st.sel = i; st.trajet = [i]; paint(); effetChoix(i); }
   }
 
   /** Place le curseur (et le focus) sur une case. */
@@ -284,6 +320,93 @@ export function creer(root, ctx) {
     el.legende.innerHTML = `${lg(j1, '1', 'Pions crème', compte['1'])}<span aria-hidden="true">·</span>${lg(j2, '2', 'Pions rouge brun', compte['2'])}`;
   }
 
+  /** Son de la table (aucun son après le départ de la page). */
+  const son = (n) => { if (st.vivant) jouerSonJeu('dames', n); };
+  /** Animations permises : préférence « effets », mouvement réduit et réglage calme des duels. */
+  const animer = () => st.vivant && motionAllowed() && !document.body.classList.contains('duels-calme');
+
+  /** Pièce choisie : sa case s'éclaire, « Annuler la sélection » pulse, tic de sélection. */
+  function effetChoix(i) {
+    son(3);
+    if (!animer()) return;
+    passager(st.cases[i], 'zz-libre', 3000);
+    passager(el.actions.querySelector('[data-annuler]'), 'zz-joue', 4000);
+  }
+
+  /** Mon tour : mon nom pulse ; les pièces qui peuvent prendre s'éclairent dès que la liste des coups est reçue. */
+  function effetATo() {
+    if (!animer()) return;
+    passager(root.querySelector('.duels-face-j.is-tour'), 'zz-joue', 5000);
+    st.aTo = true;
+    prisesVues();
+  }
+
+  /** Éclaire les pièces qui peuvent prendre et le message « Prise obligatoire » (une seule fois, coups connus). */
+  function prisesVues() {
+    if (!st.aTo || !st.coups) return;
+    st.aTo = false;
+    if (!animer()) return;
+    if (el.info.textContent) passager(el.info, 'zz-joue', 5000);
+    st.cases.forEach((c) => { if (c?.classList.contains('is-prise')) passager(c, 'zz-libre', 4000); });
+  }
+
+  /** La pièce posée sur la case d'arrivée glisse case après case le long du chemin joué (départ compris). */
+  function glisser(chemin, duree) {
+    const arrivee = st.cases[chemin[chemin.length - 1]];
+    const pion = arrivee?.querySelector('.duels-dames-pion');
+    if (!pion) return;
+    const rf = arrivee.getBoundingClientRect();
+    const d = chemin.map((c) => {
+      const r = st.cases[c]?.getBoundingClientRect();
+      return r ? [r.left - rf.left, r.top - rf.top] : [0, 0];
+    });
+    const t = ([x, y]) => `translate(${x}px,${y}px)`;
+    const n = chemin.length - 1;
+    const images = [{ transform: t(d[0]), offset: 0 }];
+    for (let k = 1; k <= n; k++) {
+      images.push({ transform: t(d[k - 1]), offset: (k - 1) / n });
+      images.push({ transform: t(d[k]), offset: (k - 0.2) / n }); // arrivée sur la case, puis une courte pause
+    }
+    images.push({ transform: 'translate(0px,0px)', offset: 1 });
+    const an = pion.animate(images, { duration: duree, easing: 'ease-in-out' });
+    setTimeout(() => an.cancel(), duree + 200);
+  }
+
+  /** Coup joué : glissement, puis chaque pièce sautée disparaît après son saut (sons « Pièce prise »). */
+  function animerCoup(prevG, chemin) {
+    const n = chemin.length - 1;
+    const mover = camp(prevG[chemin[0]]);
+    if (!mover) return;
+    const adv = adverse(mover);
+    const duree = Math.min(2400, 600 + 600 * n);
+    son(2);
+    if (animer()) glisser(chemin, duree);
+    for (let s = 0; s < n; s++) {
+      for (const j of sautees(chemin[s], chemin[s + 1], prevG, adv)) {
+        const t = ((s + 0.8) / n) * duree; // la pièce atteint la case suivante ; la pièce sautée disparaît à cet instant
+        setTimeout(() => son(1), t);
+        const c = st.cases[j];
+        if (!c || !animer()) continue;
+        const f = fantome(prevG[j]);
+        c.append(f);
+        f.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.25)', opacity: 1, offset: 0.4 }, { transform: 'scale(.2)', opacity: 0 }],
+          { duration: 520, delay: t, easing: 'ease-in', fill: 'both' });
+        setTimeout(() => f.remove(), t + 600);
+      }
+    }
+  }
+
+  /** Vrais changements seulement : nouveau coup (même partie, nb_coups augmenté) et début de mon tour. */
+  function effets(prec, e) {
+    if (!prec || !st.vivant || !e.partie) return;
+    const p = e.partie, q = prec.partie;
+    if (p.id === q.id && p.nb_coups > q.nb_coups) {
+      const chemin = cheminDu(e);
+      if (chemin) animerCoup(grilleDe(prec), chemin);
+    }
+    if (p.statut === 'en_cours' && cadre.monTour(e) && !cadre.monTour(prec)) effetATo();
+  }
+
   /** Statut sous la barre : à moi, au tour de l'autre, ou le robot. */
   function statut(e) {
     if (!e.moi?.joue) return;
@@ -323,6 +446,7 @@ export function creer(root, ctx) {
   return {
     /** Met à jour la table avec l'état du duel. */
     maj(e) {
+      const prec = st.etat;
       st.etat = e;
       st.attente = false;
       clearTimeout(st.timer);
@@ -340,6 +464,7 @@ export function creer(root, ctx) {
       chargerCoups(e);
       statut(e);
       paint();
+      effets(prec, e);
     },
     message(m) { cadre.message(m); },
     detruire() {
