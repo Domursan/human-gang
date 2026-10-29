@@ -1,4 +1,3 @@
 # Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
-# 2026-10-29 : Secret Santa toujours sur Discord, rattrapage dès 8 h, liste d'attente des annonces de cartes
-hg-notify
+# 2026-10-29 : excuse pour le retard dans les MP rattrapés du Secret Santa
 hg-cron

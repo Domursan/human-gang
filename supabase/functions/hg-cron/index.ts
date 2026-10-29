@@ -399,6 +399,10 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
 
 /** Heure suisse (0 à 23). */
 const zurichHour = () => Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', hour12: false }).format(new Date())) % 24;
+/** Excuse ajoutée en tête d'un MP rattrapé quand l'événement date de plus d'une heure. */
+const EXCUSE_RETARD = '🙏 Désolé pour le retard : ce message aurait dû t\'arriver plus tôt, mais un souci technique l\'a bloqué. Merci pour ta patience !';
+/** Vrai si la date ISO a plus d'une heure. */
+const enRetard = (d: string | null | undefined) => !!d && Date.now() - new Date(d).getTime() > H;
 /** Secret Santa : MP dès qu'il y a un identifiant Discord valide (sans tenir compte du choix du membre). */
 const aDiscord = (p: { discord_id: string | null } | null | undefined) => !!p && isSnowflake(p.discord_id);
 
@@ -462,7 +466,8 @@ async function ssRattrapage(out: Counters, attempts: Attempt[]) {
       const rendered = kind === 'sent'
         ? renderTemplate('ss_gift_sent', { ...base, pseudo: mdSafe(other!.pseudo) }, tpl)
         : renderTemplate('ss_gift_received', { ...base, pseudo: mdSafe(other!.pseudo), cible: mdSafe(gens.get(p.user_id)?.pseudo ?? '') }, tpl);
-      const ok = await envoyer(otherId, other!, embed({ ...embedFrom(rendered), url: page, color: COLOR.ss }), kind === 'sent' ? 'rattrapage : cadeau envoyé' : 'rattrapage : cadeau reçu');
+      const quand = kind === 'sent' ? p.sent_at : p.received_at;
+      const ok = await envoyer(otherId, other!, { ...(enRetard(quand) ? { content: EXCUSE_RETARD } : {}), ...embed({ ...embedFrom(rendered), url: page, color: COLOR.ss }) }, kind === 'sent' ? 'rattrapage : cadeau envoyé' : 'rattrapage : cadeau reçu');
       if (!ok) await releaseRow('hg_ss_participants', keys, col);
     }
   }
@@ -505,8 +510,8 @@ async function ssRattrapage(out: Counters, attempts: Attempt[]) {
       const rendered = anonyme
         ? renderTemplate('message_new_santa', { pseudo: mdSafe(dest!.pseudo), extrait: extrait || '(message vide)', lien: url ?? '' }, tpl)
         : renderTemplate('message_new', { pseudo: mdSafe(dest!.pseudo), expediteur: mdSafe(gensM.get(dernier.sender_id)?.pseudo ?? ''), extrait: extrait || '(message vide)', lien: url ?? '' }, tpl);
-      const ok = await envoyer(mb.user_id, dest!, embed({ ...embedFrom(rendered), url, color: COLOR.ss,
-        ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}) }), 'rattrapage : message anonyme');
+      const ok = await envoyer(mb.user_id, dest!, { ...(enRetard(nonLus[0].created_at) ? { content: EXCUSE_RETARD } : {}), ...embed({ ...embedFrom(rendered), url, color: COLOR.ss,
+        ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}) }) }, 'rattrapage : message anonyme');
       if (!ok) echec = true;
     }
     // Échec Discord : les messages redeviennent « à prévenir » pour le passage suivant.
