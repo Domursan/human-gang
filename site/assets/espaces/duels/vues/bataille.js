@@ -6,17 +6,22 @@
  *   Phase 'jeu' : « Ta flotte » (mes navires + tirs reçus) et « Flotte de X » (mes tirs, cases cliquables à mon tour),
  *   radar (une fois par manche), salve (tirs restants), restants des deux côtés dans la colonne latérale.
  *   Spectateur : les deux grilles avec les tirs, aucune action.
+ *   Effets (ajouts visuels et sonores, sur les seuls nouveaux tirs ou tours) : « à toi » (face et cases libres),
+ *   tir dans l'eau, touché, coulé (secousse et bandeau), tir reçu (viseur), victoire (effetsFin, appelé par fin.js).
+ *   Le signal « à toi » (son et titre) reste dans commun.js. Mouvement réduit : pas d'animation, les sons restent.
+ *   Exporte aussi : effetsFin.
  * Dessin : navires vus de dessus en SVG (symboles définis une fois dans la vue), feu et éclaboussure sur les cases.
  * Accessibilité : chaque case de tir est un <button> avec aria-label « B7 : pas encore visée » ; l'état n'est
  *   jamais donné par la couleur seule (icônes et texte). Animations coupées par body.duels-calme.
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite, FLOTTE, nomCase), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { esc, toast } from '../../../commun/core.js';
+import { esc, toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte, FLOTTE, nomCase } from '../api.js';
 import { creerCadre, nomJoueur, deJoueur, deNom } from './commun.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import { voisinGrille } from '../../../commun/grille-clavier.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 
 const TAILLE = 10;
 const NB_CASES = 100;
@@ -111,6 +116,81 @@ function longueurNavire(type) {
 function typeEn(pose, c) {
   for (const t of Object.keys(pose)) if (pose[t].includes(c)) return t;
   return null;
+}
+
+/* ---------- Effets (ajouts visuels, aucun clic intercepté) ---------- */
+
+/** Parties (ids) dont une table a reçu un état « en cours » dans cette page : seules elles ont l'effet de fin. */
+const VUES_EN_COURS = new Set();
+const COULEURS_CONF = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398', '#E2C77E'];
+
+/** Bandeau fixe au milieu de la page (sans clic, retiré après 2,3 s). Textes fixes ou déjà contrôlés. */
+function bandeau(titre, sous) {
+  const b = document.createElement('div');
+  b.className = 'bn-fx-ban';
+  b.setAttribute('aria-hidden', 'true');
+  b.append(titre);
+  const s = document.createElement('small');
+  s.textContent = sous;
+  b.append(s);
+  document.body.append(b);
+  setTimeout(() => b.remove(), 2300);
+}
+/** 70 confettis qui tombent (calque fixe, retirés après 4 s). */
+function confettis() {
+  for (let i = 0; i < 70; i++) {
+    const d = document.createElement('i');
+    d.className = 'bn-fx-conf';
+    d.setAttribute('aria-hidden', 'true');
+    d.style.left = `${Math.random() * 100}vw`;
+    d.style.background = COULEURS_CONF[i % COULEURS_CONF.length];
+    d.style.animationDuration = `${1.6 + Math.random() * 1.6}s`;
+    d.style.animationDelay = `${Math.random() * 0.5}s`;
+    document.body.append(d);
+    setTimeout(() => d.remove(), 4000);
+  }
+}
+/** Élément d'effet centré sur (x, y), retiré après `ms`. */
+function fxEn(classe, x, y, ms) {
+  const d = document.createElement('i');
+  d.className = `bn-fx ${classe}`;
+  d.setAttribute('aria-hidden', 'true');
+  d.style.left = `${x}px`;
+  d.style.top = `${y}px`;
+  document.body.append(d);
+  setTimeout(() => d.remove(), ms);
+}
+/** Centre d'un élément, en coordonnées de la fenêtre. */
+function centreDe(el) {
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+/** Ajoute une classe d'effet à un élément pendant quelques instants (sans effet si l'élément n'existe plus). */
+function flash(el, classe, ms) {
+  if (!el) return;
+  el.classList.add(classe);
+  setTimeout(() => el.classList.remove(classe), ms);
+}
+
+/**
+ * Effet de fin de duel (appelé par vues/fin.js) : seulement pour une partie vue en direct et gagnée par moi.
+ * Le perdant voit l'écran de fin sans effet.
+ * @param {HTMLElement} root conteneur de l'écran de fin.
+ * @param {object} e état du duel terminé.
+ */
+export function effetsFin(root, e) {
+  const p = e.partie || {};
+  if (p.statut !== 'terminee' || !VUES_EN_COURS.has(p.id)) return;
+  VUES_EN_COURS.delete(p.id);
+  const js = e.joueurs || [];
+  const gagnant = js.find((j) => j.gagne) || js.find((j) => j.user_id === p.vainqueur) || null;
+  if (!gagnant || gagnant.user_id !== e.moi?.user_id) return;
+  jouerSonJeu('bataille-navale', 5);
+  if (!motionAllowed()) return;
+  flash(root.querySelector('.duels-fin-joueur.is-gagnant'), 'bn-fx-fin', 4800);
+  const tirs = (e.bataille?.tirs?.[e.moi.user_id] || []).length;
+  const format = p.format > 1 ? `Au meilleur des ${p.format}` : 'Manche unique';
+  setTimeout(() => { bandeau('Tu gagnes le duel !', `${format} · ${tirs} tir${tirs > 1 ? 's' : ''}`); confettis(); }, 300);
 }
 
 /* ---------- Dessin ---------- */
@@ -733,6 +813,90 @@ export function creer(root, ctx) {
     maj_actions();
   };
 
+  /* ----- effets (sur les seuls changements entre deux états) ----- */
+
+  /** Clés « joueur:case » de tous les tirs d'un état. */
+  const clesTirs = (e) => {
+    const s = new Set();
+    for (const [uid, liste] of Object.entries(e?.bataille?.tirs || {})) for (const t of liste) s.add(`${uid}:${t.case}`);
+    return s;
+  };
+  /** Vrai si c'est mon tour de tirer dans cet état (phase de jeu). */
+  const monTourDe = (e) => !!e && e.partie.phase === 'jeu' && cadre.monTour(e);
+
+  /**
+   * Joue les effets des changements entre l'état précédent et le nouveau.
+   * Premier état reçu : rien (ouverture de page ou rechargement). Sons joués même si le mouvement est réduit.
+   */
+  const effets = (avant, e) => {
+    if (!avant || !e.moi || st.vue !== 'jeu') return;
+    const anime = motionAllowed();
+    const { gauche, droite } = cotes(e);
+    const moi = String(gauche?.user_id);
+    const adv = String(droite?.user_id);
+    const avantTirs = clesTirs(avant);
+    const coulesD = e.bataille?.coules?.[droite?.user_id] || [];
+
+    /** Secousse du navire adverse coulé (la coque est la n-ième du calque, dans le même ordre que `coules`). */
+    const secouer = (type) => {
+      if (!anime) return;
+      const idx = coulesD.findIndex((c) => c.type === type);
+      const coque = st.grilles.droite?.calque.querySelectorAll('.bn-coque')[idx];
+      if (!coque) return;
+      coque.classList.add('bn-fx-secoue');
+      setTimeout(() => coque.classList.remove('bn-fx-secoue'), 2000);
+    };
+    /** Un tir sur la grille adverse (mes tirs, ou ceux de p1 en spectateur). */
+    const tirSur = (t) => {
+      const n = st.grilles.droite?.cases.get(t.case);
+      if (!n?.isConnected) return;
+      const o = anime ? centreDe(n) : null;
+      if (t.resultat === 'eau') {
+        if (anime) { fxEn('bn-fx-plouf', o.x, o.y, 1100); setTimeout(() => fxEn('bn-fx-plouf', o.x, o.y, 1000), 260); }
+        jouerSonJeu('bataille-navale', 1);
+      } else if (t.resultat === 'touche') {
+        if (anime) { n.classList.add('bn-fx-touche'); setTimeout(() => n.classList.remove('bn-fx-touche'), 2600); fxEn('bn-fx-boom', o.x, o.y, 900); }
+        jouerSonJeu('bataille-navale', 2);
+      } else if (t.resultat === 'coule') {
+        if (anime) fxEn('bn-fx-boom', o.x, o.y, 900);
+        secouer(t.navire);
+        if (anime) bandeau('Coulé !', `Le ${nomNavire(t.navire).toLowerCase()} adverse est au fond`);
+        jouerSonJeu('bataille-navale', 3);
+      }
+    };
+    /** Un tir de l'adversaire sur ma grille : viseur, puis impact (ou éclaboussure) ; le son est un ping de sonar. */
+    const tirRecu = (t) => {
+      const n = st.grilles.gauche?.cases.get(t.case);
+      if (!n?.isConnected) return;
+      if (anime) {
+        const o = centreDe(n);
+        fxEn('bn-fx-viseur', o.x, o.y, 1150);
+        setTimeout(() => fxEn(t.resultat === 'eau' ? 'bn-fx-plouf' : 'bn-fx-boom', o.x, o.y, 800), 900);
+      }
+      jouerSonJeu('bataille-navale', 4);
+    };
+
+    // Tirs nouveaux (quatre au plus, les plus récents), un après l'autre.
+    const nouveaux = [];
+    for (const [uid, liste] of Object.entries(e.bataille?.tirs || {})) {
+      for (const t of liste) if (!avantTirs.has(`${uid}:${t.case}`) && t.resultat !== 'radar') nouveaux.push({ uid, t });
+    }
+    nouveaux.slice(-4).forEach(({ uid, t }, i) => {
+      setTimeout(() => {
+        if (uid === moi) tirSur(t);
+        else if (uid === adv) tirRecu(t);
+      }, i * 450);
+    });
+
+    // « À toi de tirer » : mon nom et les cases libres s'éclairent au passage à mon tour.
+    if (!monTourDe(avant) && monTourDe(e) && anime) {
+      const idx = (e.joueurs || []).findIndex((j) => j.user_id === e.moi.user_id);
+      const face = root.querySelectorAll('.duels-face-j')[idx];
+      flash(face, 'bn-fx-joue', 5000);
+      st.grilles.droite?.el.querySelectorAll('.bn-c.is-cible').forEach((c) => flash(c, 'bn-fx-libre', 4000));
+    }
+  };
+
   /* ----- mise à jour ----- */
 
   /** Texte de statut (lu par les lecteurs d'écran) selon la phase. */
@@ -856,7 +1020,9 @@ export function creer(root, ctx) {
   return {
     /** Nouvel état : barre et chat via le cadre, puis la vue de la phase. */
     maj(e) {
+      const avant = st.etat;
       st.etat = e;
+      if (e.partie.statut === 'en_cours' && e.partie.id) VUES_EN_COURS.add(e.partie.id);
       // Bataille : en placement, j'ai à agir tant que ma flotte n'est pas prête ; en jeu, c'est mon tour de tirer.
       const aAgir = e.partie.phase === 'placement'
         ? !!e.moi?.joue && e.partie.statut === 'en_cours' && !moiJ(e)?.pret
@@ -886,6 +1052,7 @@ export function creer(root, ctx) {
       maj_actions();
       cadre.statut(statutDe(e));
       tic();
+      effets(avant, e);
     },
     /** Message du chat (relayé au cadre). */
     message(m) { cadre.message(m); },

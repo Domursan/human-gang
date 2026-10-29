@@ -81,3 +81,40 @@
   .mm-case-btn { width: 44px; height: 44px; font-size: 14px; }
   .mm-rangee { min-height: 44px; }
 }
+
+/* Effets (vues/mastermind.js) : « à toi », pion posé, indices un par un, code percé, le robot perce mon code.
+   Calques fixes sans clic (pointer-events:none), retirés après 3 s au plus. Mouvement réduit : rien n'est ajouté. */
+.mm-fx-ban { position: fixed; left: 50%; top: 72%; translate: -50% -50%; scale: .5; opacity: 0; z-index: 9001; pointer-events: none; white-space: nowrap;
+  font: 400 clamp(30px, 5vw, 56px) 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: mm-fx-ban 2.2s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.mm-fx-ban small { display: block; text-align: center; font: 700 15px Inter, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes mm-fx-ban { 0% { opacity: 0; scale: .5; rotate: -6deg; } 20% { opacity: 1; scale: 1.06; rotate: -2deg; } 35% { scale: 1; rotate: -2deg; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.mm-fx-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none; animation: mm-fx-tombe linear forwards; }
+@keyframes mm-fx-tombe { to { translate: 0 105vh; rotate: 720deg; } }
+.duels-mm .mm-fx-joue { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); animation: mm-fx-joue 1.2s ease-in-out 4; }
+@keyframes mm-fx-joue { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.duels-mm .mm-rangee.is-cur.mm-fx-libre { animation: mm-fx-libre 1.3s ease-in-out 3; }
+@keyframes mm-fx-libre { 50% { box-shadow: inset 0 0 0 2px var(--sand), 0 0 0 3px rgba(226, 199, 126, .45); } }
+.duels-mm .mm-palette.mm-fx-palette { animation: mm-fx-palette .5s ease-in-out 6; }
+.duels-mm .mm-palette.mm-fx-palette .mm-pal { animation: mm-fx-pal-pouls 1.2s ease-in-out 1; }
+@keyframes mm-fx-palette { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 24px rgba(226, 199, 126, .5); } }
+@keyframes mm-fx-pal-pouls { 50% { scale: 1.12; } }
+.duels-mm .mm-case-btn.mm-fx-pose { animation: mm-fx-pose .45s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes mm-fx-pose { from { scale: 1.5; } to { scale: 1; } }
+.duels-mm .mm-fb.mm-fx-cache { opacity: 0 !important; }
+.duels-mm .mm-fb.mm-fx-pop { animation: mm-fx-pop .45s cubic-bezier(.2, 1.5, .4, 1); }
+@keyframes mm-fx-pop { from { scale: .2; opacity: 0; } to { scale: 1; opacity: 1; } }
+.duels-mm .mm-rangee.mm-fx-gagne { animation: mm-fx-gagne 1.2s ease-in-out 2; }
+@keyframes mm-fx-gagne { 50% { box-shadow: inset 0 0 0 2px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); scale: 1.02; } }
+.duels-fin-joueur.mm-fx-fin { animation: mm-fx-fin 1.2s ease-in-out 4; }
+@keyframes mm-fx-fin { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); } }
+
+body.duels-calme .mm-fx-ban, body.duels-calme .mm-fx-conf { display: none; }
+body.duels-calme .duels-mm .mm-fx-joue, body.duels-calme .duels-mm .mm-rangee.mm-fx-libre, body.duels-calme .duels-mm .mm-palette.mm-fx-palette,
+body.duels-calme .duels-mm .mm-case-btn.mm-fx-pose, body.duels-calme .duels-mm .mm-fb.mm-fx-pop, body.duels-calme .duels-mm .mm-rangee.mm-fx-gagne,
+body.duels-calme .duels-fin-joueur.mm-fx-fin { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mm-fx-ban, .mm-fx-conf { display: none; }
+  .duels-mm .mm-fx-joue, .duels-mm .mm-rangee.mm-fx-libre, .duels-mm .mm-palette.mm-fx-palette, .duels-mm .mm-case-btn.mm-fx-pose,
+  .duels-mm .mm-fb.mm-fx-pop, .duels-mm .mm-rangee.mm-fx-gagne, .duels-fin-joueur.mm-fx-fin { animation: none; }
+}

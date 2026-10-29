@@ -114,3 +114,43 @@ body.duels-calme .duels-bn .bn-feu, body.duels-calme .duels-bn .bn-eau { animati
   .duels-bn .bn-panneau { padding: 14px 14px; }
   .duels-bn .bn-conteneur { overflow-x: hidden; }
 }
+
+/* Effets (vues/bataille.js) : « à toi », tir dans l’eau, touché, coulé, tir reçu, victoire.
+   Calques fixes ajoutés au corps de page, sans clic (pointer-events:none), retirés après 3 s au plus.
+   Rien n'est ajouté si le mouvement est réduit (body.duels-calme) ; les règles ci-dessous le couvrent aussi. */
+.bn-fx { position: fixed; z-index: 9000; pointer-events: none; border-radius: 50%; translate: -50% -50%; }
+.bn-fx-plouf { width: 70px; height: 70px; border: 3px solid #9FD8FF; box-shadow: 0 0 14px rgba(159, 216, 255, .6); animation: bn-fx-plouf 1s ease-out forwards; }
+@keyframes bn-fx-plouf { 0% { opacity: 1; scale: .15; } 100% { opacity: 0; scale: 1.1; } }
+.bn-fx-boom { width: 64px; height: 64px; background: radial-gradient(circle, #FFF4C2 0, #FFB347 30%, #FE3104 55%, transparent 70%); animation: bn-fx-boom .8s ease-out forwards; }
+@keyframes bn-fx-boom { 0% { opacity: 1; scale: .2; } 50% { opacity: 1; scale: 1.15; } 100% { opacity: 0; scale: 1.5; } }
+.bn-fx-viseur { width: 44px; height: 44px; border: 2px solid #FE3104; animation: bn-fx-viseur 1.1s ease-in-out forwards; }
+.bn-fx-viseur::before, .bn-fx-viseur::after { content: ""; position: absolute; left: 50%; top: 50%; background: #FE3104; translate: -50% -50%; }
+.bn-fx-viseur::before { width: 2px; height: 70px; }
+.bn-fx-viseur::after { width: 70px; height: 2px; }
+@keyframes bn-fx-viseur { 0% { opacity: 0; scale: 1.8; } 30% { opacity: 1; scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.bn-fx-ban { position: fixed; left: 50%; top: 72%; translate: -50% -50%; scale: .5; opacity: 0; z-index: 9001; pointer-events: none; white-space: nowrap;
+  font: 400 clamp(30px, 5vw, 56px) 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: bn-fx-ban 2.2s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.bn-fx-ban small { display: block; text-align: center; font: 700 15px Inter, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes bn-fx-ban { 0% { opacity: 0; scale: .5; rotate: -6deg; } 20% { opacity: 1; scale: 1.06; rotate: -2deg; } 35% { scale: 1; rotate: -2deg; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.bn-fx-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none; animation: bn-fx-tombe linear forwards; }
+@keyframes bn-fx-tombe { to { translate: 0 105vh; rotate: 720deg; } }
+.duels-bn .bn-c.bn-fx-touche { animation: bn-fx-touche 1.2s ease-in-out 2; }
+@keyframes bn-fx-touche { 50% { box-shadow: 0 0 0 3px #FE3104, 0 0 20px rgba(254, 49, 4, .7); } }
+.duels-bn .bn-c.bn-fx-libre { animation: bn-fx-libre 1.3s ease-in-out 3; }
+@keyframes bn-fx-libre { 50% { border-color: #E2C77E; background: #2A2A1F; } }
+.duels-bn .bn-coque.bn-fx-secoue { animation: bn-fx-secoue .5s 3; }
+@keyframes bn-fx-secoue { 20% { translate: -5px 0; } 40% { translate: 5px 0; } 60% { translate: -3px 0; } 80% { translate: 2px 0; } }
+.duels-bn .duels-face-j.bn-fx-joue { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); animation: bn-fx-joue 1.2s ease-in-out 4; }
+@keyframes bn-fx-joue { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.duels-fin-joueur.bn-fx-fin { animation: bn-fx-fin 1.2s ease-in-out 4; }
+@keyframes bn-fx-fin { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); } }
+
+body.duels-calme .bn-fx, body.duels-calme .bn-fx-ban, body.duels-calme .bn-fx-conf { display: none; }
+body.duels-calme .duels-bn .bn-c.bn-fx-touche, body.duels-calme .duels-bn .bn-c.bn-fx-libre, body.duels-calme .duels-bn .bn-coque.bn-fx-secoue,
+body.duels-calme .duels-bn .duels-face-j.bn-fx-joue, body.duels-calme .duels-fin-joueur.bn-fx-fin { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bn-fx, .bn-fx-ban, .bn-fx-conf { display: none; }
+  .duels-bn .bn-c.bn-fx-touche, .duels-bn .bn-c.bn-fx-libre, .duels-bn .bn-coque.bn-fx-secoue,
+  .duels-bn .duels-face-j.bn-fx-joue, .duels-fin-joueur.bn-fx-fin { animation: none; }
+}
