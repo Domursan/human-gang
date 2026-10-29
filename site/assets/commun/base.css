@@ -968,6 +968,12 @@ html[data-fx="off"] :is(.site-header .nav-menu, .me-fan.is-in .fan-list, .brand:
 @keyframes px-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: px-wipe .32s steps(8, end) both; }
+/* Traînée arc-en-ciel (classe px-arrivee posée par theme-boot.js) : les six bandes du logo couvrent la page qui arrive
+   (le balayage ci-dessus les fait entrer par la gauche), puis filent vers la droite par crans et la découvrent. */
+@keyframes px-trail { from { transform: translateX(0); } to { transform: translateX(105%); } }
+html.px-arrivee::after { content: ''; position: fixed; top: 0; bottom: 0; left: -12vw; width: 124vw; z-index: 2147483000; pointer-events: none;
+  background: linear-gradient(100deg, transparent 0 4%, #FE3104 4% 20%, #FCA301 20% 36%, #FBD32D 36% 52%, #2FD16B 52% 68%, #3D7BFF 68% 84%, #8B5CF6 84% 100%);
+  animation: px-trail .42s steps(10, end) .26s both; }
 
 /* Mouvement réduit ou effets coupés : rien ne bouge */
 @media (prefers-reduced-motion: reduce) {
@@ -978,4 +984,6 @@ html[data-fx="off"] :is(.site-header .nav-menu, .me-fan.is-in .fan-list, .brand:
 }
 html[data-fx="off"] .toast { animation: none; }
 html[data-fx="off"] ::view-transition-new(root) { animation: none; }
+@media (prefers-reduced-motion: reduce) { html.px-arrivee::after { display: none; } }
+html[data-fx="off"].px-arrivee::after { display: none; }
 html[data-mode="clair"] { --px-shadow: 4px 4px 0 #1B1A1F; --px-shadow-up: 6px 6px 0 #1B1A1F; }
