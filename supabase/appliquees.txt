@@ -32,3 +32,4 @@
 2026-10-29T00:34:42.701Z ok supabase/migrations/173_ss_nouveau_tirage.sql
 2026-10-29T00:42:57.756Z ok supabase/migrations/174_bot_file_attente.sql
 2026-10-29T14:10:18.534Z ok supabase/migrations/175_echecs_repetition.sql
+2026-10-29T15:18:20.472Z ok supabase/migrations/176_audit_correctifs.sql
