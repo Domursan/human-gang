@@ -424,6 +424,9 @@ export function creer(root, ctx) {
     maj(e) {
       dernier = e;
       rendre(e);
+      // Effets de fin propres à certains jeux (son, gagnant qui brille) : seulement pour une partie vue en direct.
+      const jeuFx = { p4: './p4.js', othello: './othello.js', bataille: './bataille.js', mastermind: './mastermind.js' }[e.partie?.jeu];
+      if (jeuFx) import(jeuFx).then((m) => m.effetsFin?.(root, e)).catch(() => {});
       chat?.maj(e);
     },
     /** Ajoute un message au chat. */

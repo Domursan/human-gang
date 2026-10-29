@@ -4,26 +4,58 @@
  *   (hg_duel_possibles, seulement quand c'est mon tour) : elles portent un point. Une case hors de cette liste n'est pas envoyée.
  *   Ordinateur : un clic joue. Téléphone : toucher une case la sélectionne, puis « Jouer en c4 » (ou « Annuler »).
  *   Clavier : flèches pour se déplacer dans le plateau (roving tabindex), Entrée ou Espace pour jouer.
- *   Compte des pions de chacun au-dessus du plateau ; pions qui changent de couleur animés (CSS, coupé par prefers-reduced-motion) ;
- *   dernier coup surligné ; « X ne peut pas jouer : il passe son tour. » affiché dans le statut et au journal.
+ *   Compte des pions de chacun au-dessus du plateau ; dernier coup surligné ; « X ne peut pas jouer : il passe son tour. »
+ *   affiché dans le statut et au journal.
+ * Effets (classes et CSS dans ../othello.css ; sons « othello » de commun/sons-jeux.js) : le pion posé arrive avec un petit
+ *   rebond (son, sauf pour mon propre coup, déjà joué au clic) ; les pions retournés changent de couleur un par un, du plus
+ *   proche du coup au plus éloigné (son par pion) ; le compte pulse ; « à toi de jouer » (mon nom pulse, cases marquées
+ *   éclairées) ; sur téléphone, la case choisie s'éclaire et « Jouer en … » pulse ; fin de partie : effetsFin (appelé par
+ *   vues/fin.js) : son, gagnant qui brille, bandeau. Mouvement réduit ou préférence « effets » coupée (motionAllowed) :
+ *   pas d'animation, les sons restent.
  * Grille : 64 caractères, case 0 = a8 ; '1' = pion de celui qui commence la manche (noirs), '2' = blancs, '.' = vide.
  * Contrat (vues/partie.js) : export function creer(root, ctx) → { maj(etat), message(msg), detruire() }, ctx = { code, naviguer, moi, suivi }.
- * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
- * Exporte : creer.
+ * Dépendances : core.js (esc, toast, motionAllowed), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur),
+ *   ../../../commun/sons-jeux.js (jouerSonJeu).
+ * Exporte : creer, effetsFin.
  */
-import { esc, toast } from '../../../commun/core.js';
+import { esc, toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 
 /** Durée pendant laquelle on attend l'état après un envoi réussi (ms), au cas où le temps réel tarde. */
 const DUREE_ATTENTE = 5000;
 /** Durée de l'animation de retournement avant de l'effacer (ms). */
 const DUREE_RETOURNE = 700;
+/** Retournement en cascade : délai avant le premier pion retourné, puis entre deux pions (ms). */
+const DELAI_CASCADE = 350;
+const PAS_CASCADE = 230;
 const COTE = 8;
 const CASES = COTE * COTE;
 
 /** Vrai sur ordinateur (souris, pointeur fin) : un clic joue directement. */
 const ordinateur = () => typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
+/** Parties (ids) dont une table Othello a reçu un état « en cours » dans cette page : seules elles ont l'effet de fin. */
+const VUES_EN_COURS = new Set();
+
+/** Ajoute une classe d'effet à un élément pendant quelques secondes (sans effet si l'élément n'existe plus). */
+function flash(el, classe, ms) {
+  if (!el) return;
+  el.classList.add(classe);
+  setTimeout(() => el.classList.remove(classe), ms);
+}
+/** Bandeau fixe au milieu de la page (sans clic, retiré après 2,3 s). Textes fixes, sans saisie. */
+function bandeau(titre, sous) {
+  const b = document.createElement('div');
+  b.className = 'duels-oth-bandeau';
+  b.setAttribute('aria-hidden', 'true');
+  b.append(titre);
+  const s = document.createElement('small');
+  s.textContent = sous;
+  b.append(s);
+  document.body.append(b);
+  setTimeout(() => b.remove(), 2300);
+}
 /** Nom d'une case (0 → a8, 7 → h8, 63 → h1). */
 const nomCase = (i) => `${'abcdefgh'[i % COTE]}${COTE - Math.floor(i / COTE)}`;
 /** Grille complétée à 64 caractères. */
@@ -52,6 +84,7 @@ export function creer(root, ctx) {
     etat: null, grille: null, cases: [], foc: 27, choix: null,
     envoi: false, attente: false, possibles: null, versionPoss: null,
     flip: new Set(), pose: -1, flipTimer: null, regle: false, timers: [], compteHtml: '',
+    version: null, monTourAvant: false, coupLocal: null, fxAtoi: false,
   };
 
   /** Crée les 64 cases une seule fois (le focus clavier survit aux mises à jour). */
@@ -72,12 +105,16 @@ export function creer(root, ctx) {
   /** Envoie le coup puis relit l'état. */
   async function jouer(i) {
     if (!peutJouer(i)) return;
+    // Son du pion posé pour mon propre coup : joué ici, pas à l'arrivée du coup (un seul son par coup).
+    jouerSonJeu('othello', 1);
+    st.coupLocal = i;
     st.envoi = true; st.choix = null; peindre();
     try {
       await duel.jouer(ctx.code, i, 'pose');
       st.attente = true;
       st.timers.push(setTimeout(() => { st.attente = false; peindre(); }, DUREE_ATTENTE));
     } catch (err) {
+      st.coupLocal = null;
       toast(erreurTexte(err), 'error');
     } finally {
       st.envoi = false;
@@ -99,6 +136,61 @@ export function creer(root, ctx) {
     if (ordinateur()) { jouer(i); return; }
     st.choix = st.choix === i ? null : i;
     peindre();
+    if (st.choix !== null) fxChoix(i);
+  }
+
+  /** Téléphone : la case choisie s'éclaire et le bouton « Jouer en … » pulse (le son joue au moment de jouer). */
+  function fxChoix(i) {
+    if (!motionAllowed()) return;
+    flash(st.cases[i], 'is-choix-fx', 3000);
+    flash(el.actions.querySelector('[data-valider]'), 'is-joue-fx', 4000);
+  }
+
+  /** « À toi de jouer » : mon nom pulse et les cases marquées d'un point s'éclairent, une fois les coups possibles reçus. */
+  function lancerAtoi() {
+    if (!st.fxAtoi || !st.possibles || !st.etat || !cadre.monTour(st.etat)) return;
+    st.fxAtoi = false;
+    if (!motionAllowed()) return;
+    flash(root.querySelector('.duels-face-j.is-tour'), 'is-a-toi-fx', 5000);
+    st.cases.forEach((c) => { if (c.classList.contains('is-possible')) flash(c, 'is-libre-fx', 4000); });
+  }
+
+  /**
+   * Effets d'un coup qui vient d'arriver (après peindre) : pion posé (son, sauf mon coup déjà joué au clic), puis les pions
+   * retournés changent de couleur un par un, du plus proche du coup au plus éloigné (son par pion), puis le compte pulse.
+   * Mouvement réduit : pas de cascade, les couleurs sont déjà les nouvelles.
+   */
+  function fxCoup(dernier, monCoup, retournes) {
+    if (!monCoup) jouerSonJeu('othello', 1);
+    if (!motionAllowed()) return;
+    const ligne = (i) => Math.floor(i / COTE);
+    const colonne = (i) => i % COTE;
+    const ordre = retournes
+      .map((i) => ({ i, d: Math.max(Math.abs(colonne(i) - colonne(dernier)), Math.abs(ligne(i) - ligne(dernier))) }))
+      .sort((a, b) => a.d - b.d);
+    ordre.forEach(({ i }, k) => {
+      const pion = st.cases[i]?.querySelector('.duels-oth-pion');
+      if (!pion) return;
+      // La couleur d'avant reste affichée jusqu'au moment du retournement.
+      pion.classList.toggle('is-noir');
+      pion.classList.toggle('is-blanc');
+      st.timers.push(setTimeout(() => {
+        pion.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(.08)' }, { transform: 'scaleX(1)' }], { duration: 520, easing: 'ease-in-out' });
+        jouerSonJeu('othello', 2);
+        st.timers.push(setTimeout(() => {
+          pion.classList.toggle('is-noir');
+          pion.classList.toggle('is-blanc');
+        }, 260));
+      }, DELAI_CASCADE + k * PAS_CASCADE));
+    });
+    st.timers.push(setTimeout(() => {
+      jouerSonJeu('othello', 3);
+      el.compte.querySelectorAll('.duels-oth-chip-n').forEach((n, k) => {
+        st.timers.push(setTimeout(() => {
+          n.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.5)', color: '#E2C77E' }, { transform: 'scale(1)' }], { duration: 480, easing: 'ease-out' });
+        }, k * 150));
+      });
+    }, DELAI_CASCADE + ordre.length * PAS_CASCADE));
   }
 
   /** Demande au serveur les coups jouables, une fois par version du duel, quand c'est mon tour. */
@@ -113,6 +205,7 @@ export function creer(root, ctx) {
       st.possibles = new Set(Array.isArray(liste) ? liste : []);
       peindre();
       statut(st.etat);
+      lancerAtoi();
     }).catch((err) => {
       if (st.versionPoss !== v) return;
       st.possibles = new Set();
@@ -243,6 +336,7 @@ export function creer(root, ctx) {
       if (!st.cases.length) construire();
       st.etat = e;
       st.attente = false;
+      if (e.partie.statut === 'en_cours' && e.partie.id) VUES_EN_COURS.add(e.partie.id);
       cadre.maj(e);
 
       if (!st.regle) {
@@ -252,14 +346,18 @@ export function creer(root, ctx) {
           <p class="duels-oth-regle">Si tu ne peux pas jouer, tu passes ton tour. La manche finit quand plus personne ne peut jouer : le plus de pions gagne.</p>`;
       }
 
-      // Pions qui changent de couleur pendant ce coup : animation de retournement.
+      // Nouveau coup : la version a changé et la grille aussi (un passage de tour seul ne joue ni pion ni son).
+      const nouveau = st.version !== null && e.partie.version !== st.version;
+      // Pions qui changent de couleur pendant ce coup : marqués (classe) et retournés en cascade après le rendu.
       const nouvelle = normaliser(e.partie.grille);
-      st.flip = new Set();
+      const coup = nouveau && st.grille !== null && st.grille !== nouvelle;
+      const retournes = [];
       if (st.grille) {
         for (let i = 0; i < CASES; i++) {
-          if (st.grille[i] !== '.' && nouvelle[i] !== '.' && st.grille[i] !== nouvelle[i]) st.flip.add(i);
+          if (st.grille[i] !== '.' && nouvelle[i] !== '.' && st.grille[i] !== nouvelle[i]) retournes.push(i);
         }
       }
+      st.flip = new Set(retournes);
       if (st.flip.size) {
         clearTimeout(st.flipTimer);
         st.flipTimer = setTimeout(() => { st.flip = new Set(); peindre(); }, DUREE_RETOURNE);
@@ -267,12 +365,22 @@ export function creer(root, ctx) {
       }
       st.grille = nouvelle;
       const dernier = e.partie.dernier && typeof e.partie.dernier.case === 'number' ? e.partie.dernier.case : -1;
-      st.pose = dernier;
+      // Pion qui arrive : seulement pour un coup nouveau (pas à l'ouverture).
+      st.pose = coup ? dernier : -1;
+      const monCoup = coup && st.coupLocal === dernier;
+      if (nouveau) st.coupLocal = null;
+      // Mon tour vient de commencer (passage de « pas mon tour » à « mon tour » sur un nouveau coup).
+      const debutTour = nouveau && cadre.monTour(e) && !st.monTourAvant;
+      st.monTourAvant = cadre.monTour(e);
+      st.version = e.partie.version;
+      if (debutTour) st.fxAtoi = true;
 
       if (!cadre.monTour(e)) st.choix = null;
       chargerPossibles(e);
       peindre();
+      if (coup) fxCoup(dernier, monCoup, retournes);
       statut(e);
+      lancerAtoi();
     },
     message(m) { cadre.message(m); },
     detruire() {
@@ -281,4 +389,20 @@ export function creer(root, ctx) {
       cadre.detruire();
     },
   };
+}
+
+/**
+ * Effets de fin de partie, appelés par vues/fin.js une fois l'écran de fin dessiné. Seulement si cette partie a été vue
+ * en cours dans cette page. Son « fin de partie », gagnant qui brille, bandeau « Partie terminée » (sauf mouvement réduit).
+ * @param {HTMLElement} root écran de fin.
+ * @param {object} e état terminé du duel.
+ */
+export function effetsFin(root, e) {
+  const p = e.partie || {};
+  if (p.statut !== 'terminee' || !VUES_EN_COURS.has(p.id)) return;
+  VUES_EN_COURS.delete(p.id);
+  jouerSonJeu('othello', 4);
+  if (!motionAllowed()) return;
+  flash(root.querySelector('.duels-fin-joueur.is-gagnant'), 'duels-oth-fin-fx', 4800);
+  setTimeout(() => bandeau('Partie terminée', 'Le plus de pions gagne'), 300);
 }

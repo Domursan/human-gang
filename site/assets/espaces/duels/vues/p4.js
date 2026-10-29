@@ -8,15 +8,22 @@
  * Fin de manche : les 4 cases gagnantes de la manche qui vient de finir restent visibles et clignotent quelques
  * secondes, avant que la grille de la manche suivante n'apparaisse.
  * Les boutons de colonne sont créés une seule fois par partie (le focus clavier survit aux mises à jour).
+ * Effets (classes et CSS dans ../p4.css ; sons « puissance-4 » de commun/sons-jeux.js) : son et rebond du jeton qui tombe
+ *   (nouveau coup seulement), « à toi de jouer » (mon nom pulse, colonnes libres éclairées), son « colonne choisie » et
+ *   « Valider » qui pulse sur téléphone, ligne gagnante qui brille ; à la victoire d'une manche, bandeau « Manche gagnée ! »
+ *   et confettis pour le gagnant. Fin de duel : effetsFin, appelé par vues/fin.js (la table n'est plus affichée à ce moment).
+ *   Mouvement réduit ou préférence « effets » coupée (motionAllowed) : pas d'animation, les sons restent.
  * Contrat : export function creer(root, ctx) → { maj(etat), message(msg), detruire() } (vues/partie.js).
  * Lecture de la grille : texte ligne par ligne, ligne 0 en haut ; '1' = jeton de la place 1 (rouge), '2' = place 2 (jaune).
- * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
- * Exporte : creer.
+ * Dépendances : core.js (toast, motionAllowed), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur),
+ *   ../../../commun/grille-clavier.js (voisinGrille), ../../../commun/sons-jeux.js (jouerSonJeu).
+ * Exporte : creer, effetsFin.
  */
-import { toast } from '../../../commun/core.js';
+import { toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
 import { voisinGrille } from '../../../commun/grille-clavier.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 
 /** Couleur des jetons par place, et leur nom affiché dans la légende. */
 const COULEUR = { 1: '#D93A3F', 2: '#F2B705' };
@@ -28,6 +35,44 @@ const DUREE_ATTENTE = 5000;
 
 /** Vrai sur ordinateur (souris, pointeur fin) : un clic joue directement. */
 const ordinateur = () => typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
+/** Parties (ids) dont une table Puissance 4 a reçu un état « en cours » dans cette page : seules elles ont l'effet de fin. */
+const VUES_EN_COURS = new Set();
+/** Délai du bandeau et des confettis après le tracé de la ligne gagnante (ms). */
+const DELAI_BANDEAU = 450;
+const COULEURS_CONF = ['#D93A3F', '#F2B705', '#E2C77E', '#159946', '#2B5AE2', '#4E2398'];
+
+/** Ajoute une classe d'effet à un élément pendant quelques secondes (sans effet si l'élément n'existe plus). */
+function flash(el, classe, ms) {
+  if (!el) return;
+  el.classList.add(classe);
+  setTimeout(() => el.classList.remove(classe), ms);
+}
+/** Bandeau fixe au milieu de la page (sans clic, retiré après 2,3 s). Textes fixes, sans saisie. */
+function bandeau(titre, sous) {
+  const b = document.createElement('div');
+  b.className = 'duels-p4-bandeau';
+  b.setAttribute('aria-hidden', 'true');
+  b.append(titre);
+  const s = document.createElement('small');
+  s.textContent = sous;
+  b.append(s);
+  document.body.append(b);
+  setTimeout(() => b.remove(), 2300);
+}
+/** Confettis : 70 petits rectangles qui tombent (calque fixe, retirés après 4 s). */
+function confettis() {
+  for (let i = 0; i < 70; i++) {
+    const d = document.createElement('i');
+    d.className = 'duels-p4-conf';
+    d.setAttribute('aria-hidden', 'true');
+    d.style.left = `${Math.random() * 100}vw`;
+    d.style.background = COULEURS_CONF[i % COULEURS_CONF.length];
+    d.style.animationDuration = `${1.6 + Math.random() * 1.6}s`;
+    d.style.animationDelay = `${Math.random() * 0.5}s`;
+    document.body.append(d);
+    setTimeout(() => d.remove(), 4000);
+  }
+}
 
 /**
  * Monte la table Puissance 4 dans root.
@@ -51,6 +96,7 @@ export function creer(root, ctx) {
     etat: null, w: 0, h: 0, cases: [], boutons: [],
     version: null, nbHist: null, choix: null, mode: 'pose', regle: false, curseur: 0,
     envoi: false, attente: false, overlay: null, chute: null, timers: [],
+    monTourAvant: false, apres: null, grilleVue: null,
   };
 
   /** Grille texte complétée à w × h (une case vide par défaut). */
@@ -104,6 +150,22 @@ export function creer(root, ctx) {
     if (ordinateur()) { jouer(c); return; }
     st.choix = c;
     peindre();
+    fxChoix(c);
+  }
+
+  /** Téléphone : colonne choisie (son « colonne choisie », colonne et bouton « Valider » qui s'éclairent). */
+  function fxChoix(c) {
+    jouerSonJeu('puissance-4', 2);
+    if (!motionAllowed()) return;
+    flash(st.boutons[c], 'is-libre-fx', 3000);
+    flash(el.actions.querySelector('[data-valider]'), 'is-joue-fx', 4000);
+  }
+
+  /** « À toi de jouer » : mon nom pulse et les colonnes libres s'éclairent (le son et le titre sont dans le cadre commun). */
+  function fxAtoi() {
+    if (!motionAllowed()) return;
+    flash(root.querySelector('.duels-face-j.is-tour'), 'is-a-toi-fx', 5000);
+    st.boutons.forEach((b) => { if (!b.disabled) flash(b, 'is-libre-fx', 4000); });
   }
 
   /** Case où tombera le jeton posé (au-dessus de la pile), pour l'animation de chute. */
@@ -117,10 +179,23 @@ export function creer(root, ctx) {
   }
 
   /** Affiche la grille de la manche qui vient de finir, cases gagnantes en évidence, pendant quelques secondes. */
-  function montrerManche(d) {
+  function montrerManche(d, moiId) {
     if (!d?.ligne?.length || !d.grille) return;
     st.overlay = { grille: d.grille, gagnantes: new Set(d.ligne), texte: `Manche ${d.manche} terminée.` };
     st.timers.push(setTimeout(() => { st.overlay = null; peindre(); }, DUREE_MANCHE));
+    // Effets, une fois la grille dessinée : la ligne brille et le son « ligne alignée » joue pour tous ;
+    // le gagnant a en plus le bandeau « Manche gagnée ! », la victoire et les confettis.
+    jouerSonJeu('puissance-4', 4);
+    st.apres = () => {
+      const anime = motionAllowed();
+      if (anime) d.ligne.forEach((i) => flash(st.cases[i], 'is-ligne-fx', 3800));
+      if (d.gagnant && d.gagnant === moiId) {
+        st.timers.push(setTimeout(() => {
+          jouerSonJeu('puissance-4', 3);
+          if (anime) { bandeau('Manche gagnée !', `${d.ligne.length} jetons alignés`); confettis(); }
+        }, DELAI_BANDEAU));
+      }
+    };
   }
 
   /** Dessine les cases, les boutons de colonne, la légende et les boutons du bas (sans recréer les boutons). */
@@ -230,6 +305,7 @@ export function creer(root, ctx) {
       if (p.w !== st.w || p.h !== st.h) construire(p.w, p.h);
       st.etat = e;
       st.attente = false;
+      if (p.statut === 'en_cours' && p.id) VUES_EN_COURS.add(p.id);
       cadre.maj(e);
 
       if (!st.regle) {
@@ -240,18 +316,29 @@ export function creer(root, ctx) {
       }
 
       const historique = p.historique || [];
-      if (st.nbHist !== null && historique.length > st.nbHist) montrerManche(historique[historique.length - 1]);
+      if (st.nbHist !== null && historique.length > st.nbHist) montrerManche(historique[historique.length - 1], e.moi?.user_id);
       st.nbHist = historique.length;
 
+      // Nouveau coup : la version a changé et la grille aussi (jamais au premier état reçu). Sert à la chute et au son.
+      const nouveau = st.version !== null && p.version !== st.version;
+      const grilleTxt = cases(p.grille);
+      const coup = nouveau && st.grilleVue !== null && st.grilleVue !== grilleTxt;
+      st.grilleVue = grilleTxt;
       // Chute du dernier jeton : seulement si c'est un nouveau coup posé (pas à l'ouverture, pas pendant l'affichage d'une manche).
       st.chute = null;
-      if (st.version !== null && p.version !== st.version && p.dernier && p.dernier.action !== 'retire' && !st.overlay) {
+      if (coup && p.dernier && p.dernier.action !== 'retire' && !st.overlay) {
         st.chute = trouverChute(p.dernier.case, p.grille);
+        if (st.chute) jouerSonJeu('puissance-4', 1);
       }
+      // Mon tour vient de commencer (passage de « pas mon tour » à « mon tour » sur un nouveau coup).
+      const debutTour = nouveau && cadre.monTour(e) && !st.monTourAvant;
+      st.monTourAvant = cadre.monTour(e);
       st.version = p.version;
 
       if (!cadre.monTour(e)) st.choix = null;
       peindre();
+      if (st.apres) { const apres = st.apres; st.apres = null; apres(); }
+      if (debutTour) fxAtoi();
       statut(e);
       st.chute = null;
     },
@@ -261,4 +348,24 @@ export function creer(root, ctx) {
       cadre.detruire();
     },
   };
+}
+
+/**
+ * Effets de fin de duel, appelés par vues/fin.js une fois l'écran de fin dessiné. Seulement si cette partie a été vue
+ * en cours dans cette page (pas à l'ouverture d'un duel déjà terminé). Son « fin de duel » pour tous ; le gagnant brille
+ * et a le bandeau « Duel gagné ! » avec les confettis (sauf mouvement réduit).
+ * @param {HTMLElement} root écran de fin.
+ * @param {object} e état terminé du duel.
+ */
+export function effetsFin(root, e) {
+  const p = e.partie || {};
+  if (p.statut !== 'terminee' || !VUES_EN_COURS.has(p.id)) return;
+  VUES_EN_COURS.delete(p.id);
+  jouerSonJeu('puissance-4', 5);
+  if (!motionAllowed()) return;
+  flash(root.querySelector('.duels-fin-joueur.is-gagnant'), 'duels-p4-fin-fx', 4800);
+  const gagnant = (e.joueurs || []).find((j) => j.gagne) || (e.joueurs || []).find((j) => j.user_id === p.vainqueur) || null;
+  if (gagnant && gagnant.user_id === e.moi?.user_id) {
+    setTimeout(() => { bandeau('Duel gagné !', 'Le duel est terminé'); confettis(); }, 300);
+  }
 }

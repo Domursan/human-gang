@@ -17,9 +17,51 @@
 .duels-p4-jeton[data-j="1"]::after { inset: 36%; background: rgba(14, 20, 48, .6); }
 .duels-p4-jeton[data-j="2"]::after { inset: 28%; border: 3px solid rgba(14, 20, 48, .55); }
 
-/* Chute du dernier jeton (gravité : accélère, sans rebond) */
-.duels-p4-jeton.is-chute { animation: duels-p4-chute .5s cubic-bezier(.55, 0, 1, .45) both; }
-@keyframes duels-p4-chute { from { transform: translateY(calc(var(--rang) * -115%)); } to { transform: none; } }
+/* Chute du dernier jeton : gravité (accélère), puis deux petits rebonds */
+.duels-p4-jeton.is-chute { animation: duels-p4-rebond .95s linear both; }
+@keyframes duels-p4-rebond {
+  0% { transform: translateY(calc(var(--rang) * -115%)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+  55% { transform: none; }
+  70% { transform: translateY(-14%); }
+  85% { transform: none; }
+  92% { transform: translateY(-4%); }
+  100% { transform: none; }
+}
+
+/* Effets (vues/p4.js) : « à toi de jouer », ligne gagnante, bouton « Valider », bandeau et confettis de fin */
+.duels-p4 .duels-face-j.is-a-toi-fx { box-shadow: 0 0 0 3px var(--sand), 0 0 22px rgba(226, 199, 126, .6); animation: duels-p4-pouls 1.2s ease-in-out 4; }
+@keyframes duels-p4-pouls { 50% { box-shadow: 0 0 0 5px var(--sand), 0 0 36px rgba(226, 199, 126, .85); } }
+.duels-p4 .duels-p4-colonne.is-libre-fx { animation: duels-p4-libre 1.3s ease-in-out 3; }
+@keyframes duels-p4-libre { 50% { background: rgba(226, 199, 126, .22); box-shadow: 0 0 0 3px var(--sand); } }
+.duels-p4 .duels-p4-valider.is-joue-fx { animation: duels-p4-pouls 1.2s ease-in-out 4; }
+.duels-p4-case.is-ligne-fx { animation: duels-p4-ligne 1.2s ease-in-out 3; }
+@keyframes duels-p4-ligne { 50% { box-shadow: 0 0 0 4px var(--sand), 0 0 30px rgba(226, 199, 126, .9); transform: scale(1.06); } }
+.duels-p4-fin-fx { animation: duels-p4-pouls 1.2s ease-in-out 4; }
+.duels-p4-bandeau { position: fixed; left: 50%; top: 72%; transform: translate(-50%, -50%) scale(.5); opacity: 0; z-index: 9000;
+  pointer-events: none; white-space: nowrap; font: 400 clamp(30px, 5vw, 56px) var(--font-display, 'Archivo Black', sans-serif); color: #fff;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: duels-p4-bandeau 2.2s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.duels-p4-bandeau small { display: block; text-align: center; font: 700 15px Inter, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes duels-p4-bandeau {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.duels-p4-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none; animation: duels-p4-tombe linear forwards; }
+@keyframes duels-p4-tombe { to { transform: translateY(105vh) rotate(720deg); } }
+
+/* Mouvement réduit (préférence du site, ou de l'appareil) : les effets sont coupés, l'écran final s'affiche directement */
+body.duels-calme .duels-p4-jeton.is-chute, body.duels-calme .duels-p4 .duels-face-j.is-a-toi-fx,
+body.duels-calme .duels-p4 .duels-p4-colonne.is-libre-fx, body.duels-calme .duels-p4 .duels-p4-valider.is-joue-fx,
+body.duels-calme .duels-p4-case.is-ligne-fx, body.duels-calme .duels-p4-fin-fx { animation: none; }
+body.duels-calme .duels-p4-bandeau, body.duels-calme .duels-p4-conf { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .duels-p4-jeton.is-chute, .duels-p4 .duels-face-j.is-a-toi-fx, .duels-p4 .duels-p4-colonne.is-libre-fx,
+  .duels-p4 .duels-p4-valider.is-joue-fx, .duels-p4-case.is-ligne-fx, .duels-p4-fin-fx { animation: none; }
+  .duels-p4-bandeau, .duels-p4-conf { display: none; }
+}
 
 /* Cases gagnantes : anneau or (la forme compte autant que la couleur) et clignotement */
 .duels-p4-case.is-gagnante { box-shadow: 0 0 0 3px var(--sand); }
