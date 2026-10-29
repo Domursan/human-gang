@@ -7,7 +7,8 @@
  *   mêmes règles que le serveur. Tout se fait au clavier (Entrée ou Espace ; Échap annule un mode).
  *   La mise en page est dans assets/espaces/plateaux/catan.css ; ici, le contenu et les actions.
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml, brancherChrono,
- *   journalHtml, envoyer, moiJoueur, estMonTour, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
+ *   journalHtml, envoyer, moiJoueur, estMonTour, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js,
+ *   ./effets.js (changements, jouerEffets : dés, production, ressources, constructions, voleur, « à toi »).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  *   etat.jeu = forme de hg_plat__catan_vue (geo, tuiles, voleur, colonies, villes, routes, phase, sous, dernier, de,
@@ -19,6 +20,7 @@ import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, estMonTou
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauSvg, RESSOURCES, nomTuile } from './plateau.js';
+import { changements, jouerEffets } from './effets.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -166,7 +168,9 @@ export function creer(root, ctx) {
   const monId = () => etat?.moi?.user_id ?? null;
   const jeu = () => etat?.jeu || {};
   const phase = () => jeu().phase;
-  const monTour = () => !!monId() && estMonTour(etat) && etat?.partie?.statut === 'en_cours';
+  /** Mon tour dans un état donné (sert à repérer le passage « à toi »). */
+  const monTourDe = (x) => !!x?.moi?.user_id && estMonTour(x) && x?.partie?.statut === 'en_cours';
+  const monTour = () => monTourDe(etat);
   const peutAgir = () => monTour() && !occupe;
   const estMoi = (uid) => uid != null && String(uid) === String(monId());
   const pseudoDe = (uid) => (uid == null ? '' : (joueurDe(etat, uid)?.pseudo || '?'));
@@ -628,6 +632,10 @@ export function creer(root, ctx) {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
       if (!e?.partie) return;
+      // Effets : seulement entre deux états réels (le premier état reçu n'anime rien).
+      const avant = etat;
+      const fx = avant ? changements(avant, e, e.moi?.user_id ?? null) : null;
+      const etaitMonTour = monTourDe(avant);
       etat = e;
       indexer();
       rendreBandeau();
@@ -643,6 +651,8 @@ export function creer(root, ctx) {
         if (monTour()) refs.annonce.textContent = 'À toi de jouer.';
         dernierTour = tour;
       }
+      if (avant) jouerEffets(fx, { plateau: refs.plateau, panneau: refs.panneau, main: refs.main, bandeau: refs.bandeau },
+        { aToi: !etaitMonTour && monTour() });
       chat.maj(e);
       signal.maj(monTour());
     },

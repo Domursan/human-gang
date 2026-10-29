@@ -3,6 +3,7 @@
  * Rôle : dessine le plateau (19 tuiles, 54 sommets, 72 arêtes) en SVG : tuiles colorées par ressource, jetons avec
  *   les points de probabilité, voleur, colonies (petites maisons), villes (maisons plus grosses), routes.
  *   Les sommets, arêtes et tuiles désignés comme cibles sont des éléments focusables, avec un nom lisible.
+ *   Attributs data-hex (tuile), data-route (route), data-batiment (colonie ou ville) : repères pour les effets (effets.js).
  *   Ce module ne fait que du SVG : table.js choisit les cibles et gère les clics.
  *   Géométrie : repère d'un hexagone de rayon 1, pointe en haut (fournie par le serveur, hg_plat__catan_vue).
  * Dépendances : core.js (esc).
@@ -102,10 +103,10 @@ export function plateauSvg({ geo, tuiles = [], voleur = null, colonies = {}, vil
     const contenu = `<polygon class="ct-hex" points="${pts}" fill="${res.couleur}"/>${jeton}${nom}${pion}`;
     const nomCourt = t.res === 'desert' ? 'désert' : nomTuile(t);
     if (cH.has(String(hx.id))) {
-      return `<g class="ct-cible" role="button" tabindex="0" data-hexe="${hx.id}" aria-label="${esc(`Poser le voleur sur ${nomCourt}`)}">` +
+      return `<g class="ct-cible" role="button" tabindex="0" data-hex="${hx.id}" data-hexe="${hx.id}" aria-label="${esc(`Poser le voleur sur ${nomCourt}`)}">` +
         `${contenu}<polygon class="ct-halo" points="${pts}"/></g>`;
     }
-    return `<g role="img" aria-label="${esc(`Tuile ${nomCourt}${voleur === hx.id ? ', voleur posé dessus' : ''}`)}">${contenu}</g>`;
+    return `<g data-hex="${hx.id}" role="img" aria-label="${esc(`Tuile ${nomCourt}${voleur === hx.id ? ', voleur posé dessus' : ''}`)}">${contenu}</g>`;
   }).join('');
 
   /* Routes : un trait à la couleur du joueur, sur un fond sombre ; cible : zone de clic de 0,84 unité de large (sans
@@ -116,8 +117,8 @@ export function plateauSvg({ geo, tuiles = [], voleur = null, colonies = {}, vil
     const coords = `x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}"`;
     const uid = routes[ar.id];
     const trait = uid != null
-      ? `<line class="ct-route-fond" ${coords} stroke="#0E0E10" stroke-width="0.26" stroke-linecap="round"/>` +
-        `<line class="ct-route" ${coords} stroke="${couleur(uid)}" stroke-width="0.16" stroke-linecap="round"/>`
+      ? `<line class="ct-route-fond" data-route="${ar.id}" ${coords} stroke="#0E0E10" stroke-width="0.26" stroke-linecap="round"/>` +
+        `<line class="ct-route" data-route="${ar.id}" ${coords} stroke="${couleur(uid)}" stroke-width="0.16" stroke-linecap="round"/>`
       : '';
     if (!cA.has(String(ar.id))) return trait;
     return `${trait}<g class="ct-cible" role="button" tabindex="0" data-arete="${ar.id}" aria-label="${esc(`Route ${nomArete(ar)}`)}">` +
@@ -128,10 +129,10 @@ export function plateauSvg({ geo, tuiles = [], voleur = null, colonies = {}, vil
   /* Colonies et villes : maisons à la couleur du joueur, la ville plus grande et bordée de crème. */
   const batimentsSvg = sommets.map((s) => {
     if (villes[s.id] != null) {
-      return `<polygon class="ct-ville" points="${maisonPts(s.x, s.y, 1.4)}" fill="${couleur(villes[s.id])}"/>`;
+      return `<polygon class="ct-ville" data-batiment="${s.id}" points="${maisonPts(s.x, s.y, 1.4)}" fill="${couleur(villes[s.id])}"/>`;
     }
     if (colonies[s.id] != null) {
-      return `<polygon class="ct-colonie" points="${maisonPts(s.x, s.y, 1)}" fill="${couleur(colonies[s.id])}"/>`;
+      return `<polygon class="ct-colonie" data-batiment="${s.id}" points="${maisonPts(s.x, s.y, 1)}" fill="${couleur(colonies[s.id])}"/>`;
     }
     return '';
   }).join('');

@@ -156,8 +156,34 @@ circle.ct-zone { stroke-width: 0; }   /* sans contour : la zone reste celle du r
   .ct-fin-points { grid-column: 2; text-align: left; }
 }
 
+/* ---------- Effets de partie (ajoutés par effets.js : tout est retiré après 2,5 s au plus) ---------- */
+.ct-table .ct-lance { animation: ct-lance .9s ease-out; transform-origin: 50% 50%; }
+@keyframes ct-lance { 0% { transform: rotate(0deg); } 70% { transform: rotate(540deg); } 100% { transform: rotate(720deg); } }
+.ct-table .ct-produit { animation: ct-produit 1.2s ease-in-out 2; }
+@keyframes ct-produit { 50% { filter: brightness(1.35); stroke: #FFF6DA; stroke-width: .14px; } }
+.ct-table .ct-neuf { animation: ct-neuf .6s ease-out; transform-box: fill-box; transform-origin: center; }
+.ct-table .ct-route.ct-neuf, .ct-table .ct-route-fond.ct-neuf { animation-name: ct-neuf-trait; }
+@keyframes ct-neuf { 0% { opacity: 0; transform: scale(.3); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes ct-neuf-trait { 0% { opacity: 0; } 100% { opacity: 1; } }
+.ct-table .ct-voleur { transform-box: fill-box; transform-origin: center; }
+.ct-table .ct-arrive { animation: ct-arrive .8s ease-out; }
+@keyframes ct-arrive { 0% { transform: scale(1.8); } 60% { transform: scale(.9); } 100% { transform: scale(1); } }
+.ct-table .ct-a-toi { animation: ct-a-toi 1.2s ease-in-out 2; }
+@keyframes ct-a-toi { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.ct-table .ct-touche { animation: ct-touche 1.2s ease-in-out 2; }
+@keyframes ct-touche { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 24px rgba(226, 199, 126, .8); filter: brightness(1.25); } }
+/* Dés qui roulent au-dessus du plateau (calque temporaire, sans interaction). */
+.ct-zone-plateau { position: relative; }
+.ct-des-vol { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; gap: 12px; z-index: 65; pointer-events: none; }
+.ct-des-vol .ct-de { width: 64px; height: 64px; font-size: 32px; animation: ct-lance .9s ease-out; }
+/* Ressource en vol : calque fixe, sans interaction (aucun clic intercepté). */
+.ct-jeton-vol { position: fixed; z-index: 70; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0, 0, 0, .5); pointer-events: none; transition: transform .9s cubic-bezier(.3, .7, .3, 1), opacity .9s; }
+
 /* ---------- Mouvement réduit ---------- */
 @media (prefers-reduced-motion: reduce) {
   .ct-des.is-roule .ct-de { animation: none; }
   .ct-btn, .ct-carte-choix { transition: none !important; }
+  .ct-table .ct-lance, .ct-table .ct-produit, .ct-table .ct-neuf, .ct-table .ct-arrive, .ct-table .ct-a-toi, .ct-table .ct-touche { animation: none !important; }
+  .ct-jeton-vol, .ct-des-vol { display: none; }
 }
+body.plat-calme .ct-table .ct-lance, body.plat-calme .ct-table .ct-produit, body.plat-calme .ct-table .ct-neuf, body.plat-calme .ct-table .ct-arrive, body.plat-calme .ct-table .ct-a-toi, body.plat-calme .ct-table .ct-touche { animation: none !important; }
