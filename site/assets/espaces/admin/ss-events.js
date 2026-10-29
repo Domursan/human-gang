@@ -215,9 +215,10 @@ async function deleteExclusion(btn) {
 async function draw(btn, ed) {
   if (ed.drawn_at) return; // un seul tirage par édition
   const n = S.participants.length;
+  const prevenir = await botPrevientTirage();
   const msg = isGodMode()
-    ? `${n} participants. Mode sans limite : les ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''} et la cible de l'an dernier sont ignorées.\nTu pourras refaire le tirage tant que le mode est actif.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`
-    : `${n} participants, ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''}.\nLe tirage est définitif : il ne pourra pas être relancé. Vérifie les inscrits et les exclusions avant.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`;
+    ? `${n} participants. Mode sans limite : les ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''} et la cible de l'an dernier sont ignorées.\nTu pourras refaire le tirage tant que le mode est actif.\nL'édition passera en « Envoi des cadeaux » et ${phraseBot(prevenir)}`
+    : `${n} participants, ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''}.\nLe tirage est définitif : il ne pourra pas être relancé. Vérifie les inscrits et les exclusions avant.\nL'édition passera en « Envoi des cadeaux » et ${phraseBot(prevenir)}`;
   if (!(await confirmBox('Lancer le tirage ?', msg, { ok: 'Lancer le tirage' }))) return;
   await busy(btn, async () => {
     const count = check(await sb.rpc('hg_ss_draw', { p_edition: ed.id }));
@@ -242,10 +243,26 @@ async function drawManual(btn, ed) {
 }
 
 /* Mode sans limite : refaire le tirage (suppression des attributions puis nouveau tirage auto ou manuel) */
-/** Supprime les attributions de l'édition (première étape d'un nouveau tirage). */
+/**
+ * Supprime les attributions de l'édition et remet à zéro les envois et réceptions notés, les MP déjà réservés et les
+ * rappels (migration 173) : première étape d'un nouveau tirage.
+ */
 async function deleteAssignments(ed) {
   check(await sb.from('hg_ss_assignments').delete().eq('edition_id', ed.id));
+  check(await sb.rpc('hg_ss_remise_envois', { p_edition: ed.id }));
 }
+
+/** Vrai si le bot est réglé pour prévenir du tirage (Réglages du bot › notifications › tirage). En cas de doute : vrai. */
+async function botPrevientTirage() {
+  try {
+    const { data } = await sb.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
+    return data?.value?.notify?.draw !== false;
+  } catch { return true; }
+}
+/** Fin du texte de confirmation selon le réglage du bot. */
+const phraseBot = (oui) => (oui
+  ? 'les participants seront prévenus par le bot.'
+  : 'le bot ne préviendra PAS les participants (notification du tirage désactivée dans les réglages du bot).');
 /**
  * Appelée quand le nouveau tirage échoue après la suppression : l'édition redevient « sans tirage » pour
  * qu'on puisse le relancer. Échec de cette remise à zéro = simple avertissement dans la console.

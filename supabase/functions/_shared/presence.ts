@@ -2,13 +2,65 @@
 // Rôle : avant chaque MP du bot à un membre, écrire la notification sur le site (cloche de l'en-tête) et n'envoyer
 // le MP Discord que si le membre est HORS LIGNE (aucune page du site ouverte et visible depuis 2 minutes).
 // Une erreur de la base (table absente, réseau) ne bloque jamais le MP : on retombe sur l'envoi Discord habituel.
-// Dépendances : ./discord.ts (sendDM) ; RPC hg_en_ligne_interne, hg_site_notif (clé service).
-// Exporte : dmOuSite, enLigne, notifDepuisMessage.
-import { sendDM, type UploadFile } from './discord.ts';
+// Copie aux admins (demande d'Ethan, 29.10.2026) : chaque message du bot destiné à un membre est aussi envoyé en MP
+// aux comptes admin (hg_profiles.is_admin avec un identifiant Discord), avec en tête le destinataire et le canal
+// utilisé (MP Discord ou notification du site). Réglage : hg_settings « bot » › copie_admins (true par défaut).
+// Une copie ratée ne bloque jamais l'envoi au membre.
+// Dépendances : ./discord.ts (sendDM, isSnowflake) ; RPC hg_en_ligne_interne, hg_site_notif ; tables hg_profiles,
+//   hg_settings (clé service).
+// Exporte : dmOuSite, enLigne, notifDepuisMessage, copierAuxAdmins.
+import { isSnowflake, sendDM, type UploadFile } from './discord.ts';
 
 /** Client minimal attendu (supabase-js avec la clé service). */
 // deno-lint-ignore no-explicit-any
-type Db = { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }> };
+type Db = { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>; from?: (t: string) => any };
+
+/** Admins qui reçoivent la copie (identifiants Discord), relus au plus toutes les 60 s. */
+let cacheAdmins: { at: number; ids: string[] } | null = null;
+async function adminsCopie(db: Db): Promise<string[]> {
+  if (cacheAdmins && Date.now() - cacheAdmins.at < 60_000) return cacheAdmins.ids;
+  let ids: string[] = [];
+  try {
+    if (!db.from) return [];
+    const { data: reglage } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
+    if (reglage?.value?.copie_admins !== false) {
+      const { data } = await db.from('hg_profiles').select('discord_id').eq('is_admin', true).not('discord_id', 'is', null);
+      ids = [...new Set(((data ?? []) as { discord_id: string }[]).map((r) => r.discord_id).filter(isSnowflake))];
+    }
+  } catch (e) {
+    console.warn('[presence] admins de la copie introuvables', e);
+  }
+  cacheAdmins = { at: Date.now(), ids };
+  return ids;
+}
+
+/**
+ * Envoie aux admins une copie d'un message du bot destiné à un membre. Jamais d'erreur levée.
+ * @param {Db} db client avec la clé service
+ * @param {string} userId destinataire (hg_profiles.id)
+ * @param {string} discordId identifiant Discord du destinataire (pas de copie à soi-même)
+ * @param {Record<string, unknown>} message message Discord d'origine
+ * @param {'site' | 'discord'} canal canal utilisé pour le membre
+ * @param {string} cat catégorie de la notification
+ * @param {UploadFile[]} [files] pièces jointes d'origine
+ */
+export async function copierAuxAdmins(db: Db, userId: string, discordId: string, message: Record<string, unknown>,
+  canal: 'site' | 'discord', cat: string, files: UploadFile[] = []): Promise<void> {
+  const admins = (await adminsCopie(db)).filter((id) => id !== discordId);
+  if (!admins.length) return;
+  let pseudo = 'un membre';
+  try {
+    const { data } = await db.from!('hg_profiles').select('pseudo').eq('id', userId).maybeSingle();
+    if (data?.pseudo) pseudo = String(data.pseudo).replace(/[*_~`|>]/g, '');
+  } catch { /* pseudo facultatif */ }
+  const via = canal === 'site' ? 'remis en notification sur le site (membre en ligne)' : 'envoyé en MP Discord';
+  const tete = `📋 **Copie** · message du bot pour **${pseudo}** (${cat}) · ${via}`;
+  const contenu = typeof message.content === 'string' && message.content ? `${tete}\n\n${message.content}` : tete;
+  const copie = { ...message, content: contenu.slice(0, 2000), allowed_mentions: { parse: [] } };
+  for (const id of admins) {
+    try { await sendDM(id, copie, files); } catch (e) { console.warn('[presence] copie admin non envoyée', e); }
+  }
+}
 
 /**
  * Vrai si le membre est en ligne sur le site (signal de vie de moins de 2 minutes). En cas d'erreur : faux.
@@ -74,7 +126,11 @@ export async function dmOuSite(db: Db, userId: string, discordId: string, messag
     console.warn('[presence] notification du site non écrite', e);
   }
   // En ligne ET notification bien écrite : pas de MP. Sinon (hors ligne, ou écriture ratée) : MP comme avant.
-  if (enLigneMaintenant && ecrite) return 'site';
+  if (enLigneMaintenant && ecrite) {
+    await copierAuxAdmins(db, userId, discordId, message, 'site', cat, files);
+    return 'site';
+  }
   await sendDM(discordId, message, files);
+  await copierAuxAdmins(db, userId, discordId, message, 'discord', cat, files);
   return 'discord';
 }

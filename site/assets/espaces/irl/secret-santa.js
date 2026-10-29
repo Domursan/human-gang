@@ -591,7 +591,7 @@ function renderSend() {
       </li>
     </ul>
     ${undo('sent_at', 'envoyé') || undo('received_at', 'reçu') ? `<div class="btn-row">${undo('sent_at', 'envoyé')}${undo('received_at', 'reçu')}</div>` : ''}
-    <p class="muted small">Le bot prévient le destinataire sur Discord, sans révéler qui tu es.</p>`;
+    <p class="muted small">Le destinataire est prévenu (notification du site, ou message du bot Discord s’il n’est pas connecté), sans révéler qui tu es.</p>`;
   $('#ss-sent', el).addEventListener('click', (e) => mark(e.currentTarget, 'sent_at', 'ss_gift_sent', 'Envoi noté. Ton destinataire va être prévenu.'));
   $('#ss-received', el).addEventListener('click', (e) => mark(e.currentTarget, 'received_at', 'ss_gift_received', 'Réception notée. Ton Santa va être prévenu.'));
   el.querySelectorAll('[data-undo]').forEach((b) => b.addEventListener('click', () => unmark(b, b.dataset.undo)));

@@ -14,5 +14,10 @@ const q = (n, sql) => { const r = psql(uid(n), sql); if (!r.ok) throw new Error(
   await g.waitForTimeout(5000);
   await shot(g, 'i3-table', false);
   console.log('url', g.url());
+  // Chat : un message de l'hôte doit arriver chez l'invité sans temps réel (relève toutes les 4 s).
+  q(1, `select hg_uno_message('${code}', 'Bienvenue Mélo !')`);
+  await g.waitForTimeout(5500);
+  const recu = await g.evaluate(() => document.body.textContent.includes('Bienvenue Mélo !'));
+  console.log(recu ? 'ok : message reçu par l\'invité' : 'ÉCHEC : message non reçu par l\'invité');
   await fermer();
 })().catch(async (e) => { console.log('ERREUR', e.message); await fermer(); process.exit(1); });

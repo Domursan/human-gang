@@ -2,12 +2,13 @@
 /*
  * Rôle : composant de chat réutilisé par la salle d'attente, le plateau, l'écran du meneur et la fin de partie.
  * Les salons visibles dépendent de l'état (la base ne renvoie de toute façon que les messages autorisés).
- * Dépendances : core.js (esc), ui.js, api.js (erreurTexte).
+ * Invité (pas de temps réel) : les salons visibles sont relus toutes les 4 s pour recevoir les nouveaux messages.
+ * Dépendances : core.js (esc), ui.js, api.js (erreurTexte, estInvite).
  * Exporte : monterChat.
  */
 import { esc } from '../../commun/core.js';
 import { icone, CANAUX, notifier } from './ui.js';
-import { erreurTexte } from './api.js';
+import { erreurTexte, estInvite } from './api.js';
 
 /**
  * Monte un chat dans el.
@@ -104,6 +105,20 @@ export function monterChat(el, s, { canaux, titre = 'Discussion' } = {}) {
     finally { st.envoi = false; input.focus(); }
   });
 
+  // Invité : pas de temps réel, on relit les nouveaux messages de chaque salon visible.
+  let releveEnCours = false;
+  const releve = estInvite() ? setInterval(async () => {
+    if (releveEnCours || document.hidden) return;
+    releveEnCours = true;
+    try {
+      for (const c of st.liste) {
+        if (!st.charges.has(c.canal)) continue;
+        const nv = await s.messages(c.canal, st.dernier[c.canal] || 0);
+        (nv || []).forEach((m) => api.message(m));
+      }
+    } catch { /* réseau : on réessaiera */ } finally { releveEnCours = false; }
+  }, 4000) : null;
+
   const api = {
     maj(etat) {
       const liste = canaux(etat) || [];
@@ -125,7 +140,7 @@ export function monterChat(el, s, { canaux, titre = 'Discussion' } = {}) {
         fil.insertAdjacentHTML('beforeend', ligne(m)); fil.scrollTop = fil.scrollHeight;
       } else { st.nonLus[m.canal] = (st.nonLus[m.canal] || 0) + 1; peindreOnglets(); }
     },
-    detruire() { el.innerHTML = ''; },
+    detruire() { clearInterval(releve); el.innerHTML = ''; },
   };
   return api;
 }

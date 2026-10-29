@@ -11,10 +11,10 @@ importent aussi `../_shared/dyn-announce.ts`).
 
 | Fonction | Fichiers à envoyer | verify_jwt |
 |---|---|---|
-| `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/bot-media.ts`, `_shared/reglages.ts` | `true` |
+| `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/bot-media.ts`, `_shared/reglages.ts`, `_shared/presence.ts`, `_shared/notif-prefs.ts` | `true` |
 | `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
-| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts` | `false` |
-| `hg-cron` | `hg-cron/index.ts`, `_shared/cine-announce.ts` (migration 087), `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts` | `false` |
+| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/presence.ts`, `_shared/notif-prefs.ts` | `false` |
+| `hg-cron` | `hg-cron/index.ts`, `_shared/cine-announce.ts` (migration 087), `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts`, `_shared/presence.ts`, `_shared/notif-prefs.ts`, `_shared/saisons-cron.ts` | `false` |
 | `hg-album` | `hg-album/index.ts`, `_shared/discord.ts` (CORS et réponse JSON ; aucun appel Discord, pas de jeton) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` | `true` |
 | `hg-archive` | `hg-archive/index.ts`, `hg-archive/lib.ts`, `_shared/discord.ts` (CORS) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` ; migration 093 (RPC `hg_archive_year`) appliquée avant | `true` |
 | `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |

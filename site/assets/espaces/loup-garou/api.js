@@ -16,6 +16,7 @@ const salon = creerSalon({
   prefixe: 'hg_lg', canal: 'lg', etiquette: '[loup-garou]',
   tablesSupp: ['hg_lg_joueurs'],           // les joueurs changent (rôle, vivant, vote) : relecture
   secours: { membre: 4000, invite: 4000 },
+  relireMessagesInvite: false,             // le chat relit lui-même chaque salon pour l'invité (chat.js)
   restePause: true,                         // partie en pause : le temps figé est affiché
   champFin: 'phase_fin',
   delaiAvance: 0,                           // l'étape avance dès que son délai est écoulé

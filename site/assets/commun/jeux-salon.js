@@ -36,6 +36,8 @@ export function erreurTexte(e) {
  *   echeance       (dernier) => { fin, cle } de la prochaine échéance à faire respecter, ou null
  *   transformerMessage (msg, dernier) => message tel qu'il est transmis à l'écran
  *   messages       (partieId, depuisId, code) => messages ; par défaut la fonction serveur <prefixe>_messages
+ *   relireMessagesInvite  vrai (défaut) : un invité (sans temps réel) relit les nouveaux messages toutes les 4 s et les
+ *                  reçoit par onMessage comme un membre ; faux si le jeu relit lui-même ses salons (Loup-Garou)
  * @returns {object} accès du jeu : commun (appels communs, à compléter par le jeu), rpc, rpcInvite, deux, messages,
  *   suivrePartie, activerInvite, estInvite, jetonInvite, erreurTexte.
  */
@@ -50,6 +52,7 @@ export function creerSalon({
     return { fin: p[champFin], cle: `${p.version}` };
   },
   transformerMessage = (m) => m,
+  relireMessagesInvite = true,
 } = {}) {
   let invite = false;
   /** Active le mode invité (visiteur sans compte), appelé par la page au démarrage. */
@@ -209,6 +212,22 @@ export function creerSalon({
         commun.avancer(code).then(rafraichir).catch(() => {});
       }
     }, 1000);
+    // Invité : pas de temps réel ; les nouveaux messages du chat sont relus toutes les 4 s (sans doublon).
+    let dernierMsg = 0;
+    let releveMsg = false;
+    const msgInvite = invite && relireMessagesInvite ? setInterval(async () => {
+      const id = dernier?.partie?.id;
+      if (!actif || document.hidden || releveMsg || !id) return;
+      releveMsg = true;
+      try {
+        const nv = await messages(id, dernierMsg, code);
+        for (const m of nv || []) {
+          if (m.id <= dernierMsg) continue;
+          dernierMsg = m.id;
+          onMessage?.(transformerMessage(m, dernier));
+        }
+      } catch { /* réseau : on réessaiera */ } finally { releveMsg = false; }
+    }, 4000) : null;
     const delai = invite ? secours.invite : secours.membre;
     // Relecture de secours : rapide sans temps réel (invité, canal coupé), espacée quand le canal est branché.
     const relecture = setInterval(() => {
@@ -223,7 +242,7 @@ export function creerSalon({
     return {
       arreter() {
         actif = false;
-        clearInterval(minuteur); clearInterval(relecture); clearTimeout(attente);
+        clearInterval(minuteur); clearInterval(relecture); clearTimeout(attente); clearInterval(msgInvite);
         document.removeEventListener('visibilitychange', visible);
         if (canalTr) { try { sb.removeChannel(canalTr); } catch { /* sans effet */ } }
       },

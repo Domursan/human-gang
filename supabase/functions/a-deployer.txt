@@ -1,11 +1,5 @@
 # Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
-# 2026-10-27 : rangement (liens vers /pages/<catégorie>/…), dépôt renommé humane-gang
-hg-album
-hg-archive
-hg-birthdays
-hg-calendar
-hg-cron
-hg-discord
+# 2026-10-29 : copie aux admins de chaque message du bot (_shared/presence.ts)
 hg-notify
-hg-support
-hg-nj-images
+hg-cron
+hg-birthdays
