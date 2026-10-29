@@ -4,13 +4,16 @@
  * description, comment gagner), alliés (meute, amoureux, famille), rappel de garder l'écran secret,
  * bouton « J'ai compris », progression des joueurs et minuteur de l'étape.
  * Ambiance nuit posée sur le corps de la page, retirée à la sortie.
- * Dépendances : core.js (esc), api.js (lg, erreurTexte), ui.js, roles.js.
+ * Effet (vues/effets.js) : la grande carte du rôle se retourne quand la partie passe de l'attente à la révélation
+ * (jamais à l'ouverture de la page sur une révélation déjà commencée).
+ * Dépendances : core.js (esc), api.js (lg, erreurTexte), ui.js, roles.js, effets.js.
  * Exporte : monter.
  */
 import { esc } from '../../../commun/core.js';
 import { erreurTexte, estInvite } from '../api.js';
 import { icone, avatar, pseudo, vignetteRole, pastilleCamp, chrono, notifier } from '../ui.js';
 import { roleById, CAMPS } from '../roles.js';
+import { creerEffets } from './effets.js';
 
 const LIBELLE_CAMP = { village: 'Camp du village', loups: 'Camp des loups', solo: 'Solitaire' };
 
@@ -39,6 +42,8 @@ export function monter(root, s) {
   let fini = false;
   let busy = false;
   let vuLocal = false;     // « J'ai compris » vient d'être envoyé (avant la mise à jour de l'état)
+  let premierEtat = true;  // la grande carte ne se retourne qu'une fois, à l'arrivée sur l'écran
+  const effets = creerEffets();
 
   root.innerHTML = `
     <div class="lg-revel">
@@ -174,6 +179,10 @@ export function monter(root, s) {
   function maj(e) {
     if (fini || !e) return;
     const moi = e.moi || {};
+    if (premierEtat) {
+      premierEtat = false;
+      if (s.precedent?.()?.partie?.statut === 'attente' && (moi.role || moi.role_initial)) effets.grandeCarte(moi.role || moi.role_initial);
+    }
     if (moi.role || moi.role_initial) {
       const cle = `${moi.role || moi.role_initial}|${moi.camp || ''}`;
       if (zCarte.dataset.cle !== cle) {
@@ -195,6 +204,7 @@ export function monter(root, s) {
     detruire() {
       fini = true;
       clearInterval(minuteur);
+      effets.arreter();
       delete document.body.dataset.lgAmbiance;
       root.innerHTML = '';
     },

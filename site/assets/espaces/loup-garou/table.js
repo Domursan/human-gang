@@ -3,6 +3,8 @@
  * Rôle : dessine les joueurs assis en cercle autour du feu (image de nuit ou de jour), chaque pseudo posé sur une bûche.
  * Les places sont celles du serveur (voisins réels pour le Montreur d'ours, le Renard, le Chevalier).
  * Les sièges sont des <button> quand on peut choisir une cible (vote, pouvoir de nuit), sinon des <div>.
+ * Effets (vues/effets.js) : chaque siège porte data-uid ; le siège du joueur qui doit agir (option aToi) reçoit l'anneau
+ * doré qui pulse et la pastille « À toi ». Ces classes sont dans le HTML, donc elles tiennent après chaque redessin.
  * Dépendances : core.js (esc), ui.js, roles.js.
  * Exporte : tableHtml.
  */
@@ -49,6 +51,7 @@ export function couleurPrenom(hex) {
  * @param {Object<string,number>} [o.votes] nombre de voix par user_id.
  * @param {string} [o.centre] texte au centre (« Le village dort », « 7 votes sur 10 »).
  * @param {(j:object)=>string} [o.sous] petite étiquette sous la bûche (HTML déjà échappé).
+ * @param {string|null} [o.aToi] user_id du joueur qui doit agir maintenant (anneau doré et pastille « À toi »).
  */
 export function tableHtml(joueurs, o = {}) {
   const assis = joueurs.filter((j) => j.place != null).sort((a, b) => a.place - b.place);
@@ -62,6 +65,8 @@ export function tableHtml(joueurs, o = {}) {
     if (j.user_id === o.moi) classes.push('moi');
     if (!j.vivant) classes.push('mort');
     if (o.cible && j.user_id === o.cible) classes.push('cible');
+    const aToi = !!o.aToi && j.user_id === o.aToi;
+    if (aToi) classes.push('lg-fx-atoi');
     const bouton = !!o.choisissable?.(j);
     const couleur = couleurPrenom(j.invite ? '#9A968F' : (/^#[0-9a-f]{6}$/i.test(j.couleur || '') ? j.couleur : '#F2EFEA'));
     const nbVotes = o.votes?.[j.user_id];
@@ -73,12 +78,13 @@ export function tableHtml(joueurs, o = {}) {
     const etiquette = `${esc(j.pseudo)}${j.user_id === o.moi ? ' (toi)' : ''}${!j.vivant ? `, mort·e${role ? `, ${role}` : ''}` : ''}${nbVotes ? `, ${nbVotes} voix` : ''}`;
     const inner = `<span class="lg-siege-av">${j.vivant ? avatar(j, 46) : icone('crane', 18)}`
       + `${nbVotes ? `<span class="lg-siege-badge" aria-hidden="true">${nbVotes}</span>` : ''}</span>`
+      + (aToi ? '<span class="lg-fx-puce" aria-hidden="true">À toi</span>' : '')
       + `<span class="lg-siege-buche" style="color:${couleur}">${esc(j.pseudo)}</span>`
       + (sous ? `<span class="lg-siege-sous">${sous}</span>` : '');
     const style = `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%`;
     return bouton
-      ? `<button type="button" class="${classes.join(' ')}" style="${style}" data-cible="${esc(j.user_id)}" aria-label="${esc(etiquette)}" aria-pressed="${o.cible === j.user_id}">${inner}</button>`
-      : `<div class="${classes.join(' ')}" style="${style}" role="img" aria-label="${esc(etiquette)}">${inner}</div>`;
+      ? `<button type="button" class="${classes.join(' ')}" style="${style}" data-uid="${esc(j.user_id)}" data-cible="${esc(j.user_id)}" aria-label="${esc(etiquette)}" aria-pressed="${o.cible === j.user_id}">${inner}</button>`
+      : `<div class="${classes.join(' ')}" style="${style}" data-uid="${esc(j.user_id)}" role="img" aria-label="${esc(etiquette)}">${inner}</div>`;
   }).join('');
   // Beaucoup de joueurs : sièges plus petits pour que les voisins ne se chevauchent pas (CSS : .lg-table--dense / --serre).
   const taille = n > 20 ? ' lg-table--serre' : n > 12 ? ' lg-table--dense' : '';

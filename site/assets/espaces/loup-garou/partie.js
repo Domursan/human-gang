@@ -4,7 +4,8 @@
  *   attente → vues/salle.js · revelation → vues/revelation.js · en cours → vues/plateau.js (joueur) ou vues/meneur.js (meneur)
  *   · terminée → vues/fin.js. Quand on n'est pas encore dans la partie : renvoie vers #rejoindre/CODE.
  * Contrat des écrans de partie : export function monter(root, s) → { maj(etat), message(msg), detruire() }.
- *   s = { code, lg, messages, etat(), secondesRestantes(), rafraichir(), naviguer }.
+ *   s = { code, lg, messages, etat(), precedent(), secondesRestantes(), rafraichir(), naviguer }.
+ *   precedent() : l'état reçu juste avant le dernier (null à l'ouverture de la page) ; sert aux effets d'une transition d'écran.
  * Dépendances : api.js, ui.js.
  * Exporte : afficher.
  */
@@ -38,10 +39,14 @@ export async function afficher(root, { code, naviguer }) {
   let charge = null;           // chargement d'écran en cours
   let file = [];               // messages arrivés pendant un chargement
   let fini = false;
+  let vuEtat = null;      // dernier état reçu
+  let avantEtat = null;   // celui d'avant
 
   const session = suivrePartie(code, {
     onEtat: async (e) => {
       if (fini) return;
+      avantEtat = vuEtat;
+      vuEtat = e;
       if (!e?.moi) { naviguer(`#rejoindre/${encodeURIComponent(code)}`); return; }
       const nom = ecranPour(e);
       if (courant?.nom === nom) { courant.vue.maj(e); return; }
@@ -75,6 +80,7 @@ export async function afficher(root, { code, naviguer }) {
     code, lg, naviguer,
     messages: (canal, depuis = 0) => messages(session.etat()?.partie?.id, canal, depuis, code),
     etat: () => session.etat(),
+    precedent: () => avantEtat,
     secondesRestantes: () => session.secondesRestantes(),
     rafraichir: () => session.rafraichir(),
   };

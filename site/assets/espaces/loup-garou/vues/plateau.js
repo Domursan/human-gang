@@ -6,7 +6,10 @@
  * Thème du rôle (version « Horizon ») : couleur d'accent, emblème en filigrane derrière la table, motif dans le panneau
  *   d'action, devise sur la carte du rôle et paysage dessiné en bas de page (themes.js).
  * Signal « à toi de jouer » (son + titre d'onglet) : commun/tour-signal.js, branché sur doitAgir (actions.js).
- * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte), commun/tour-signal.js.
+ * Effets (vues/effets.js) : passage nuit / jour, victime à l'aube, votes en jetons, « Éliminé », carte de la voyante,
+ * surlignage du panneau « à toi ». Déclenchés par la différence avec l'état précédent (jamais au premier état reçu).
+ * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte), commun/tour-signal.js,
+ *   effets.js.
  * Exporte : monter.
  */
 import { esc } from '../../../commun/core.js';
@@ -17,6 +20,7 @@ import { creerSignalTour } from '../../../commun/tour-signal.js';
 import { roleById } from '../roles.js';
 import { themeDe, imagesTheme } from '../themes.js';
 import { erreurTexte } from '../api.js';
+import { creerEffets } from './effets.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import {
   typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS, doitAgir,
@@ -140,6 +144,7 @@ function htmlTable(e, sel) {
     anneau: nuit ? '#7E93C9' : '#E2C77E',
     choisissable: (j) => choisissable(e, sel, j),
     votes: badgesCible(e),
+    aToi: doitAgir(e) ? e.moi?.user_id : null,
     centre,
     sous: victime ? (j) => (j.user_id === victime ? '<span class="lg-etiquette ambre">Victime</span>' : '') : undefined,
   });
@@ -229,6 +234,13 @@ export function monter(root, s) {
     role: ref('role'), restants: ref('restants'), horizon: ref('horizon'), embleme: ref('embleme'), chat: ref('chat'), journal: ref('journal'), journalCorps: ref('journalCorps'),
   };
 
+  // Calque des effets (cartes, jetons, tampons) : posé dans la zone de table, sans interaction.
+  const calque = document.createElement('div');
+  calque.className = 'lg-fx-calque';
+  calque.setAttribute('aria-hidden', 'true');
+  root.querySelector('.lg-pl-table').append(calque);
+  const effets = creerEffets({ calque, racine: refs.table, panneau: refs.action });
+
   const st = { etat: null, sel: {}, cle: '', cleAct: '', depart: 0, envoi: false, nuit: null, sigChat: '', sangVu: false };
   let sangEl = null;
   let inertes = [];
@@ -259,6 +271,8 @@ export function monter(root, s) {
   /** Redessine ce qui dépend de l'état (sans toucher au minuteur ni au chat). */
   function maj(e) {
     if (!e?.partie || !e.moi) return;
+    // Avant : l'état précédent de cet écran, ou celui de l'écran d'avant (premier affichage après une transition).
+    const avant = e === st.etat ? null : (st.etat || s.precedent?.() || null);
     st.etat = e;
     const p = e.partie;
     const m = e.moi;
@@ -294,6 +308,7 @@ export function monter(root, s) {
     if (sig !== st.sigChat) { st.sigChat = sig; chat.maj(e); }
     verifierSang(e);
     fondSang(e);
+    effets.appliquer(avant, e);
     tick();
   }
 
@@ -466,6 +481,7 @@ export function monter(root, s) {
     detruire() {
       clearInterval(timer);
       signal.arreter();
+      effets.arreter();
       fermerSang(false);
       if (fondEl) { fondEl.remove(); fondEl = null; }
       document.body.classList.remove('lg-spectateur');
