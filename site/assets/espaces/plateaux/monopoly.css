@@ -91,7 +91,10 @@
 .mo-case.mo-type-caisse { background: #2F6BC4; color: #FFFFFF; }
 .mo-case.mo-type-caisse .mo-nom, .mo-case.mo-type-caisse .mo-prix { color: #FFFFFF; }
 .mo-haut, .mo-bas { display: flex; flex-direction: column; align-items: center; gap: .15cqi; min-width: 0; width: 100%; }
-.mo-nom { display: block; width: 100%; font-family: 'Archivo Black', sans-serif; font-size: 1.09cqi; line-height: 1; overflow: hidden; overflow-wrap: anywhere; hyphens: auto; }
+.mo-nom { display: block; width: 100%; font-family: 'Archivo Black', sans-serif; font-size: 1.09cqi; line-height: 1; overflow: hidden; overflow-wrap: normal; hyphens: manual; }
+/* Les mots restent entiers (pas de « COMMUNAU/TÉ ») : sur les cases étroites, le nom est un peu plus petit. */
+.mo-case:not(.mo-cn) .mo-nom { font-size: .92cqi; }
+.mo-case.mo-mot-long:not(.mo-cn) .mo-nom { font-size: .76cqi; letter-spacing: -.01em; }
 /* Le texte s'écarte de la bande de couleur (côté tourné vers le bord du plateau). */
 .mo-case.mo-bt { padding-top: 2.3cqi; }
 .mo-case.mo-tp { padding-bottom: 2.3cqi; }
@@ -289,6 +292,37 @@
 .mo-de.is-roule .mo-faux { animation: moFaux 1.3s linear both; }
 .mo-de.is-roule .mo-vrai { animation: moVrai 1.3s linear both; }
 .mo-carte.is-neuve, .mo-titre-carte.is-neuve { animation: moCarte 1.4s ease-out both; }
+
+/* Effets « vrais écrans » (classes posées par effets.js, retirées après leur durée, moins de 3 s) */
+.mo-anim-pouls { animation: moPouls 1.2s ease-in-out 2; }
+@keyframes moPouls { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); } }
+.mo-anim-cadre { animation: moCadre 1.2s ease-in-out 2; }
+@keyframes moCadre { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 34px rgba(226, 199, 126, .55); } }
+.mo-case.mo-anim-case { animation: moCaseSel .5s ease-in-out 1 both; }
+@keyframes moCaseSel { 50% { box-shadow: inset 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .7); } }
+.mo-case.mo-type-prison.mo-anim-prison { animation: moPrison 1.2s ease-in-out 2; z-index: 5; }
+@keyframes moPrison { 50% { box-shadow: 0 0 0 3px #E53935, 0 0 26px rgba(229, 57, 53, .7); } }
+.mo-billet.mo-anim-billet { animation: moBillet .5s ease-in-out 3; }
+@keyframes moBillet { 50% { transform: translateY(-6px) rotate(calc(var(--r, 0deg) - 4deg)); } }
+.mo-moins { position: absolute; right: 18px; top: 10px; z-index: 2; pointer-events: none; font: 900 clamp(20px, 2.8vw, 30px) 'Archivo Black', Inter, sans-serif;
+  color: #FF8A80; text-shadow: 0 3px 0 rgba(0, 0, 0, .6); animation: moMonte 1.6s ease-out forwards; }
+@keyframes moMonte { 0% { opacity: 0; transform: translateY(10px) scale(.7) } 20% { opacity: 1; transform: translateY(0) scale(1.05) } 100% { opacity: 0; transform: translateY(-40px) scale(1) } }
+
+/* Fin en direct : bandeau et confettis sur l'écran de classement (classes posées par fin.js) */
+.mo-fete { position: fixed; inset: 0; z-index: 9000; pointer-events: none; overflow: hidden; animation: moFete 2.9s linear forwards; }
+@keyframes moFete { 0%, 88% { opacity: 1; visibility: visible } 100% { opacity: 0; visibility: hidden } }
+.mo-fete-banc { position: absolute; left: 50%; top: 70%; transform: translate(-50%, -50%) scale(.5); opacity: 0; white-space: nowrap;
+  font: 400 clamp(26px, 4.5vw, 52px) 'Archivo Black', Inter, sans-serif; color: #FFFFFF; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: moBanc 2.6s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.mo-fete-banc small { display: block; text-align: center; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes moBanc { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg) } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg) }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg) } 85% { opacity: 1 } 100% { opacity: 0 } }
+.mo-fete-confettis { position: absolute; inset: 0; }
+.mo-conf { position: absolute; top: -10px; width: 8px; height: 14px; animation: moTombe linear forwards; }
+@keyframes moTombe { to { transform: translateY(105vh) rotate(720deg) } }
+
+/* Mouvement réduit demandé par le membre : aucune animation (les classes ne sont de toute façon pas posées) */
+body.plat-calme .mo-table *, body.plat-calme .mo-fete * { animation: none !important; transition: none !important; }
 
 /* ---------- Téléphone ---------- */
 @media (max-width: 760px) {

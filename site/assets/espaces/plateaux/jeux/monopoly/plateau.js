@@ -7,6 +7,7 @@
  *   hypothèque (grisée), et son nom pour les lecteurs d'écran (pions compris).
  *   Les pions ne sont PAS ici : table.js les dessine dans une couche à part, pour pouvoir les faire avancer case par case.
  *   Ce module ne fait que du HTML : table.js le monte et décide quand le refaire.
+ *   Un nom qui contient un mot de 10 lettres ou plus reçoit la classe mo-mot-long (texte plus petit, mots non coupés).
  * Dépendances : core.js (esc, initials), ../../api.js (nomDe).
  * Exporte : positionCase(i), pointCase(i, k) -> { left, top } en %, plateauHtml(opts) -> HTML des cases (sans le cadre).
  *   opts = { plateau: [40 cases], contenus, joueurs, proprietes, maCase: case de mon pion|null }
@@ -150,6 +151,8 @@ function caseHtml(i, { plateau, contenus, joueurs, proprietes, maCase }) {
   if (proprio) classes.push('has-proprio');
   if (hypo) classes.push('is-hypo');
   if (i === maCase) classes.push('is-moi');
+  // Un mot trop long pour la case (« COMMUNAUTÉ », « MONTPARNASSE ») : nom plus petit, mais jamais coupé au milieu.
+  if (nom.split(/[\s'’-]+/).some((m) => m.length >= 10)) classes.push('mo-mot-long');
 
   const styleCouleurs = [
     bande ? `--bande:${esc(bande)};` : '',

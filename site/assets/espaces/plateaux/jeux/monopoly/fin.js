@@ -2,15 +2,39 @@
 /*
  * Rôle : HTML de l'encart de fin du Monopoly : classement par fortune (argent, terrains, maisons)
  *   et titres de chacun, groupés par couleur. Le classement général et les récompenses sont à part (écran commun).
- * Dépendances : core.js (esc, initials), ../../api.js (nomDe).
+ *   Fin vécue en direct (la table vient de se fermer sur cette partie, voir effets.js) : bandeau « Partie terminée »,
+ *   confettis (CSS seulement, sans mouvement réduit) et son « Victoire ». Une seule fois : la fin consommée ne rejoue pas.
+ * Dépendances : core.js (esc, initials), ../../api.js (nomDe), commun/sons-jeux.js (jouerSonJeu), ./effets.js (finEnDirect, mouvementOk).
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   La fortune vient de etat.jeu.fortunes[user_id] (sinon de joueur.etat.fortune). Les titres viennent de etat.jeu.proprietes.
  */
 import { esc, initials } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
+import { jouerSonJeu } from '../../../../commun/sons-jeux.js';
+import { finEnDirect, mouvementOk } from './effets.js';
 
+const JEU = 'monopoly';
 const EUR = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR')} €`;
 const COULEUR_OK = /^#[0-9a-f]{6}$/i;
+const COULEURS_CONFETTI = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398', '#E2C77E'];
+
+/**
+ * Bandeau « Partie terminée » et confettis, en CSS (position fixe, aucun clic intercepté, disparaît seul en 2,9 s).
+ * Les positions et durées sont fixes d'un confetti à l'autre : le rendu reste stable.
+ * @returns {string} HTML.
+ */
+function feteHtml() {
+  const confettis = Array.from({ length: 60 }, (_, i) => {
+    const x = (i * 37) % 100;
+    const duree = (1.6 + (((i * 17) % 16) / 10)).toFixed(2);
+    const delai = (((i * 13) % 5) / 10).toFixed(1);
+    return `<i class="mo-conf" style="left:${x}vw;background:${COULEURS_CONFETTI[i % COULEURS_CONFETTI.length]};animation-duration:${duree}s;animation-delay:${delai}s"></i>`;
+  }).join('');
+  return `<div class="mo-fete" aria-hidden="true">
+    <div class="mo-fete-banc">Partie terminée<small>Le plus riche gagne</small></div>
+    <div class="mo-fete-confettis">${confettis}</div>
+  </div>`;
+}
 
 /** Fortune d'un joueur : d'après jeu.fortunes, sinon d'après son état. */
 function fortuneDe(etat, j) {
@@ -52,7 +76,11 @@ function classement(etat) {
  */
 export function recap(etat, contenus) {
   const liste = classement(etat);
-  if (!liste.length) return '';
+  // Fin en direct : une seule fois (finEnDirect consomme le signal), son et bandeau si le mouvement est permis.
+  const enDirect = finEnDirect(etat?.partie?.id);
+  if (enDirect) jouerSonJeu(JEU, 5);
+  const fete = enDirect && mouvementOk() ? feteHtml() : '';
+  if (!liste.length) return fete;
   const lignes = liste.map(({ j, fortune }, i) => {
     const titres = titresDe(etat, contenus, j.user_id);
     const couleur = COULEUR_OK.test(j.couleur || '') && !j.invite ? j.couleur : '#F2EFEA';
@@ -73,7 +101,7 @@ export function recap(etat, contenus) {
       </div>
     </li>`;
   }).join('');
-  return `<section class="mo-fin" aria-labelledby="mo-fin-titre">
+  return `${fete}<section class="mo-fin" aria-labelledby="mo-fin-titre">
     <h2 id="mo-fin-titre" class="mo-fin-titre">Classement par fortune</h2>
     <p class="small muted">La fortune compte l'argent, les terrains (à leur prix) et les maisons.</p>
     <ol class="mo-classement">${lignes}</ol>

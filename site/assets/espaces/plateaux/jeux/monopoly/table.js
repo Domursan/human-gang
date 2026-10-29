@@ -8,9 +8,12 @@
  *   Animations (dés qui roulent, carte qui apparaît, achat) : seulement quand l'état change, jamais au rafraîchissement.
  *   La mise en page est dans assets/espaces/plateaux/monopoly.css ; ici, le contenu, les actions et les animations.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les saisies restent en place).
+ *   Effets « vrais écrans » (à toi, pion case par case, achat, prison) : ./effets.js, après chaque rendu. Le pion attend la
+ *   fin du roulement des dés avant d'avancer (DELAI_DES_MS). Mouvement réduit (body.plat-calme) : le pion saute à sa case.
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe, pseudoHtml, texteSur),
- *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, pointCase), ../../../../commun/grille-clavier.js.
+ *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, pointCase), ./effets.js (creerEffets),
+ *   ../../../../commun/grille-clavier.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -21,11 +24,13 @@ import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml, pointCase } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
+import { creerEffets } from './effets.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 const CAUTION_PRISON = 50;
 const PAS_MARCHE_MS = 150;                 // durée d'une case pendant le déplacement d'un pion
+const DELAI_DES_MS = 1300;                 // attente, après un nouveau lancer, avant que le pion avance (fin du roulement)
 const DUREE_TITRE_MS = 3200;               // durée d'affichage de la carte de propriété achetée
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
 const LIBELLE_CASE = { rue: 'Rue', gare: 'Gare', compagnie: 'Compagnie', caisse: 'Caisse de communauté', chance: 'Chance', impot: 'Impôt', depart: 'Départ', prison: 'Prison', parc: 'Parc gratuit', allez_prison: 'Allez en prison' };
@@ -145,6 +150,8 @@ export function creer(root, ctx) {
   const cles = {};                         // clé du dernier rendu de chaque zone
   const pions = new Map();                 // user_id -> { el, visu (case affichée), cible (case de l'état), marche }
   const messagesVus = [];
+  let retardPions = 0;                     // ms avant le premier pas des pions de ce rendu (dés qui roulent)
+  const calme = () => document.body.classList.contains('plat-calme');
 
   /* ---------- Chat : colonne (ordinateur) ou tiroir (téléphone) ---------- */
 
@@ -246,9 +253,10 @@ export function creer(root, ctx) {
       if (p.visu === p.cible) { p.marche = false; return; }
       p.visu = (p.visu + 1) % 40;
       disposerPions();
+      effets.caseAtteinte(p.visu);
       setTimeout(pas, PAS_MARCHE_MS);
     };
-    setTimeout(pas, PAS_MARCHE_MS);
+    setTimeout(pas, PAS_MARCHE_MS + retardPions);
   }
 
   /** Synchronise les pions avec les joueurs ; un changement de case déclenche la marche (sauf à l'arrivée). */
@@ -268,7 +276,7 @@ export function creer(root, ctx) {
         pions.set(j.user_id, p);
       }
       p.cible = posDe(j);
-      if (reduit.matches) p.visu = p.cible;
+      if (reduit.matches || calme()) p.visu = p.cible;
       const ini = initials(j.pseudo);
       p.el.textContent = ini;
       p.el.title = j.pseudo || '?';
@@ -808,6 +816,7 @@ export function creer(root, ctx) {
   /* ---------- Chat et contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el);
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -817,10 +826,13 @@ export function creer(root, ctx) {
       const precedent = etat;
       etat = e;
       const achat = achatsDepuis(precedent);
+      // Un nouveau lancer : le pion attend la fin du roulement des dés avant d'avancer.
+      retardPions = !premiere && !!e.jeu?.des && JSON.stringify(e.jeu.des) !== cles.des ? DELAI_DES_MS : 0;
       rendreBandeau();
       rendreElimine();
       rendreCases();
       rendrePions();
+      retardPions = 0;
       rendreArgent();
       rendreTourTete();
       rendreJoueurs();
@@ -837,6 +849,7 @@ export function creer(root, ctx) {
       if (avant !== undefined && e.jeu?.actif !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
       signal.maj(monTour());
+      try { effets.maj(e, monId()); } catch (err) { console.warn('[monopoly] effets visuels', err); }
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -847,6 +860,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, les déplacements et le chat ; retire la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       arretChrono?.();
       clearTimeout(minuteurTitre);
       pions.forEach((p) => { p.marche = true; });
