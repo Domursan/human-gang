@@ -136,6 +136,41 @@ const SONS = {
     4: () => { note(600,0,.12,{type:'square',vol:.07});note(600,.18,.12,{type:'square',vol:.07}); }, // Égalité, on relance
     5: () => { [659,784,988,1319].forEach((f,i)=>note(f,i*.11,.55,{type:'triangle',vol:.14})); }, // Duel gagné
   },
+  'cluedo': {
+    1: () => { bruit(0,.05,900,.7,2);note(260,0,.08,{type:'triangle',vol:.12}); }, // Pas sur le plateau
+    2: () => { bruit(0,.25,2500,.25,.9,'highpass');bruit(.22,.08,1800,.2,1.2); }, // Carte montrée
+    3: () => { cloche(523,0,1.4,.2);cloche(784,.15,1.2,.12); }, // Hypothèse posée
+    4: () => { [523,659,784,1047].forEach((f,i)=>note(f,i*.12,.7,{type:'triangle',vol:.14})); }, // Solution révélée
+    5: () => { note(392,0,.4,{type:'triangle',vol:.14});note(294,.3,.4,{type:'triangle',vol:.14});note(220,.6,.8,{type:'sawtooth',vol:.05}); }, // Éliminé
+  },
+  'destins': {
+    1: () => { bruit(0,.05,1800,.5,2);note(660,0,.05,{type:'triangle',vol:.08}); }, // Pas sur la case
+    2: () => { [0,.09,.18,.28,.39,.52,.66,.82,1.0,1.2,1.42,1.66].forEach((t)=>bruit(t,.03,2600,.35,3,'highpass')); }, // Roulette
+    3: () => { cloche(1047,0,1.2,.18);note(1319,.05,.6,{type:'triangle',vol:.08}); }, // Résultat de la roue
+    4: () => { bruit(0,.2,1200,.3,.8);cloche(659,.15,1.4,.14);cloche(988,.3,1.2,.08); }, // Carte Événement
+    5: () => { [523,659,784,1047].forEach((f,i)=>note(f,i*.14,.5,{type:'triangle',vol:.16}));note(1047,.6,1,{type:'triangle',vol:.1}); }, // Victoire
+  },
+  'monopoly': {
+    1: () => { [0,.07,.15,.22,.31,.4].forEach((t)=>bruit(t,.04,3000,.5,2,'highpass'));bruit(.45,.08,400,.6,1,'lowpass'); }, // Dés qui roulent
+    2: () => { bruit(0,.04,2200,.5,2);note(780,0,.05,{type:'triangle',vol:.08}); }, // Pion posé
+    3: () => { note(1568,0,.08,{type:'square',vol:.1});note(2093,.07,.25,{type:'square',vol:.1});bruit(0,.05,4000,.3,3,'highpass'); }, // Billets
+    4: () => { note(180,0,.6,{type:'sawtooth',vol:.1,f2:120});bruit(.3,.06,900,.8,4);bruit(.65,.06,900,.8,4); }, // Prison
+    5: () => { [392,523,659,784].forEach((f,i)=>note(f,i*.12,.5,{type:'triangle',vol:.16}));note(784,.5,1.2,{type:'triangle',vol:.12}); }, // Victoire
+  },
+  'risk': {
+    1: () => { bruit(0,.06,1200,.6,2);note(330,0,.1,{type:'triangle',vol:.14}); }, // Troupe posée
+    2: () => { [0,.05,.11,.19,.28,.38,.5].forEach((t)=>bruit(t,.035,2000,.5,3,'bandpass'));bruit(.56,.1,400,.7,1,'lowpass'); }, // Dés qui roulent
+    3: () => { bruit(0,.12,300,.9,1,'lowpass');note(146,0,.25,{type:'sawtooth',vol:.12,f2:70}); }, // Choc de bataille
+    4: () => { [262,330,392,523].forEach((f,i)=>note(f,i*.1,.35,{type:'triangle',vol:.16})); }, // Territoire conquis
+    5: () => { [262,330,392,523,659].forEach((f,i)=>note(f,i*.08,1.4,{type:'triangle',vol:.1}));cloche(523,.4,1.8,.18); }, // Victoire du monde
+  },
+  'shadow-hunters': {
+    1: () => { [0,.06,.13,.21,.3].forEach((t)=>bruit(t,.035,2400,.5,2.5,'highpass'));bruit(.4,.08,500,.6,1,'lowpass');note(440,.5,.1,{type:'triangle',vol:.1}); }, // Dés (d6 + d4)
+    2: () => { cloche(392,0,1.6,.14);cloche(587,.5,1.4,.1); }, // Vision révélée
+    3: () => { bruit(0,.14,260,.9,1,'lowpass');note(120,0,.35,{type:'sawtooth',vol:.12,f2:60}); }, // Blessure
+    4: () => { note(900,0,.35,{type:'sine',vol:.08,f2:300});bruit(.25,.12,2000,.25,1,'highpass'); }, // Attaque ratée
+    5: () => { [330,415,494,659].forEach((f,i)=>note(f,i*.12,.6,{type:'triangle',vol:.14}));note(659,.5,1.2,{type:'triangle',vol:.1}); }, // Victoire
+  },
 };
 /** Noms des sons (pour les réglages et la documentation). */
 export const SONS_JEUX = {
@@ -242,6 +277,41 @@ export const SONS_JEUX = {
   "3": "Lancer gagné",
   "4": "Égalité, on relance",
   "5": "Duel gagné"
+ },
+ "cluedo": {
+  "1": "Pas sur le plateau",
+  "2": "Carte montrée",
+  "3": "Hypothèse posée",
+  "4": "Solution révélée",
+  "5": "Éliminé"
+ },
+ "destins": {
+  "1": "Pas sur la case",
+  "2": "Roulette",
+  "3": "Résultat de la roue",
+  "4": "Carte Événement",
+  "5": "Victoire"
+ },
+ "monopoly": {
+  "1": "Dés qui roulent",
+  "2": "Pion posé",
+  "3": "Billets",
+  "4": "Prison",
+  "5": "Victoire"
+ },
+ "risk": {
+  "1": "Troupe posée",
+  "2": "Dés qui roulent",
+  "3": "Choc de bataille",
+  "4": "Territoire conquis",
+  "5": "Victoire du monde"
+ },
+ "shadow-hunters": {
+  "1": "Dés (d6 + d4)",
+  "2": "Vision révélée",
+  "3": "Blessure",
+  "4": "Attaque ratée",
+  "5": "Victoire"
  }
 };
 
