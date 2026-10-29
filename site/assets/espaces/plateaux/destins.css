@@ -203,10 +203,10 @@
 .dp-podium-total { font-family: 'Archivo Black', sans-serif; font-size: 22px; font-weight: 400; text-align: center; }
 .dp-podium-detail { font-size: 14px; color: var(--ds-muet); text-align: center; }
 .dp-liste-chemins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
-.dp-chemin { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--ds-carte-2); }
-.dp-chemin-pseudo { overflow-wrap: anywhere; }
-.dp-chemin-texte { color: var(--ds-texte); }
-.dp-chemin-fortune { font-weight: 700; text-align: right; }
+.dp-chemin { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr); align-items: center; gap: 4px 10px; padding: 10px 14px; border-radius: 12px; background: var(--ds-carte-2); }
+.dp-chemin-pseudo { grid-row: 1 / span 2; overflow-wrap: anywhere; }
+.dp-chemin-texte { color: var(--ds-texte); min-width: 0; overflow-wrap: anywhere; }
+.dp-chemin-fortune { grid-column: 2; font-weight: 700; text-align: right; }
 .dp-chemin-fortune small { display: block; font-size: 12px; font-weight: 400; color: var(--ds-muet); }
 
 /* ---------- Téléphone (≤ 760 px) ---------- */
@@ -240,6 +240,7 @@
   .ds-classement .ds-rang-piste { display: none; }
   .dp-podium { grid-template-columns: minmax(0, 1fr); }
   .dp-chemin { grid-template-columns: minmax(0, 1fr); }
+  .dp-chemin-pseudo, .dp-chemin-fortune { grid-row: auto; grid-column: 1; }
   .dp-chemin-fortune { text-align: left; }
 }
 
@@ -247,4 +248,31 @@
 @media (prefers-reduced-motion: reduce) {
   .ds-scene, .ds-flip, .ds-btn, .ds-carte-choix { transition: none !important; }
   .dp-halo, .dp-pion.is-saut, .ds-rang-barre, .ds-scene-val.is-pop { animation: none !important; }
+}
+
+/* ---------- Effets « à toi » et fête de fin (jeux/destins/effets.js, fin.js) : durées < 3 s, pointer-events:none ---------- */
+.ds-anim-joue { animation: ds-anim-pouls 1.2s ease-in-out 2; }
+@keyframes ds-anim-pouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.ds-anim-surligne { animation: ds-anim-cadre 1.3s ease-in-out 2; }
+@keyframes ds-anim-cadre { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 34px rgba(226, 199, 126, .6); } }
+
+.ds-anim-fete { position: fixed; inset: 0; z-index: 8999; pointer-events: none; overflow: hidden; animation: ds-anim-retire .2s linear 2.5s forwards; }
+.ds-anim-banc { position: absolute; left: 50%; top: 70%; margin: 0; transform: translate(-50%, -50%) scale(.5); opacity: 0; white-space: nowrap;
+  font: 400 clamp(26px, 4.5vw, 52px)/1.1 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9);
+  animation: ds-anim-banc-in 2.6s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.ds-anim-banc small { display: block; text-align: center; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes ds-anim-banc-in {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.ds-anim-conf { position: fixed; top: -10px; width: 8px; height: 14px; pointer-events: none; animation: ds-anim-tombe linear forwards; }
+@keyframes ds-anim-tombe { to { transform: translateY(105vh) rotate(720deg); } }
+@keyframes ds-anim-retire { to { opacity: 0; visibility: hidden; } }
+body.plat-calme .ds-anim-fete { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-anim-joue, .ds-anim-surligne { animation: none !important; }
+  .ds-anim-fete { display: none !important; }
 }

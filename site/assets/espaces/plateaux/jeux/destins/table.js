@@ -7,10 +7,13 @@
  *   Animations (jamais bloquantes, jamais rejouées sans changement) : chaque nouvel état est comparé au précédent.
  *   Un tour de roue fait apparaître une grande roue qui s'arrête sur la vraie valeur, le pion saute case par case
  *   jusqu'à sa nouvelle case, une carte Événement tirée se retourne, l'argent qui change compte jusqu'à sa valeur.
+ *   Sons (commun/sons-jeux.js, id « destins ») : roulette au tour de roue, résultat à l'arrêt, un pas par case, carte Événement.
+ *   Effets « à toi » (siège, bouton de la roue, panneau surligné) : ./effets.js, après chaque rendu (try/catch).
+ *   Le signal « à toi de jouer » (son, titre d'onglet) reste dans commun/tour-signal.js.
  *   La mise en page est dans assets/espaces/plateaux/destins.css ; ici, le contenu, les actions et les animations.
- * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
+ * Dépendances : commun/tour-signal.js (creerSignalTour), commun/sons-jeux.js (jouerSonJeu), core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe),
- *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, POSITIONS, LIBELLES, legendeHtml, ...).
+ *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, POSITIONS, LIBELLES, legendeHtml, ...), ./effets.js (creerEffets).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -19,8 +22,11 @@ import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
+import { jouerSonJeu } from '../../../../commun/sons-jeux.js';
 import { plateauHtml, legendeHtml, POSITIONS, LIBELLES, NOM_ZONE, zoneDeCase, caseSuivante, pasEntre } from './plateau.js';
+import { creerEffets } from './effets.js';
 
+const JEU = 'destins';        // id des sons (commun/sons-jeux.js)
 const ECRAN_GRAND = '(min-width: 761px)';
 const MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 const NB_CASES = POSITIONS.length;
@@ -41,8 +47,8 @@ const euros = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR')} €`
 const couleurDe = (j) => (/^#[0-9a-f]{6}$/i.test(j?.couleur || '') && !j?.invite ? j.couleur : '#F2EFEA');
 /** Pion : initiales du pseudo (deux lettres). */
 const initialesPseudo = (pseudo) => initials(pseudo || '?');
-/** Vrai si l'utilisateur demande moins de mouvement. */
-const reduit = () => window.matchMedia(MOUVEMENT_REDUIT).matches;
+/** Vrai si l'utilisateur demande moins de mouvement (préférence du membre, ou réglage du système). */
+const reduit = () => document.body.classList.contains('plat-calme') || window.matchMedia(MOUVEMENT_REDUIT).matches;
 /** Angle (degrés, sens horaire) qui amène la valeur v sous la pointe, en haut de la roue. */
 const angleFinal = (v) => (360 - ((((v - 1) * ANGLE_CASE) + ANGLE_CASE / 2) % 360)) % 360;
 /** Cases de la voie non prise (estompées sur le plan). */
@@ -278,7 +284,11 @@ export function creer(root, ctx) {
 
   /** Grande roue : apparaît, tourne et s'arrête sur la valeur réelle, puis se réduit. */
   async function sceneRoue(valeur, lanceur, action) {
-    if (reduit() || valeur == null) return;
+    if (valeur == null) return;
+    if (reduit()) {          // pas d'animation, mais le résultat se fait entendre
+      jouerSonJeu(JEU, 3);
+      return;
+    }
     const pseudo = lanceur ? pseudoDe(lanceur) : '';
     refs.sceneTitre.textContent = pseudo ? `${pseudo} ${action}` : 'Tour de roue';
     refs.sceneRoue.hidden = false;
@@ -289,12 +299,14 @@ export function creer(root, ctx) {
     refs.scene.classList.remove('is-sortie');
     void refs.scene.offsetWidth;
     refs.scene.classList.add('is-ouverte');
+    jouerSonJeu(JEU, 2);     // roulette qui ralentit
     animGrande?.cancel();
     animGrande = refs.grande.animate(
       [{ transform: 'rotate(0deg)' }, { transform: `rotate(${TOURS * 360 + angleFinal(valeur)}deg)` }],
       { duration: ROUE_MS, easing: 'cubic-bezier(.2,.7,.15,1)', fill: 'forwards' },
     );
     await attendre(350 + ROUE_MS);
+    jouerSonJeu(JEU, 3);     // ding à l'arrêt
     refs.sceneVal.textContent = `${valeur} !`;
     refs.sceneVal.classList.add('is-pop');
     await attendre(1000);
@@ -303,7 +315,10 @@ export function creer(root, ctx) {
 
   /** Carte Événement : se retourne en grand, reste un instant, puis disparaît. */
   async function sceneCarte(carte) {
-    if (reduit()) return;
+    if (reduit()) {          // pas d'animation, mais le son de la carte reste
+      jouerSonJeu(JEU, 4);
+      return;
+    }
     refs.avant.innerHTML = carteFaceHtml(carte);
     refs.sceneRoue.hidden = true;
     refs.sceneCarte.hidden = false;
@@ -313,6 +328,7 @@ export function creer(root, ctx) {
     void refs.scene.offsetWidth;
     refs.scene.classList.add('is-ouverte');
     await attendre(450);
+    jouerSonJeu(JEU, 4);     // souffle de carte, puis carillon
     refs.flip.classList.add('is-ouverte');
     await attendre(900 + CARTE_MS);
     await fermerScene();
@@ -335,6 +351,7 @@ export function creer(root, ctx) {
     const voie2 = j.voie2 ?? null;
     const reste = pasEntre(affiche[uid], vers, voie, voie2);
     if (reduit() || reste < 0 || reste > 14) {
+      if (reduit() && reste > 0 && reste <= 14) jouerSonJeu(JEU, 1);   // un seul son, pas de saut
       affiche[uid] = vers;
       rendrePlan();
       return;
@@ -344,6 +361,7 @@ export function creer(root, ctx) {
       n = caseSuivante(n, voie, voie2);
       affiche[uid] = n;
       sautants.add(uid);
+      jouerSonJeu(JEU, 1);   // un clic léger par case
       rendrePlan();
       await attendre(PAS_MS);
       sautants.delete(uid);
@@ -802,6 +820,7 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el);
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -826,6 +845,7 @@ export function creer(root, ctx) {
       }
       chat.maj(e);
       signal.maj(monTour());
+      try { effets.maj(e, monId()); } catch (err) { console.warn('[destins] effets visuels', err); }
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -836,6 +856,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono et les animations, retire le chat et la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       detruit = true;
       minuteries.forEach((res, t) => { clearTimeout(t); res(); });
       minuteries.clear();

@@ -2,17 +2,34 @@
 /*
  * Rôle : HTML de l'encart de fin de Destins : podium (fortune estimée de chacun) et « Le chemin de chacun »
  *   (métier, mariage, enfants, retraite). Le classement et les récompenses sont à part, dans l'écran de fin commun.
- * Dépendances : core.js (esc), ../../api.js (nomDe).
+ *   Fête de fin (bandeau « Victoire ! », confettis, son Victoire) : seulement si la table a vu la partie en cours sur cette page
+ *   (effets.js, avaitEnCours). Sous mouvement réduit (body.plat-calme) le bandeau et les confettis ne s'affichent pas.
+ * Dépendances : core.js (esc), ../../api.js (nomDe), commun/sons-jeux.js (jouerSonJeu), ./effets.js (avaitEnCours).
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.jeu.fortunes = {user_id: fortune estimée} ; etat.joueurs[i].etat = {metier, marie, enfants, maisons, argent, prets, retraite, retraite_lieu, pari}.
  */
 import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
+import { jouerSonJeu } from '../../../../commun/sons-jeux.js';
+import { avaitEnCours } from './effets.js';
 
 /** Montant en euros, format français. */
 const euros = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR')} €`;
 /** Somme à rendre par prêt (voir les règles : 20 000 € empruntés, 25 000 € à rendre). */
 const PRET_A_RENDRE = 25000;
+/** Couleurs des confettis (palette de la maquette). */
+const COULEURS_CONFETTI = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398', '#E2C77E'];
+
+/**
+ * Bandeau « Victoire ! » et confettis de la fête de fin (CSS seul : aucun script, rien à nettoyer).
+ * @returns {string} HTML.
+ */
+function feteHtml() {
+  const confettis = Array.from({ length: 60 }, (_, i) =>
+    `<i class="ds-anim-conf" style="left:${(i * 37) % 100}vw;background:${COULEURS_CONFETTI[i % COULEURS_CONFETTI.length]};` +
+    `animation-duration:${(1.2 + (i % 5) * 0.25).toFixed(2)}s;animation-delay:${((i % 4) * 0.1).toFixed(1)}s"></i>`).join('');
+  return `<div class="ds-anim-fete" aria-hidden="true"><p class="ds-anim-banc">Victoire !<small>La fortune la plus grande gagne</small></p>${confettis}</div>`;
+}
 
 /** Lettres de l'avatar : initiales du pseudo. */
 const initiales = (pseudo) => String(pseudo || '?').trim().split(/\s+/).slice(0, 2).map((m) => m[0] || '').join('').toUpperCase() || '?';
@@ -101,5 +118,8 @@ export function recap(etat, contenus) {
     <ul class="dp-liste-chemins">${lignes || '<li class="dp-vide">Aucun chemin à afficher.</li>'}</ul>
   </section>`;
 
-  return `<div class="dp-fin">${podiumHtml}${cheminsHtml}</div>`;
+  // Fête : une seule fois, et seulement si la partie a été vue en cours sur cette page.
+  const fete = avaitEnCours(etat?.partie?.code);
+  if (fete) jouerSonJeu('destins', 5);
+  return `<div class="dp-fin">${fete ? feteHtml() : ''}${podiumHtml}${cheminsHtml}</div>`;
 }
