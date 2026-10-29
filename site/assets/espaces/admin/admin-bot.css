@@ -182,7 +182,7 @@
   display: flex; flex-direction: column; gap: 10px; }
 .bot-grp-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
 .bot-grp-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; }
-.bot-grp-head .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.bot-grp-head .btn-sm { min-height: 44px; padding: 6px 12px; font-size: 13px; }
 @media (pointer: coarse) { .bot-grp-head .btn-sm { min-height: 44px; } }
 .bot-grp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 14px; align-items: start; }
 .bot-grp-grid > .field { min-width: 0; }

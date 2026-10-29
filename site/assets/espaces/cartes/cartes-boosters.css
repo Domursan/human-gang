@@ -12,7 +12,7 @@
 .cart--serie .cart-lbl2 { color: #fff; }
 /* Petit rappel « 1 SÉRIE AU CHOIX » sous le sous-titre, dans la bande libre de l'étiquette. */
 .cart--serie .cart-label::after { content: "1 SÉRIE AU CHOIX"; position: absolute; left: 0; right: 0; bottom: 3px;
-  text-align: center; font-size: 7px; font-weight: 700; line-height: 1; letter-spacing: .18em; color: #fff; }
+  text-align: center; font-size: 12px; font-weight: 700; line-height: 1; letter-spacing: .18em; color: #fff; }
 
 /* ---------- Argenté : métal brossé gris ---------- */
 .cart--argente .cart-body { background:

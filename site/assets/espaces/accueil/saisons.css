@@ -25,7 +25,7 @@
 .av-photo { width: 108px; height: 108px; border-radius: 12px; object-fit: cover; background: var(--surface-2); display: block; }
 .av-booster { width: 84px; height: 112px; border-radius: 12px; border: 2px solid var(--sand); display: grid; place-items: center; text-align: center;
   background: linear-gradient(160deg, #9E3543, #4E2398); color: #fff; font-size: 12px; padding: 6px; }
-.av-booster b { display: block; color: var(--sand); letter-spacing: 2px; font-size: 10px; text-transform: uppercase; }
+.av-booster b { display: block; color: var(--sand); letter-spacing: 1px; font-size: 12px; text-transform: uppercase; }
 .av-q fieldset { border: 0; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 6px; }
 .av-q label.av-opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 12px; cursor: pointer; }
 .av-q input[type="text"] { min-height: 44px; }
@@ -124,7 +124,7 @@
 .zav-day { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 12px; }
 .zav-day > summary { min-height: 44px; display: flex; align-items: center; gap: 10px; cursor: pointer; flex-wrap: wrap; }
 .zav-prev { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; list-style: none; padding: 0; margin: 0; max-width: 420px; }
-.zav-p { min-height: 48px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
-.zav-p b { font-size: 11px; }
+.zav-p { min-height: 48px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; }
+.zav-p b { font-size: 12px; }
 .zav-p.is-today { border: 2px solid var(--sand); }
 .zav-p.is-locked { background: #2B1D22; color: var(--muted); }

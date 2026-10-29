@@ -20,7 +20,7 @@
 //   tables hg_profiles, hg_birthday_log, hg_activity, hg_settings, hg_bot_log ; fonction SQL hg_cron_gate.
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
-import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
+import { loadTemplates, renderTemplate, embedFrom, mdSafe } from '../_shared/templates.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
 import { dmOuSite } from '../_shared/presence.ts';
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
       } else {
         try {
           await dmOuSite(db, p.id, p.discord_id!, { embeds: [{
-            ...embedFrom(renderTemplate('birthday_dm', { pseudo: p.pseudo, lien: home }, tpl)),
+            ...embedFrom(renderTemplate('birthday_dm', { pseudo: mdSafe(p.pseudo), lien: home }, tpl)),
             color: 0xe0909a, url: home || undefined, footer: { text: 'Humane Gang' },
           }] }, 'anniversaires');
           out.dms++;
@@ -178,13 +178,13 @@ Deno.serve(async (req) => {
       } else {
         try {
           // Le membre est mentionné par son ID s'il en a un, sinon par son pseudo simple.
-          const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
+          const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : mdSafe(p.pseudo);
           // Mention configurée (bot.mentions.birthday) en plus de la personne fêtée, qui est toujours notifiée
           const mention = mentionWith(bot, mentionMode(bot.mentions?.birthday), isSnowflake(p.discord_id) ? [p.discord_id] : []);
           const annonce = {
             ...mention,
             content: [mention.content, `Joyeux anniversaire ${who} !`].filter(Boolean).join(' '),
-            embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: p.pseudo, lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
+            embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: mdSafe(p.pseudo), lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
           };
           const results = await sendToChannels(bdayChannels, (id) => sendChannel(id, annonce), `anniversaire ${p.id}`);
           chanLog.push(...channelLog(results, `anniversaire de ${p.pseudo}`));

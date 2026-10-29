@@ -166,7 +166,7 @@
 .ds-tuile-corps small { font-size: 12px; color: var(--ds-muet); }
 .ds-tuile-large { grid-column: 1 / span 2; }
 .ds-tuile-large .ds-pied { margin-top: 2px; }
-.ds-tuile-large .ds-btn { min-height: 40px; font-size: 13px; }
+.ds-tuile-large .ds-btn { min-height: 44px; font-size: 13px; }
 .ds-carte-zone { display: flex; flex-direction: column; gap: 8px; }
 .ds-carte-zone .ds-bloc-titre { margin: 0; }
 .ds-carte-cadre { position: relative; box-sizing: border-box; height: 140px; border-radius: 16px; border: 1px solid #A98BD4; overflow: hidden; }

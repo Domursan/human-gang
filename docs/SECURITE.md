@@ -74,3 +74,17 @@ Gravité : haute / moyenne / basse / info. « Corrigé » = correctif dans le d�
 8. **Plafond de `hg_client_error`** : le passer par visiteur ou par IP, plutôt que global.
 9. **`supabase/migrations/README.md`** : périmé (indique 072 à 079 « à appliquer » alors qu'elles sont appliquées). Non modifié.
 10. **Test CSP `parcours-securite-front`** : mettre à jour l'attendu (YouTube dans `pages/jeux/jeux.html`) ou retirer YouTube de la CSP.
+
+## Audit du 29/10/2026 (correctifs)
+
+Rapport complet hors dépôt. Corrigé par la migration `176_audit_correctifs.sql` et par `hg-birthdays` :
+
+- **Loup-Garou** : `hg_lg_parties.etat` (victime des loups pendant le réveil) n'est plus lisible par les joueurs ni diffusé en temps réel ; un mort non loup ne lit plus le canal `loups` ; une étape ne saute plus quand deux appels arrivent ensemble.
+- **Uno** : `hg_uno_parties.defi` (dont `legal`) et `pioche_carte` ne sont plus lisibles ni diffusés.
+- **Photos** : une photo ou un moment masqué n'est plus lisible dans le bucket `hg-photos` (sauf l'auteur et le Staff « souvenirs » ou « support »).
+- **Invitations** (5 jeux à salon) : codes à 4 chiffres, donc plus de 15 codes inconnus essayés en 10 minutes depuis un même appareil sont refusés (`hg_invite__frein`, table `hg_invite_essais`, empreinte de l'adresse gardée une heure au plus).
+- **Privilèges** : la migration 105 était bien appliquée ; les quatre tables créées depuis (`hg_jeux_bonus`, `hg_jeux_resultats`, `hg_presence`, `hg_site_notifs`) perdent les écritures directes inutiles.
+- **Bot** : le pseudo est échappé (Markdown) dans l'annonce et le MP d'anniversaire.
+
+Reste à faire par le propriétaire : activer la protection contre les mots de passe fuités (tableau de bord Supabase › Authentication › Sign In / Providers › Email › « Prevent use of leaked passwords »).
+Les points 3 et 5 de la liste ci-dessus sont réglés (clé `hg_support_hash_key`, bucket `d-files` privé).

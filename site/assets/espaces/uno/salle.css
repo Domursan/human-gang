@@ -67,7 +67,7 @@
 .uno-regle-txt { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 15px; }
 .uno-regle-txt small { color: var(--muted); font-size: 13px; }
 .uno-regle-seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden; }
-.uno-regle-seg button { min-height: 40px; padding: 0 12px; border: 0; background: none; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
+.uno-regle-seg button { min-height: 44px; padding: 0 12px; border: 0; background: none; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
 .uno-regle-seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--sand); }
 .uno-regle-seg button:disabled { cursor: default; }
 .uno-regle-seg button:disabled:not([aria-pressed="true"]) { opacity: .55; }

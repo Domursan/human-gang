@@ -23,6 +23,7 @@
   --surface-2: #1F1F23;
   --border: #2A2A2F;
   --border-strong: #3A3A40;
+  --field-border: #6E6E78;    /* bordure des champs : 3:1 minimum sur --bg et --surface (WCAG 1.4.11) */
   --text: #F2EFEA;
   --muted: #ABA7A0;
 
@@ -353,7 +354,7 @@ html[data-fx="off"] .badge-celebrate .bc-badge, html[data-fx="off"] .badge-celeb
 .field label, .label { font-size: 14px; color: var(--muted); }
 .input, .field input, .field select, .field textarea {
   font: inherit; font-size: 16px; padding: 12px 14px; min-height: 44px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); width: 100%;
+  border: 1px solid var(--field-border); background: var(--bg); color: var(--text); width: 100%;
 }
 .field textarea { resize: vertical; min-height: 100px; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
@@ -503,6 +504,7 @@ html[data-mode="clair"] {
   --irl-bg: #FBF5E4; --irl-border: #E8DBB4; --irl-fg: #775B10;
   --hist-bg: #EDF2FB; --hist-border: #CBD6EE; --hist-fg: #34508F;
   --progress-bg: #E3DFD8;
+  --field-border: #6E6E76;    /* fond clair : gris foncé, 3:1 minimum (4,5:1 sur #F5F2ED, 5:1 sur #FFFFFF) */
 }
 html[data-mode="clair"] .btn-light { background: var(--text); color: #FFFFFF; }
 /* Une seule couleur d'action en mode clair : les boutons « sable » (Jouer, Créer, Répondre…) prennent l'accent du thème */

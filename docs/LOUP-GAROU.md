@@ -104,7 +104,11 @@ Un joueur qui n'est pas dans la partie reçoit `{ partie: { code, nom, statut, m
 
 - `hg_lg_peut()` : accès à la page « loup-garou » (`hg_page_ok`) ou compte listé dans `hg_settings.loup_garou.testeurs`.
 - Toutes les tables `hg_lg_*` sont en lecture seule pour le client ; les rôles secrets (`hg_lg_cartes`, `hg_lg_centre`), actions, votes et journal ne sont lisibles qu'à travers `hg_lg_etat`.
-- `hg_lg_tick()` (pg_cron, chaque minute) débloque les parties dont le minuteur est écoulé.
+- La colonne `hg_lg_parties.etat` (victime des loups pendant le réveil, file des réactions…) n'est pas lisible par le client ni diffusée en temps réel (droit de lecture par colonne, migration 176) : une nouvelle colonne de `hg_lg_parties` n'est lisible que si on l'ajoute à ce droit.
+- Canal `loups` : loups (vivants ou morts) et Petite fille vivante ; les autres morts lisent `morts`, pas `loups`.
+- « Passer » annule le choix déjà fait à l'étape (sauf les pouvoirs à effet immédiat : Voyante, Renard, Voleur, Cupidon, Chien-loup, Enfant sauvage).
+- `hg_lg_tick()` (pg_cron, chaque minute) débloque les parties dont le minuteur est écoulé, lève une pause du meneur au bout de 30 minutes et arrête une partie automatique sans élimination depuis trois manches où plus personne n'agit ni ne vote. `hg_lg__essayer` revérifie l'échéance sous verrou : deux appels simultanés ne font plus sauter une étape.
+- Invités : plus de 15 codes inconnus essayés en 10 minutes depuis un même appareil sont refusés (`hg_invite__frein`, commun aux jeux à salon) ; un code inconnu à `rejoindre` renvoie `null`.
 
 ## Annonce Discord (facultative)
 

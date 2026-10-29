@@ -48,7 +48,7 @@
 .shell-avatar[aria-expanded="true"] { box-shadow: 0 0 0 3px var(--accent); }
 .shell-menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; min-width: 230px; padding: 6px; display: flex; flex-direction: column;
   background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 14px; box-shadow: 0 16px 40px color-mix(in srgb, black 45%, transparent); }
-.shell-menu a, .shell-menu button { display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13.5px; text-align: left; color: var(--text); }
+.shell-menu a, .shell-menu button { display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 10px; font-size: 13.5px; text-align: left; color: var(--text); }
 .shell-menu a:hover, .shell-menu button:hover, .shell-menu :focus-visible { background: var(--surface); }
 
 /* ---------- Corps : liste facultative | zone principale | panneau d'infos facultatif ---------- */

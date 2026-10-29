@@ -128,14 +128,14 @@ html[data-fx="off"] .av-rv.is-new > * { animation: none; }
   .av-dlg-head .av-close { top: 10px; right: 10px; }
   .av-bow { display: none; }
   .av-dlg-body { padding: 16px; }
-  .av-legend { font-size: 11px; }
+  .av-legend { font-size: 12px; }
   .av-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; width: 100%; }
   .av-cell { border-radius: 10px; padding: 2px; gap: 2px; }
   .av-n { font-size: 13px; }
   .av-cell.is-locked .av-n { font-size: 15px; }
   .av-cell.is-today .av-n { font-size: 18px; }
   .av-ico { width: 20px; height: 20px; }
-  .av-val { font-size: 10px; }
+  .av-val { font-size: 12px; }
   .av-val.is-txt { display: none; }
   .av-grp { top: 3px; right: 3px; }
   .av-grp svg { width: 11px; height: 11px; }
@@ -158,12 +158,12 @@ html[data-fx="off"] .av-rv.is-new > * { animation: none; }
 .av-rv-card .av-qty { top: -8px; right: -8px; }
 /* Pastille « +N » : autres éléments de la case */
 .av-more { position: absolute; left: 4px; top: 4px; min-width: 22px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #F7D9A0;
-  font: 700 11px/18px Inter, sans-serif; text-align: center; }
+  font: 700 12px/18px Inter, sans-serif; text-align: center; }
 .av-cell .av-val { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 760px) {
   .av-rv-item { flex-basis: 100%; }
   .av-rv-card { flex-basis: 150px; }
-  .av-more { font-size: 9px; min-width: 16px; height: 14px; line-height: 14px; padding: 0 3px; left: 2px; top: 2px; }
+  .av-more { font-size: 12px; min-width: 20px; height: 18px; line-height: 18px; padding: 0 4px; left: 2px; top: 2px; }
 }
 @media (max-width: 760px) {
   .av-dlg-head { background: linear-gradient(135deg, #7c1426, #3b0f1c); }
