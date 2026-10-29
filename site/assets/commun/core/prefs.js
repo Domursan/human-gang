@@ -90,7 +90,7 @@ function buildPrefsDialog() {
           <input class="pref-switch" type="checkbox" role="switch" name="sound">
         </label>
         <label class="switch-row">
-          <span class="switch-txt"><strong>Son « à toi de jouer »</strong><small>Dans les jeux à plusieurs : un petit son quand ton tour commence (même si les autres sons sont coupés).</small></span>
+          <span class="switch-txt"><strong>Sons des jeux</strong><small>Dans les jeux à plusieurs : le son « à toi de jouer » et les sons des coups (même si les autres sons sont coupés).</small></span>
           <input class="pref-switch" type="checkbox" role="switch" name="sonTour">
         </label>
         <label class="switch-row">
