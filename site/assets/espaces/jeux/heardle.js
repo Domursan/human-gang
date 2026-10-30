@@ -4,12 +4,14 @@
  * 1 s au départ, puis 2, 4, 7, 11 et 16 s à chaque erreur ou « Passer ». 6 essais, même barème que Framed.
  * Lecteur : API iframe YouTube chargée à la demande, domaine youtube-nocookie, vidéo cachée derrière une pochette
  * dessinée jusqu'à la fin. Les tests remplacent le lecteur par window.__HG_FAKE_YT (aucun appel à YouTube).
- * Les membres peuvent proposer un morceau (le Staff « souvenirs » valide).
+ * Les membres peuvent proposer un morceau (le Staff « souvenirs » valide). Sous le jeu : l'historique de toutes les manches
+ * passées avec les scores du gang (heardle-historique.js).
  * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose, hg_heardle_signaler (vidéo qui ne se lit plus). Exporte : mount(panel, ctx), unmount().
  */
 import { paillSym } from '../../commun/paillettes.js';
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
 import { boutonReponses } from '../../commun/core/admin-reponses.js';
+import { monterHistorique } from './heardle-historique.js';
 
 const STEPS = [1, 2, 4, 7, 11, 16];
 const dateLong = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' });
@@ -237,8 +239,9 @@ function render() {
   if (!st.round) {
     P.innerHTML = `<div class="jd"><div class="jd-head"><h2 class="jd-title">Heardle du gang</h2></div>
       <p class="card muted">${st.cancelled ? 'Manche annulée aujourd’hui (la vidéo ne se lit plus). Rendez-vous demain !' : 'Pas de morceau aujourd’hui.'}${st.next_day ? ` Prochain Heardle le ${esc(dateLong.format(new Date(st.next_day + 'T12:00:00Z')))}.` : ''}</p>
-      ${hier}${board}${proposeHtml()}</div>`;
+      ${hier}${board}${proposeHtml()}</div><div id="jh-hist" class="jh-hist"></div>`;
     boutonReponses(P.querySelector('.jd-head'), 'heardle');
+    monterHistorique(P.querySelector('#jh-hist'), C);
     return;
   }
   const lim = st.finished ? 16 : st.seconds;
@@ -268,8 +271,9 @@ function render() {
     bottom = guessFormHtml('jh', 'Titre ou artiste', S.busy)
       + `<p class="muted small jd-note">Seuls les ${esc(st.tracks.length)} morceaux du gang sont proposés. Trouvé : ${esc(st.gain)} ${paillSym()} · pas trouvé : ${esc(st.consolation)} ${paillSym()}.</p>`;
   }
-  P.innerHTML = `<div class="jd">${head}${playerBox}${barHtml(st)}${triesHtml(st)}${bottom}${hier}${board}${proposeHtml()}</div>`;
+  P.innerHTML = `<div class="jd">${head}${playerBox}${barHtml(st)}${triesHtml(st)}${bottom}${hier}${board}${proposeHtml()}</div><div id="jh-hist" class="jh-hist"></div>`;
   boutonReponses(P.querySelector('.jd-head'), 'heardle');
+  monterHistorique(P.querySelector('#jh-hist'), C);
   if (!st.finished) {
     const g = st.guesses?.length || 0;
     const passBtn = P.querySelector('[data-act="passer"]');

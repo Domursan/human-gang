@@ -49,6 +49,26 @@ const J = window.__J3 = {
 if (S.framedDone) Object.assign(J.framed, { guesses: ['f-prestige', ''], solved: false, finished: false });
 
 /* ---------- Framed et Heardle ---------- */
+/**
+ * Historique du Heardle (hg_heardle_historique) : 23 manches passées, de la plus récente à la plus ancienne. Manche n :
+ * Ethan trouve en (n % 3) + 1 essais, sauf la 20 (ratée) et la 21 (pas jouée) ; Alice trouve du premier coup ; Bruno passe tout.
+ */
+const heardleHistorique = () => {
+  const joueur = (id, pseudo, color, essais, points) => ({ user_id: id, pseudo, color, avatar_url: null, solved: essais.endsWith('o'), essais, points });
+  const manches = Array.from({ length: 23 }, (_, i) => {
+    const n = 23 - i;
+    const d = new Date(`${today}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - (i + 1));
+    const joueurs = [joueur(U(2), 'Alice', '#2B5AE2', 'o', 150)];
+    if (n === 20) joueurs.push(joueur(ME, 'Ethan', '#4F6A8F', 'xxxxxx', 10));
+    else if (n !== 21) joueurs.push(joueur(ME, 'Ethan', '#4F6A8F', 'x'.repeat(n % 3) + 'o', 150 - 10 * (n % 3)));
+    joueurs.push(joueur(U(3), 'Bruno', '#159946', 'ssssss', null));
+    joueurs.sort((a, b) => (b.solved - a.solved) || (a.essais.length - b.essais.length));
+    return { day: d.toISOString().slice(0, 10), round: n, title: n === 23 ? 'Tout va bien' : `Morceau ${n}`, artist: n === 23 ? 'Orelsan' : `Artiste ${n}`,
+      youtube_id: 'VHoT4N43jK8', start_s: 12, shared_on: '#musique', proposed_by: 'Alice', joueurs };
+  });
+  return { moi: { joues: 22, trouves: 21, moyenne: 2.0, serie: 3 }, manches };
+};
+
 const board = () => [{ user_id: U(2), pseudo: 'Alice', points: 14, wins: 3 }, { user_id: ME, pseudo: 'Ethan', points: 9, wins: 2 }];
 function framedState() {
   if (S.noRound) return { day: today, round: null, next_day: null, board: board(), hier: null };
@@ -130,6 +150,7 @@ const HANDLERS = {
   hg_framed_guess: (a) => { const m = apply(J.framed, a.p_film); return m ? err(m) : ok(framedState()); },
   hg_heardle_state: () => ok(heardleState()),
   hg_heardle_guess: (a) => { const m = apply(J.heardle, a.p_track); return m ? err(m) : ok(heardleState()); },
+  hg_heardle_historique: () => (S.heardleHistErr ? err('Historique en panne') : ok(heardleHistorique())),
   hg_heardle_propose: (a) => { J.proposals.push(a); return ok('t-new'); },
   hg_proof_submit: (a) => {
     const q = PROOF_QUESTS.find((x) => x.code === a.p_quest); if (!q) return err('Cette quête à preuve ne fait pas partie des quêtes de la semaine');

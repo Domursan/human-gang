@@ -1,0 +1,102 @@
+/* ===== Heardle du gang : historique des morceaux (heardle-historique.js, maquette du 30/10/2026) =====
+   Style Pixel Pop : petits titres pixel à la couleur de l'espace (--esp-ink), bordures 2 px, ombre franche sur la ligne
+   ouverte. Carrés des essais : vert trouvé, rouge mauvaise réponse, pointillés passé, gris pas utilisé. */
+.jhh { display: flex; flex-direction: column; gap: 18px; container: jhh / inline-size; }
+.jhh-haut { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.jhh-haut p { margin: 0; }
+.jhh-code, .jhh-k { font: 400 12px var(--font-pixel); letter-spacing: 1.5px; text-transform: uppercase; color: var(--esp-ink); margin: 0; }
+.jhh-k { font-size: 11px; letter-spacing: 1px; color: var(--muted); }
+.jhh .jhh-h { margin: 4px 0 6px; font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 3vw, 32px); line-height: 1.05; }
+.jhh-stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.jhh-stat { min-width: 104px; padding: 8px 14px; border: 2px solid var(--border); border-radius: 12px; background: var(--bg); }
+.jhh-stat b { display: block; margin-top: 2px; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.jhh .is-ok { color: var(--esp-ink); }
+.jhh .is-sand { color: var(--sand); }
+
+.jhh-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.jhh-cherche { flex: 1 1 280px; }
+.jhh-cherche input { width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 14px; border: 2px solid var(--field-border); border-radius: 12px;
+  background: var(--bg); color: var(--text); font: 500 15px var(--font-body); }
+.jhh-cherche input:focus-visible { outline: none; border-color: var(--esp); box-shadow: 3px 3px 0 var(--esp); }
+.jhh-filtres { display: flex; gap: 8px; }
+.jhh-filtre { min-height: 44px; padding: 0 16px; border: 2px solid var(--border-strong); border-radius: 10px; background: transparent; color: var(--text);
+  font: 600 14px var(--font-body); cursor: pointer; }
+.jhh-filtre[aria-pressed="true"] { background: var(--esp); color: var(--esp-text); border-color: #000; box-shadow: 3px 3px 0 #000; }
+@media (hover: hover) { .jhh-filtre[aria-pressed="false"]:hover { border-color: var(--esp); } }
+
+.jhh-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.jhh-ligne { border: 2px solid var(--border); border-radius: 12px; background: var(--bg); }
+.jhh-ligne.is-open { border-color: var(--esp); background: var(--surface-2); box-shadow: 4px 4px 0 #000; }
+.jhh-tete { width: 100%; min-height: 64px; box-sizing: border-box; display: grid; grid-template-columns: 64px 110px minmax(0, 1fr) 150px 140px 24px;
+  align-items: center; gap: 14px; padding: 10px 16px; border: 0; border-radius: 10px; background: transparent; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+@media (hover: hover) { .jhh-ligne:not(.is-open):hover { border-color: var(--esp); } }
+.jhh-tete:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.jhh-num { font: 400 15px var(--font-pixel); color: var(--esp-ink); }
+.jhh-date, .jhh-qui, .jhh-moi > span:last-child { font-size: 13px; color: var(--muted); }
+.jhh-qui b { color: var(--text); }
+.jhh-titre { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.jhh-titre b, .jhh-titre span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jhh-titre b { font-size: 16px; }
+.jhh-titre span { font-size: 13px; color: var(--muted); }
+.jhh-moi { display: flex; flex-direction: column; gap: 4px; }
+.jhh-chev { color: var(--muted); transition: transform .15s ease; }
+.jhh-ligne.is-open .jhh-chev { color: var(--esp-ink); transform: rotate(180deg); }
+
+/* Carrés des essais */
+.jhh-carres { display: flex; gap: 4px; }
+.jhh-c { display: inline-block; width: 18px; height: 18px; box-sizing: border-box; border-radius: 4px; background: var(--border); }
+.jhh-c.jhh-mini { width: 12px; height: 12px; border-radius: 3px; }
+.jhh-moi .jhh-carres { gap: 3px; }
+.jhh-c.is-ok { background: #2FD16B; }
+.jhh-c.is-x { background: #FF3B5C; }
+.jhh-c.is-s { background: transparent; border: 2px dashed var(--field-border); }
+
+/* Panneau déroulant */
+.jhh-panneau { border-top: 2px solid var(--border); padding: 18px 16px 20px; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 28px; }
+.jhh-gauche, .jhh-droite { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.jhh-gauche p { margin: 0; }
+.jhh-chiffres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.jhh-chiffre { padding: 8px 12px; border: 2px solid var(--border); border-radius: 10px; }
+.jhh-chiffre b { display: block; margin-top: 2px; font-size: 18px; }
+.jhh-histo { display: flex; flex-direction: column; gap: 6px; }
+.jhh-barre { display: grid; grid-template-columns: 22px minmax(0, 1fr) 20px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.jhh-barre b { text-align: right; color: var(--text); }
+.jhh-piste { height: 14px; border-radius: 3px; background: var(--surface); overflow: hidden; }
+.jhh-piste > span { display: block; height: 100%; background: #2FD16B; }
+.jhh-piste > span.is-x { background: #FF3B5C; }
+.jhh-yt { align-self: flex-start; }
+.jhh-scores { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.jhh-score { display: grid; grid-template-columns: 26px 28px minmax(0, 1fr) auto 50px 64px; align-items: center; gap: 12px; padding: 6px 10px; border-radius: 8px; }
+.jhh-score.is-me { background: color-mix(in srgb, var(--esp) 12%, transparent); outline: 2px solid color-mix(in srgb, var(--esp) 45%, transparent); }
+.jhh-score .avatar { width: 28px; height: 28px; border-radius: 6px; font-size: 12px; }
+.jhh-rang { font: 400 13px var(--font-pixel); color: var(--muted); }
+.jhh-nom { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jhh-res { font: 400 13px var(--font-pixel); }
+.jhh-res.is-x { color: #FF6B83; }
+.jhh-gain { font-size: 13px; color: var(--muted); text-align: right; }
+.jhh-legende { display: flex; flex-wrap: wrap; gap: 14px; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.jhh-legende span { display: inline-flex; align-items: center; gap: 6px; }
+.jhh-legende .jhh-c { width: 12px; height: 12px; border-radius: 3px; }
+.jhh-vide { margin: 0; padding: 18px; border: 2px dashed var(--border-strong); border-radius: 12px; color: var(--muted); text-align: center; }
+.jhh-plus { align-self: center; display: block; margin: 12px auto 0; }
+
+/* Section étroite (colonne du Heardle, téléphone) : ligne sur deux niveaux, panneau empilé */
+@container jhh (max-width: 820px) {
+  .jhh-tete { grid-template-columns: 44px minmax(0, 1fr) auto 18px; gap: 10px; padding: 10px 12px; }
+  .jhh-date, .jhh-moi > span:last-child { display: none; }
+  .jhh-qui { grid-column: 2 / 4; grid-row: 2; font-size: 12px; }
+  .jhh-moi { align-items: flex-end; }
+  .jhh-panneau { grid-template-columns: 1fr; gap: 16px; padding: 14px 12px 16px; }
+  .jhh-yt { align-self: stretch; text-align: center; }
+  .jhh-score { grid-template-columns: 28px minmax(0, 1fr) auto 40px; gap: 8px; padding: 5px 8px; }
+  .jhh-rang, .jhh-gain { display: none; }
+  .jhh-c { width: 14px; height: 14px; border-radius: 3px; }
+  .jhh-filtres { flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+html[data-mode="clair"] .jhh-ligne.is-open, html[data-mode="clair"] .jhh-filtre[aria-pressed="true"] { box-shadow: 3px 3px 0 color-mix(in srgb, var(--text) 70%, transparent); }
+html[data-mode="clair"] .jhh-res.is-x { color: #B3002A; }
+@media (prefers-reduced-motion: reduce) { .jhh-chev { transition: none; } }
+html[data-fx="off"] .jhh-chev { transition: none; }
+
+/* Emplacement : sous la colonne du jeu (.jd, 560 px), sur toute la largeur de l'onglet */
+.jh-hist { margin-top: 24px; }

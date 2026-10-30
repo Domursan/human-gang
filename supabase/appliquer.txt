@@ -41,3 +41,4 @@ supabase/migrations/174_bot_file_attente.sql
 supabase/migrations/175_echecs_repetition.sql
 supabase/migrations/176_audit_correctifs.sql
 supabase/migrations/177_theme_pixel_pop.sql
+supabase/migrations/178_heardle_historique.sql
