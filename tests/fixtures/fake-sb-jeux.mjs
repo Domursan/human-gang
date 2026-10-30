@@ -64,8 +64,17 @@ function quoteRow(x) {
     explanation: x.answer ? x.context : null, solution: x.answer ? [x.good] : null, rate: x.answer ? x.rate : null };
 }
 
+/** Classement des jeux du jour (hg_jeux_classement, migration 179) : Sutom à 8 points et GeoGuessr à 10, notés aujourd'hui. */
+function classement() {
+  const jeux = { sutom: { score: 8, points: 170, reussi: true, palier: 3 }, geo: { score: 10, points: 200, reussi: true, palier: 1 } };
+  return { jeu: null, day: today(), total_jeux: 16, bonus: 250, max: 200, pas: 15, rate: 50,
+    jour: [{ user_id: 'u-moi', pseudo: 'Moi', points: 18, paillettes: 370, parties: 2, reussies: 2 }], semaine: [],
+    moi: { faits: 1, bonus: false, jeux } };
+}
+
 /** RPC des jeux : réponse, ou undefined pour laisser répondre le faux client de base. */
 function jeux(fn, a = {}) {
+  if (fn === 'hg_jeux_classement' && !S.jeuxFail) return ok(classement());
   if (!/^hg_(geo|quote)_/.test(fn) && !(fn === 'hg_quiz_answer' && String(a.p_question).startsWith('qt-'))) return undefined;
   if (S.jeuxFail) return ko('Failed to fetch');
   const d = today();

@@ -136,7 +136,7 @@ export async function monter(panel, ctx, jeu) {
     const n = (st.essais || []).length, fini = !!st.finished, manche = !!st.round;
     const pills = !manche ? '' : fini
       ? `<span class="pill nj-pill">Essais <strong>${n} / 6</strong></span><span class="pill nj-pill">Points <strong>${esc(st.score)}</strong></span>`
-      : `<span class="pill nj-pill">Essai <strong>${Math.min(n + 1, 6)} / 6</strong></span><span class="pill nj-pill">Points max <strong>${Math.max(1, 6 - n)}</strong></span>`;
+      : `<span class="pill nj-pill">Essai <strong>${Math.min(n + 1, 6)} / 6</strong></span><span class="pill nj-pill">Points max <strong>${Math.max(1, 10 - n)}</strong></span>`;
     const head = `<div class="nj-head"><div class="nj-head-t"><p class="nj-kicker">JEU DU JOUR${manche ? ` · N°${esc(st.round)}` : ''}</p>
       <h2 class="nj-title">${esc(cfg.titre)}</h2></div><div class="nj-pills">${pills}</div></div>`;
     const corps = manche
@@ -395,8 +395,8 @@ export async function resumer(ctx, jeu) {
         ? { etat: 'fait', texte: `Trouvé en ${pluriel(n, 'essai')}`, badge: `${st.score} pt${st.score > 1 ? 's' : ''}`, gain: Number(st.reward) || 0 }
         : { etat: 'fait', texte: 'Pas trouvé cette fois', badge: '0 pt', gain: Number(st.reward) || 0 };
     }
-    if (n > 0) return { etat: 'en_cours', texte: `${pluriel(n, 'essai')} sur 6`, badge: `${Math.max(1, 6 - n)} pt${6 - n > 1 ? 's' : ''} max` };
-    return { etat: 'a_jouer', texte: 'Devine en 6 essais', badge: '6 pts max' };
+    if (n > 0) return { etat: 'en_cours', texte: `${pluriel(n, 'essai')} sur 6`, badge: `${Math.max(1, 10 - n)} pts max` };
+    return { etat: 'a_jouer', texte: 'Devine en 6 essais', badge: '10 pts max' };
   } catch {
     return { etat: 'info', texte: 'Indisponible pour le moment', badge: '' };
   }

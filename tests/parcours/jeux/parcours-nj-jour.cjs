@@ -31,7 +31,7 @@ const ouvre = (browser, hash, extra = {}) => openPage(browser, { page: 'jeux', f
   let p = await ouvre(browser, '#pays');
   check((await p.locator('.nj-title').textContent()) === 'Pays du jour', 'pays : titre « Pays du jour »');
   check((await p.locator('.nj-kicker').textContent()) === 'JEU DU JOUR · N°16', 'pays : en-tête « JEU DU JOUR · N°16 »');
-  check((await p.locator('.nj-pills').textContent()).includes('Essai 1 / 6') && (await p.locator('.nj-pills').textContent()).includes('Points max 6'), 'pays : pastilles « Essai 1 / 6 » et « Points max 6 »');
+  check((await p.locator('.nj-pills').textContent()).includes('Essai 1 / 6') && (await p.locator('.nj-pills').textContent()).includes('Points max 10'), 'pays : pastilles « Essai 1 / 6 » et « Points max 10 »');
   check((await p.locator('.nj-grille path').getAttribute('d')).startsWith('M30 0'), 'pays : silhouette tracée (SVG du serveur)');
   check((await p.locator('.nj-photo-vide').count()) === 1 && (await p.locator('.nj-photo img').count()) === 0, 'pays : emplacement « Photo débloquée à la 3e erreur »');
   check((await p.locator('.nj-ind').count()) === 3 && (await p.locator('.nj-ind.is-verrouille').count()) === 3, 'pays : 3 indices, tous verrouillés au départ');

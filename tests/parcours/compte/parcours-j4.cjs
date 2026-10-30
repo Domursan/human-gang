@@ -38,7 +38,7 @@ const fs = require('fs');
   check(res.includes('Bravo'), 'réponse juste : « Bravo »');
   check(res.includes('Un Worldle de mars 2022'), 'réponse : explication affichée');
   check(res.includes('9 membres sur 12 ont trouvé'), 'réponse : score du gang');
-  check(res.includes('+10 pour ta série') && res.includes('+200 : palier de 30 jours'), 'réponse : bonus du jour et palier');
+  check(res.includes('+10 pour la question du jour') && res.includes('+200 : palier de 30 jours'), 'réponse : bonus du jour et palier');
   check((await tuile.locator('.qdj-serie').innerText()).includes('31 jours'), 'réponse : série passée à 31 jours');
   check(await p.evaluate(() => document.activeElement?.classList.contains('qdj-result')), 'réponse : le focus va sur le résultat');
   const calls = (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_quiz_daily_answer');

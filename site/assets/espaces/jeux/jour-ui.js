@@ -78,7 +78,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false, meId = n
     const ok = d.correct === true;
     const st = d.stats ? `<p class="small qdj-stats">${esc(nf.format(d.stats.correct))} membre${d.stats.correct > 1 ? 's' : ''} sur ${esc(nf.format(d.stats.answered))} ${d.stats.correct > 1 ? 'ont' : 'a'} trouvé.</p>` : '';
     const gains = S.retour ? [
-      S.retour.bonus ? `+${nf.format(S.retour.bonus)} pour ta série` : '',
+      S.retour.bonus ? `+${nf.format(S.retour.bonus)} pour la question du jour` : '',
       S.retour.reward ? `+${nf.format(S.retour.reward)} pour la bonne réponse` : '',
       ...(S.retour.paliers || []).map((p) => `+${nf.format(p.paillettes)} : palier de ${nf.format(p.palier)} jours !`),
     ].filter(Boolean) : [];
@@ -106,7 +106,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false, meId = n
     const img = q.image_url ? `<img class="qdj-img" src="${esc(q.image_url)}" alt="Illustration de la question" loading="lazy" decoding="async" data-on-error="remove">` : '';
     const corps = d.answered ? resultat() : `${champs(q)}
       <p class="qdj-error small" role="alert" hidden></p>
-      <div class="qdj-foot"><span class="small muted">Réponds pour garder ta série</span><span class="qdj-plus">+${esc(nf.format(d.bonus || 0))}</span></div>`;
+      <div class="qdj-foot"><span class="small muted">Juste : 10 points (raté : 0) · réponds pour garder ta série</span><span class="qdj-plus">+${esc(nf.format(d.bonus || 0))}</span></div>`;
     return `<section class="card qdj-card" aria-labelledby="qdj-prompt">
       ${tete()}
       <p class="qdj-prompt" id="qdj-prompt">${esc(q.prompt)}</p>

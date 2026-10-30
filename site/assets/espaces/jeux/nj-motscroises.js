@@ -382,6 +382,6 @@ export async function resume(ctx) {
     fini: (p) => (p.erreurs ? `Grille complète · ${p.erreurs} erreur${p.erreurs > 1 ? 's' : ''}` : 'Grille complète sans erreur'),
     enCours: () => 'Grille commencée',
     aFaire: 'Une mini grille à remplir',
-    badgeMax: '5 pts max',
+    badgeMax: '10 pts max',
   });
 }

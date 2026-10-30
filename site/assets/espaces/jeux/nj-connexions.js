@@ -166,6 +166,6 @@ export async function resume(ctx) {
     fini: (p) => (p.gagne ? 'Grille trouvée' : 'Grille perdue'),
     enCours: (p) => `${(p.etat?.trouves || []).length} groupe${(p.etat?.trouves || []).length > 1 ? 's' : ''} trouvé${(p.etat?.trouves || []).length > 1 ? 's' : ''} sur 4`,
     aFaire: '16 mots, 4 groupes cachés',
-    badgeMax: '5 pts max',
+    badgeMax: '10 pts max',
   });
 }

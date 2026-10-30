@@ -175,7 +175,7 @@ const valide = async (p) => { await p.click('[data-act="valider"]'); await sleep
   await sleep(350);
   check((await p.locator('.ng-ligne.is-saisie .ng-c.is-indice').count()) === 1 && (await p.locator('.ng-ligne.is-saisie .ng-c.is-indice').textContent()) === '1', 'nerdle indice : case 1 révélée en pâle dans la ligne en cours');
   check((await p.locator('[data-act="indice"]').textContent()).includes('1/3') && (await p.locator('.ng-indices').textContent()).includes('case 1'), 'nerdle indice : bouton « 1/3 » et liste des indices');
-  check((await p.locator('.ng-pills').textContent()).includes('Essai 1 / 6') && (await p.locator('.ng-pills').textContent()).replace(/\s+/g, ' ').match(/Points max\s*5/), 'nerdle indice : pas d’essai compté, points max 5');
+  check((await p.locator('.ng-pills').textContent()).includes('Essai 1 / 6') && (await p.locator('.ng-pills').textContent()).replace(/\s+/g, ' ').match(/Points max\s*9/), 'nerdle indice : pas d’essai compté, points max 9');
   for (const t of ['1', '0', '+', '3', '7', '=', '4', '7']) await p.click(`.ng-key[data-touche="${t}"]`);
   check((await p.locator('.ng-ligne.is-saisie .ng-c').allTextContents()).join('') === '10+37=47', 'nerdle : saisie affichée dans la ligne en cours');
   await p.click('[data-act="entrer"]');

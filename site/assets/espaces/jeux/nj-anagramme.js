@@ -317,6 +317,6 @@ export async function resume(ctx) {
       return `${n} mot${n > 1 ? 's' : ''} trouvé${n > 1 ? 's' : ''} sur 5`;
     },
     aFaire: 'Cinq mots mélangés à retrouver',
-    badgeMax: '5 pts',
+    badgeMax: '10 pts max',
   });
 }

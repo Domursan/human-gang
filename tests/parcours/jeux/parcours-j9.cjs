@@ -18,7 +18,7 @@ const { ROOT, check, finish, openPage, adminSection, hscroll, log, sleep, chromi
   check((await p.locator('#jeux-panel-framed .jd-title').innerText()).includes('Framed du gang #18'), 'titre : « Framed du gang #18 »');
   check((await p.locator('.jf-img img').count()) === 1, 'image : la 1re image est affichée');
   check((await p.locator('.jf-num:not([disabled])').count()) === 1 && (await p.locator('.jf-num[disabled]').count()) === 5, 'images : 1 ouverte, 5 verrouillées');
-  check((await p.locator('.jd-pts-pill').innerText()).includes('6 pts possibles'), 'points : 6 possibles à la 1re image');
+  check((await p.locator('.jd-pts-pill').innerText()).includes('10 pts possibles'), 'points : 10 possibles à la 1re image');
   check((await p.locator('.jd-note').innerText()).includes('Seules les 5 réponses de la liste'), 'note : seules les réponses de la liste sont proposées');
   check((await p.locator('.jd-sub').innerText()).includes('Devine l’image du jour'), 'en-tête : « Devine l’image du jour »');
   check((await p.locator('.jf-img img').getAttribute('alt')) === 'Image 1 du jour à deviner', 'alt : « Image 1 du jour à deviner »');

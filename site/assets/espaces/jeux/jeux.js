@@ -65,8 +65,9 @@ const LISTE = [{ id: TOUS, titre: 'Tous les jeux', icone: ICONE_DEF, catalogue: 
 const BASE = new URL('./', import.meta.url);
 /** Contexte passé aux modules. sub : choix propre à un jeu tiré de l'adresse (null si aucun). */
 const CTX = { sb, me, toast, esc, sub: null };
-// État : onglet affiché ; modules montés (id -> module) ; montages en cours ; modules importés ; résumés (id -> résumé).
-const S = { cur: null, mods: new Map(), loading: new Map(), imports: new Map(), resumes: new Map(), classements: new Map() };
+// État : onglet affiché ; modules montés (id -> module) ; montages en cours ; modules importés ; résumés (id -> résumé) ;
+// notes : jeux notés aujourd'hui (clé de hg_jeux_resultats -> { score, points… }).
+const S = { cur: null, mods: new Map(), loading: new Map(), imports: new Map(), resumes: new Map(), classements: new Map(), notes: null };
 
 const tablist = $('#jeux-tabs');
 const panels = $('#jeux-panels');
@@ -193,10 +194,17 @@ function peindreHub() {
     if (sub) sub.textContent = r?.texte || descr.get(o.id) || '';
     const b = document.querySelector(`[data-badge="${o.id}"]`);
     if (b) b.innerHTML = badgeHtml(r);
-    const cb = document.querySelector(`[data-cbadge="${o.id}"]`);
-    if (cb) cb.innerHTML = r && ['fait', 'a_jouer', 'en_cours'].includes(r.etat) ? badgeHtml(r) : '';
     const st = document.querySelector(`[data-st="${o.id}"]`);
     if (st) st.textContent = r?.etat === 'fait' ? (r.badge || 'Fait') : r?.etat === 'en_cours' ? (r.badge || '') : '';
+  }
+  // Cartes de la vue « Tous les jeux » : un jeu noté aujourd'hui (hg_jeux_classement, migration 179) prend le cadre vert et
+  // ses points sur 10 ; sinon la pastille du résumé du jeu (à jouer, en cours, ou fait avant d'être noté).
+  for (const cb of document.querySelectorAll('[data-cbadge]')) {
+    const k = cb.dataset.cbadge;
+    const res = S.notes?.[CLE_JEU[k] || (k === 'code-du-jour' ? 'code_jour' : '')];
+    const r = S.resumes.get(k);
+    cb.innerHTML = res ? badgeHtml({ etat: 'fait', badge: `${nf(res.score)} pt${res.score > 1 ? 's' : ''}` })
+      : r && ['fait', 'a_jouer', 'en_cours'].includes(r.etat) ? badgeHtml(r) : '';
   }
   const total = BONUS.length;
   const bar = $('#jeux-bar');
@@ -264,7 +272,7 @@ function vignetteHtml(c) {
 /** HTML d'une carte de jeu (lien, ou bloc inerte si le jeu est en préparation). */
 function carteHtml(c) {
   const corps = `<span class="jx-vig">${vignetteHtml(c)}
-      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : c.admin ? 'En développement' : '<span class="jx-l-long">Admins seulement</span><span class="jx-l-court" aria-hidden="true">Admins</span>'}</span>` : ''}<span data-cbadge="${esc(c.onglet || '')}"></span></span></span>
+      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : c.admin ? 'En développement' : '<span class="jx-l-long">Admins seulement</span><span class="jx-l-court" aria-hidden="true">Admins</span>'}</span>` : ''}<span data-cbadge="${esc(c.onglet || c.id)}"></span></span></span>
     <span class="jx-txt"><span class="jx-t">${esc(c.titre)}</span><span class="jx-s">${esc(c.texte)}</span></span>`;
   return c.bientot
     ? `<li class="jx-carte is-prep is-chantier" data-nom="${esc(c.titre.toLowerCase())}" aria-label="${esc(`${c.titre} : en préparation, visible des admins seulement`)}">${corps}</li>`
@@ -309,7 +317,8 @@ function monterCatalogue(panel) {
       </div>
     </div>`;
   // Classement général des jeux du jour et progression vers le bonus « 16 jeux terminés » (migration 157)
-  S.classements.set(TOUS, monterClassement(panel.querySelector('#jx-classement'), null));
+  S.classements.set(TOUS, monterClassement(panel.querySelector('#jx-classement'), null,
+    { onData: (d) => { S.notes = d?.moi?.jeux || {}; peindreHub(); } }));
   let filtre = '';
   const appliquer = () => {
     const q = (panel.querySelector('#jx-q').value || '').trim().toLowerCase();

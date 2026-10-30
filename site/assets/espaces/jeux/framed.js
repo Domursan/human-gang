@@ -90,7 +90,7 @@ function render() {
     return;
   }
   const k = st.frames.length, path = st.frames[S.view], url = S.urls[path];
-  const pts = st.finished ? st.score : Math.max(1, 7 - k);
+  const pts = st.finished ? st.score : Math.max(1, 11 - k);
   const head = `<div class="jd-head"><h2 class="jd-title">Framed du gang #${esc(st.round)}</h2>
     <div class="jd-sub"><span class="muted small">Devine l’image du jour · image ${esc(S.view + 1)} sur ${esc(st.total_frames)}</span>
     <span class="pill jd-pts-pill">${st.finished ? `${esc(st.score)} pt${st.score > 1 ? 's' : ''}` : `${esc(pts)} pt${pts > 1 ? 's' : ''} possible${pts > 1 ? 's' : ''}`}</span></div></div>`;

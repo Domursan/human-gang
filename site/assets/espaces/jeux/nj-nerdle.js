@@ -180,7 +180,7 @@ const CFG = {
     const n = (st.partie?.etat?.essais || []).length;
     if (st.partie?.fini) return [['Essais', `${n} / ${ESSAIS}`]];
     const ni = (st.partie?.etat?.indices || []).length;
-    return [['Essai', `${Math.min(n + 1, ESSAIS)} / ${ESSAIS}`], ['Points max', Math.max(1, ESSAIS - n - ni)]];
+    return [['Essai', `${Math.min(n + 1, ESSAIS)} / ${ESSAIS}`], ['Points max', Math.max(1, 10 - n - ni)]];
   },
   corps,
   lier,
@@ -209,6 +209,6 @@ export async function resume(ctx) {
     fini: (p) => (p.gagne ? `Trouvé en ${(p.etat?.essais || []).length} essai${(p.etat?.essais || []).length > 1 ? 's' : ''}` : 'Pas trouvé cette fois'),
     enCours: (p) => `${(p.etat?.essais || []).length} essai${(p.etat?.essais || []).length > 1 ? 's' : ''} sur ${ESSAIS}`,
     aFaire: 'Calcul de 8 caractères, 6 essais',
-    badgeMax: '6 pts max',
+    badgeMax: '10 pts max',
   });
 }

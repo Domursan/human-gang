@@ -1,9 +1,10 @@
 // ===== Humane Gang — classement des jeux du jour (migration 157) =====
 /*
  * Rôle : bloc « Classement » sous chaque jeu du jour (Sutom HG, Framed, Heardle, Code du jour, jeux « devine », grilles,
- *   Sudoku) et classement général (tous les jeux) avec la progression vers le bonus « 16 jeux terminés ».
+ *   Sudoku, GeoGuessr, Qui a dit ça ?, Question du jour) et classement général (tous les jeux) avec la progression vers le bonus « 16 jeux terminés ».
  *   Deux onglets : « Aujourd'hui » (points du jour, puis temps) et « Cette semaine » (somme des points, lundi à dimanche).
- *   Points = Paillettes gagnées : 150 au 1er palier, −10 par palier, 10 si raté.
+ *   Points sur 10 par jeu (migration 179) : 10 au 1er palier, −1 par palier, 0 si raté ; Paillettes : 200 à 10 points,
+ *   −15 par point manquant.
  * Données : RPC hg_jeux_classement(p_jeu) (p_jeu null = tous les jeux).
  * Dépendances : core.js (sb, esc), core/util.js (avatarHtml), core/profile.js (membre connecté).
  * Exporte : CLE_JEU (onglet de /pages/jeux/jeux.html → clé du classement), monterClassement(conteneur, cle), rafraichirClassements().
@@ -18,7 +19,7 @@ export const CLE_JEU = {
   sutom: 'sutom', framed: 'framed', heardle: 'heardle', code_jour: 'code_jour',
   'carte-mystere': 'nj_carte', 'jeu-video': 'nj_jv', pochette: 'nj_pochette', replique: 'nj_replique', pays: 'nj_pays', plat: 'nj_plat',
   connexions: 'nj_connexions', 'mots-croises': 'nj_motscroises', 'mot-mele': 'nj_motmele', anagramme: 'nj_anagramme', nerdle: 'nj_nerdle',
-  sudoku: 'nj_sudoku',
+  sudoku: 'nj_sudoku', geo: 'geo', citations: 'citations', jour: 'quiz_jour',
 };
 /** Nombre de lignes montrées avant « Voir tout ». */
 const COURT = 10;
@@ -46,7 +47,7 @@ function css() {
  * @param {boolean} general classement de tous les jeux (montre le nombre de jeux faits)
  * @returns {string} HTML
  */
-function lignes(liste, moi, tout, general, total) {
+function lignes(liste, moi, tout, general) {
   if (!liste.length) return '<p class="jc-vide">Personne pour l’instant. À toi de jouer !</p>';
   const idxMoi = liste.findIndex((x) => x.user_id === moi);
   const vis = liste.map((x, i) => [x, i]).filter(([, i]) => tout || i < COURT || i === idxMoi);
@@ -54,8 +55,8 @@ function lignes(liste, moi, tout, general, total) {
       <span class="jc-rang" aria-label="Rang ${i + 1}">${rang(i)}</span>
       ${avatarHtml({ pseudo: x.pseudo, color: x.color, avatar_url: x.avatar_url }, 28)}
       <span class="jc-nom">${esc(x.pseudo || 'Membre')}${x.user_id === moi ? ' <span class="jc-toi">toi</span>' : ''}${x.bonus ? ' <span class="jc-bonus" title="Les 16 jeux terminés">bonus</span>' : ''}</span>
-      ${general ? `<span class="jc-faits">${nf(x.parties)}${total ? `/${total}` : ''} jeu${x.parties > 1 ? 'x' : ''}</span>` : ''}
-      <span class="jc-pts">${nf(x.points)} ${paillSym()}</span></li>`).join('')}</ol>
+      ${general ? `<span class="jc-faits">${nf(x.parties)} jeu${x.parties > 1 ? 'x' : ''}</span>` : ''}
+      <span class="jc-pts">${nf(x.points)} pt${x.points > 1 ? 's' : ''}</span></li>`).join('')}</ol>
     ${!tout && liste.length > COURT ? `<button type="button" class="btn btn-ghost btn-sm jc-tout" data-jc="tout">Voir tout le classement (${liste.length})</button>` : ''}`;
 }
 
@@ -63,9 +64,10 @@ function lignes(liste, moi, tout, general, total) {
  * Monte un bloc de classement dans un conteneur.
  * @param {HTMLElement} el conteneur (vidé)
  * @param {string|null} cle clé du jeu (CLE_JEU) ; null = classement général de tous les jeux
+ * @param {{onData?: Function}} [opts] onData(data) : appelé après chaque chargement réussi (pastilles des cartes de jeux)
  * @returns {{rafraichir: Function}}
  */
-export function monterClassement(el, cle = null) {
+export function monterClassement(el, cle = null, { onData } = {}) {
   css();
   const st = { onglet: 'jour', tout: false, data: null, err: null };
   const general = !cle;
@@ -74,7 +76,8 @@ export function monterClassement(el, cle = null) {
     try {
       const { data, error } = await sb.rpc('hg_jeux_classement', { p_jeu: cle });
       if (error) throw error;
-      st.data = data || { jour: [], semaine: [], moi: { faits: 0 }, total_jeux: 16, bonus: 250, max: 150 }; st.err = null;
+      st.data = data || { jour: [], semaine: [], moi: { faits: 0 }, total_jeux: 16, bonus: 250, max: 200, pas: 15 }; st.err = null;
+      onData?.(st.data);
     } catch (e) { st.err = e?.message || String(e); }
     peindre();
   }
@@ -93,8 +96,8 @@ export function monterClassement(el, cle = null) {
           <button type="button" class="jc-o" data-jc-o="jour" aria-pressed="${st.onglet === 'jour'}">Aujourd’hui</button>
           <button type="button" class="jc-o" data-jc-o="semaine" aria-pressed="${st.onglet === 'semaine'}">Cette semaine</button></div></div>
       ${prog}
-      ${st.err ? `<p class="jc-vide">Classement indisponible (${esc(st.err)}).</p>` : !d ? '<p class="jc-vide">Chargement…</p>' : lignes(liste, moi, st.tout, general, general ? d.total_jeux : 0)}
-      ${d && !general ? `<p class="jc-note">Points = Paillettes gagnées : ${nf(d.max)} ${paillSym()} du premier coup, puis 10 de moins par essai ou palier ; 10 ${paillSym()} si c’est raté.</p>` : ''}
+      ${st.err ? `<p class="jc-vide">Classement indisponible (${esc(st.err)}).</p>` : !d ? '<p class="jc-vide">Chargement…</p>' : lignes(liste, moi, st.tout, general)}
+      ${d && !general ? `<p class="jc-note">10 points du premier coup, puis 1 de moins par essai ou palier ; 0 si c’est raté. Paillettes : ${nf(d.max)} ${paillSym()} à 10 points, ${nf(d.pas ?? 15)} de moins par point manquant.</p>` : ''}
     </section>`;
   }
   el.addEventListener('click', (ev) => {

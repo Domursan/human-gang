@@ -90,7 +90,7 @@ export async function resumerGrille(ctx, jeu, textes) {
     const st = await lireEtat(ctx, jeu);
     if (!st.grille) return { etat: 'info', texte: 'Pas de grille aujourd’hui', badge: '' };
     const p = st.partie;
-    if (p?.fini) return { etat: 'fait', texte: textes.fini(p), badge: `${p.score} pt${p.score > 1 ? 's' : ''}`, gain: Number(p.reward) || 0 };
+    if (p?.fini) return { etat: 'fait', texte: textes.fini(p), badge: `${p.points ?? p.score} pt${(p.points ?? p.score) > 1 ? 's' : ''}`, gain: Number(p.reward) || 0 };
     if (p) return { etat: 'en_cours', texte: textes.enCours(p), badge: '' };
     return { etat: 'a_jouer', texte: textes.aFaire, badge: textes.badgeMax || '' };
   } catch {
@@ -196,7 +196,7 @@ export async function monterGrille(panel, ctx, cfg) {
     const p = st.partie;
     const gagne = !!p.gagne;
     const texte = cfg.finTexte ? cfg.finTexte(st) : (gagne ? 'Bien joué !' : 'Pas cette fois.');
-    const stats = [gagne && p.secondes != null ? `Temps ${formatDuree(p.secondes)}` : null, `Score ${p.score} pt${p.score > 1 ? 's' : ''}`].filter(Boolean).join(' · ');
+    const stats = [gagne && p.secondes != null ? `Temps ${formatDuree(p.secondes)}` : null, `Score ${p.points ?? p.score} pt${(p.points ?? p.score) > 1 ? 's' : ''}`].filter(Boolean).join(' · ');
     return `<section class="ng-fin${gagne ? ' is-win' : ''}" aria-label="Fin de partie">
       <p class="ng-fin-t">${esc(texte)}</p>
       <p class="ng-fin-s">${esc(stats)}</p>

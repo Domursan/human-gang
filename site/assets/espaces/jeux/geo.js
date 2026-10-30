@@ -120,7 +120,7 @@ async function charger() {
 /** Règles du jeu, avec les réglages du serveur. */
 function regles(r) {
   const b = Array.isArray(r.bonus) ? r.bonus : [100, 60, 30];
-  q('#geo-rules').textContent = `Une nouvelle manche chaque jour à 6 h. Score sur 5 000 selon la distance ; 1 Paillette pour ${nf(r.points_par_paillette || 100)} points, ${nf(r.plafond ?? 50)} au plus par jour. Le lundi, le podium de la semaine reçoit ${b.map(nf).join(', ')} Paillettes.`;
+  q('#geo-rules').textContent = `Une nouvelle manche chaque jour à 6 h. Score sur 5 000 selon la distance, ramené sur 10 points (500 = 1 point) ; 200 Paillettes à 10 points, 15 de moins par point manquant. Le lundi, le podium de la semaine reçoit ${b.map(nf).join(', ')} Paillettes.`;
 }
 
 /** Pas de manche aujourd'hui : message, pas de carte. */

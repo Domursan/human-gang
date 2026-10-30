@@ -241,6 +241,6 @@ export async function resume(ctx) {
     fini: () => 'Tous les mots trouvés',
     enCours: (p) => `${(p.etat?.trouves || []).length} mot${(p.etat?.trouves || []).length > 1 ? 's' : ''} trouvé${(p.etat?.trouves || []).length > 1 ? 's' : ''}`,
     aFaire: 'Retrouve les mots cachés',
-    badgeMax: '5 pts',
+    badgeMax: '10 pts max',
   });
 }

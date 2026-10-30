@@ -50,6 +50,13 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   check(['Sutom du gang', 'Carte mystère', 'Sudoku du jour'].every((t) => titresQ.includes(t)), 'quotidiens : Sutom du gang, Carte mystère, Sudoku du jour');
   check(['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile'].every((t) => titresF.includes(t)), 'flash : Paillettes, Raclette, Démineur, Domu-mobile');
   check(!titresQ.some((t) => ['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile', '2048 Paillettes'].includes(t)), 'quotidiens : aucun jeu à volonté');
+  // Jeux notés aujourd'hui (hg_jeux_classement, migration 179) : pastille « N pts » et cadre vert, quel que soit le jeu
+  await p.waitForSelector('[data-cbadge="sutom"] .pill-ok', { timeout: 4000 }).catch(() => {});
+  const pastille = (id) => p.locator(`[data-cbadge="${id}"] .pill-ok`).innerText().catch(() => '');
+  check(/8 pts/i.test(await pastille('sutom')) && /10 pts/i.test(await pastille('geo')), 'cartes notées : Sutom « 8 pts », GeoGuessr « 10 pts »');
+  check(await p.locator('.jx-carte:has([data-cbadge="sutom"] .pill-ok)').evaluate((li) => getComputedStyle(li).borderTopColor !== getComputedStyle(li.closest('.jx-grille').querySelector('.jx-carte:has([data-cbadge="framed"])')).borderTopColor).catch(() => false),
+    'cartes notées : cadre de couleur (Framed, pas joué, reste neutre)');
+  check(!(await p.locator('[data-cbadge="framed"] .pill-ok').count()), 'cartes : Framed sans pastille « fait »');
   await p.click('.jx-filtre[data-f="quotidien"]'); await sleep(150);
   check(await sec('quotidien').isVisible() && await sec('flash').isHidden(), 'filtre « Quotidiens » : seulement les jeux quotidiens');
   await p.click('.jx-filtre[data-f="flash"]'); await sleep(150);
