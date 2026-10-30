@@ -67,7 +67,7 @@ const fs = require('fs');
   await p.evaluate(() => document.getElementById('jeux-tab-jour').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
   await sleep(300);
   check((await p.locator('#jeux-tab-sutom').getAttribute('aria-selected')) === 'true' && p.url().endsWith('#sutom'), 'onglets : flèche droite → onglet suivant, adresse mise à jour');
-  check((await p.locator('.site-header a.nav-top[href="/pages/jeux/jeux.html"]').innerText()).includes('Jeux'), 'menu : lien « Jeux » vers la page des jeux (sans sous-menu)');
+  check((await p.locator('.site-header .nav-group[data-menu="jeux"] > .nav-top').innerText()).includes('Jeux'), 'menu : « Jeux » déroulant dans la barre du haut');
   check((await hscroll(p)) <= 0, 'Jeux 390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'Jeux : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();

@@ -71,7 +71,7 @@ const { ROOT, check, finish, openPage, adminSection, hscroll, log, sleep, chromi
   await fleche('jeux-tab-heardle', 'ArrowLeft');
   await sleep(300);
   check((await hscroll(p)) <= 0, '360 px : pas de défilement horizontal');
-  check((await p.locator('.site-header a.nav-top[href="/pages/jeux/jeux.html"]').count()) === 1, 'menu : lien « Jeux » vers la page des jeux (sans sous-menu)');
+  check((await p.locator('.site-header .nav-group[data-menu="jeux"] a.nav-item[href="/pages/jeux/jeux.html#tous"]').count()) === 1, 'menu : « Jeux » déroulant, avec « Tous les jeux » vers la page des jeux');
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#framed', scenario: { noRound: true } });

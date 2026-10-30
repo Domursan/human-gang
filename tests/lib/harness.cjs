@@ -116,7 +116,11 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       if (u.hostname.endsWith('supabase.co')) EXTERNAL.push(req.url());
       return route.fulfill({ status: 204, body: '' });
     }
-    // supabase-js est servi localement : assets/vendor/supabase-js-2.45.4.mjs (et son .js) reçoivent le faux client.
+    // supabase-js est servi localement : le module (assets/vendor/supabase-js-2.45.4.mjs, ou sa version regroupée
+    // assets/_b/assets/vendor/supabase-js-2.45.4.js) reçoit le faux client. Le script classique préchargé par le HTML publié
+    // (assets/vendor/supabase-js-2.45.4.js) reçoit un script vide : le faux client tient déjà sa place, et le compter deux
+    // fois fausserait le budget de performance (en ligne, ce script n'est téléchargé qu'une fois).
+    if (/^\/assets\/vendor\/supabase-js-[\d.]+\.js$/.test(u.pathname.slice(PREFIX.length))) return serve(route, { body: '/* faux client servi par le module */', contentType: 'text/javascript' });
     if (/\/vendor\/supabase/.test(u.pathname)) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
     if (PREFIX && u.pathname !== PREFIX && !u.pathname.startsWith(PREFIX + '/')) return route.fulfill({ status: 404, body: 'nf' });
     const rel = u.pathname.slice(PREFIX.length) || '/';

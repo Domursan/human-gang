@@ -181,7 +181,7 @@ const pressed = (p, sel) => p.getAttribute(sel, 'aria-pressed');
   await p.evaluate(() => { document.getElementById('trd-edit').scrollTop = 400; });
   await sleep(120);
   const drift = await p.evaluate(() => {
-    const d = document.getElementById('trd-edit').getBoundingClientRect().top;
+    const e = document.getElementById('trd-edit'), d = e.getBoundingClientRect().top + e.clientTop; // haut de l'intérieur de la fenêtre (sous sa bordure)
     return Math.abs(document.getElementById('trd-peek').getBoundingClientRect().top - d);
   });
   check(drift < 2, 'bandeau collé en haut de la fenêtre pendant le défilement');

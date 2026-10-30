@@ -50,6 +50,11 @@ console.log(`Racine testée : ${ROOT}${CONSTRUIT ? ' (version construite)' : ' (
 const manquantsHtml = [];
 for (const p of pagesHtml) {
   const t = lire(p);
+  // Scripts classiques préchargés (ex. supabase-js, injecté par son relais .mjs) : chargés par <script>, pas en double
+  for (const [lien] of t.matchAll(/<link\b[^>]*rel\s*=\s*["']preload["'][^>]*>/gi)) {
+    const href = lien.match(/\shref\s*=\s*"(\/[^"]+\.js)"/i);
+    if (href && /\sas\s*=\s*["']script["']/i.test(lien)) scriptsClassiques.add(href[1]);
+  }
   for (const [balise] of t.matchAll(/<script\b[^>]*>/gi)) {
     const src = balise.match(/\ssrc\s*=\s*"(\/[^"]+)"/i);
     if (!src) continue;

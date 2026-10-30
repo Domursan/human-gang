@@ -1,6 +1,6 @@
 // Parcours : idée S1 « Ce jour-là » (tuile de l'accueil), plus la vue admin « Ce jour-là ».
 // Tuile visible avec des souvenirs (titre « Il y a 3 ans », vignettes, réactions, « Un autre », lien vers l'album),
-// masquée sans souvenir ou quand le réglage est coupé ; placée entre Secret Santa et IRL sur mobile ; 360 px sans défilement.
+// masquée sans souvenir ou quand le réglage est coupé ; placée sous les rubriques (Secret Santa, IRL…) sur mobile ; 360 px sans défilement.
 // Faux Supabase : fixtures/fake-sb-contenu.mjs (scénario ceJour).
 // Lancer : node tests/parcours/compte/parcours-s1-ce-jour.cjs
 const { check, finish, openPage, adminSection, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
@@ -31,7 +31,7 @@ const ITEMS = [
   check((await p.locator('#tile-day .day-go').getAttribute('href')) === '/pages/irl/irl.html#event-eeeeeeee-0000-4000-8000-000000000001', 'tuile : « Voir l’album » mène à la sortie');
   check((await p.locator('#tile-day .day-dots span').count()) === 3, 'tuile : 3 points (souvenirs)');
   const ySs = (await p.locator('#tile-ss').boundingBox()).y, yDay = (await p.locator('#tile-day').boundingBox()).y, yIrl = (await p.locator('#tile-irl').boundingBox()).y;
-  check(ySs < yDay && yDay < yIrl, 'mobile : la tuile est entre Secret Santa et IRL (maquette)');
+  check(ySs < yIrl && yIrl < yDay, 'mobile : la tuile est sous les rubriques (Secret Santa, IRL), refonte Pixel Pop');
   await p.click('#tile-day .day-next');
   await sleep(100);
   check((await p.locator('#tile-day .day-title').innerText()).includes('karaoké'), '« Un autre » : deuxième souvenir');

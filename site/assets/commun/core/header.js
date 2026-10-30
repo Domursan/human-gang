@@ -35,7 +35,6 @@ import { bindRechercheLien, ouvreRecherche } from './recherche-lien.js';
 import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 import { MENUS, menuKey } from './menu-def.js';
-import { CARTES } from '../../espaces/jeux/catalogue.js';
 
 /* ---------- Structure du menu ---------- */
 
@@ -57,6 +56,8 @@ const allowed = (it, profile) => !!profile && (!it.page || canAccess(it.page)) &
  * Menu « Jeux » : raccourcis vers les sections de la page Jeux (ancres lues par jeux.js, qui fait défiler jusqu'à la section).
  * Le titre du menu garde le libellé réglé pour l'ancien lien direct (menu-def.js : { id: 'jeux', href, page: 'jeux' }).
  * section : id de SECTIONS (espaces/jeux/catalogue.js) ; l'entrée n'apparaît que si la section a un jeu visible.
+ * Le catalogue (≈ 19 Ko) n'est chargé qu'à l'approche du menu (survol, focus, toucher) ou sur les pages Jeux : d'ici là,
+ * les entrées de section restent cachées (budget de performance mobile).
  */
 const JEUX_ITEMS = [
   { label: 'Tous les jeux', href: '/pages/jeux/jeux.html#tous', page: 'jeux' },
@@ -65,10 +66,23 @@ const JEUX_ITEMS = [
   { label: 'Duels / multijoueurs', href: '/pages/jeux/jeux.html#multi', page: 'jeux', section: 'multi' },
   { label: 'Jeux spéciaux', href: '/pages/jeux/jeux.html#speciaux', page: 'jeux', section: 'speciaux' },
 ];
+/** Cartes du catalogue des jeux, une fois chargé (null avant). */
+let cartesJeux = null;
+let cartesJeuxP = null;
+/** Charge le catalogue des jeux (une fois), puis montre les entrées de section du menu « Jeux » qui ont un jeu visible. */
+function chargerJeux(header) {
+  cartesJeuxP ||= import('../../espaces/jeux/catalogue.js').then((m) => { cartesJeux = m.CARTES; }).catch(() => { cartesJeuxP = null; });
+  cartesJeuxP.then(() => {
+    if (!cartesJeux) return;
+    const profile = getCachedProfile();
+    header.querySelectorAll('.nav-menu [data-section]').forEach((a) => { a.hidden = !sectionVisible(a.dataset.section, profile); });
+  });
+}
 /** Vrai si le membre voit au moins un jeu de la section (comme carteVisible de jeux.js : jeux en préparation pour les admins). */
 function sectionVisible(id, profile) {
+  if (!cartesJeux) return false;
   const admin = !!profile?.is_admin && !viewAsActive();
-  return CARTES.some((c) => c.section === id && (c.bientot || c.admin ? admin : !c.page || (canAccess(c.page) && !!pageLabel(c.page))));
+  return cartesJeux.some((c) => c.section === id && (c.bientot || c.admin ? admin : !c.page || (canAccess(c.page) && !!pageLabel(c.page))));
 }
 
 /**
@@ -137,7 +151,9 @@ function navHtml(profile) {
     // Jeux : menu déroulant des sections de la page Jeux (titre : libellé réglé de l'ancien lien direct)
     if (m.id === 'jeux' && m.href) {
       if (!allowed(m, profile)) return '';
-      const inner = JEUX_ITEMS.filter((it) => !it.section || sectionVisible(it.section, profile)).map(linkHtml).join('');
+      const inner = JEUX_ITEMS.map((it) => (it.section
+        ? linkHtml(it).replace('<a class="nav-item"', `<a class="nav-item" data-section="${it.section}"${sectionVisible(it.section, profile) ? '' : ' hidden'}`)
+        : linkHtml(it))).join('');
       return `<div class="nav-group" data-menu="${m.id}">
         <button class="nav-top${isHere(m.href) ? ' is-current' : ''}"${menuC(m.id)} type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}${ICON_CHEVRON}</button>
         <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
@@ -241,6 +257,8 @@ function bindMenus(header) {
   let leaveTimer = 0;
   // Pastille glissante : suit l'entrée survolée ou qui a le focus, revient sur la page affichée en sortant de la barre
   nav.addEventListener('pointerover', (e) => { const t = e.target.closest('.nav-top'); if (t) movePill(header, t); });
+  // Menu « Jeux » : catalogue chargé à l'approche (souris, doigt, clavier), avant l'ouverture
+  for (const ev of ['pointerover', 'pointerdown', 'focusin']) nav.addEventListener(ev, (e) => { if (e.target.closest('.nav-group[data-menu="jeux"]')) chargerJeux(header); });
   nav.addEventListener('pointerleave', () => movePill(header));
   nav.addEventListener('focusin', (e) => { const t = e.target.closest('.nav-top'); if (t) movePill(header, t); });
   nav.addEventListener('pointerover', (e) => {
@@ -515,6 +533,7 @@ export function renderHeader(profile, { nav = true } = {}) {
     setNavOpen(header, open);
   });
   bindMenus(header);
+  if (location.pathname.includes('/pages/jeux/')) chargerJeux(header); // pages Jeux : catalogue déjà chargé par la page
   bindWindow();
   header.querySelector('.nav-search-pill')?.addEventListener('click', ouvreRecherche);
   requestAnimationFrame(() => movePill(header));

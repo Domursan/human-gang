@@ -18,7 +18,7 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
 // les touches du clavier sont envoyées à l'onglet, comme le ferait le clavier, et les cibles visibles sont mesurées.
 const touche = (pg, id, key) => pg.evaluate(([i, k]) => document.getElementById(i).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })), [id, key]);
 // Le lien « Jeux » du menu mène à la page (lien direct, sans sous-menu).
-const LIEN_MENU = '.site-header a.nav-top[href="/pages/jeux/jeux.html"]';
+const LIEN_MENU = '.site-header .nav-group[data-menu="jeux"] a.nav-item[href="/pages/jeux/jeux.html#tous"]';
 // Le harnais répond vide aux CDN : l’empreinte (SRI) de Leaflet, chargé par le module GeoGuessr, échoue. Ce n’est pas une erreur du site.
 const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
 
@@ -35,8 +35,9 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   check(await p.locator('#jeux-panel-tous .jx-carte').count() > 0, 'vue de départ : cartes des jeux');
   // Jeux quotidiens (une partie par jour) avant les jeux flash (à volonté) ; un filtre par section
   const sec = (s) => p.locator(`#jeux-panel-tous .jx-section[data-s="${s}"]`);
-  check((await p.locator('#jeux-panel-tous .jx-h').allInnerTexts()).slice(0, 2).join(' / ') === 'Jeux quotidiens / Jeux flash', 'sections : « Jeux quotidiens » puis « Jeux flash »');
-  check((await p.locator('#jeux-panel-tous .jx-filtre').allInnerTexts()).slice(0, 3).join(',') === 'Tous,Quotidiens,Flash', 'filtres : Tous, Quotidiens, Flash');
+  const sansNb = (t) => t.replace(/\s*\d+\s*$/, ''); // nombre de jeux à la suite du titre ou du filtre (« Jeux quotidiens 4 »)
+  check((await p.locator('#jeux-panel-tous .jx-h').allInnerTexts()).slice(0, 2).map(sansNb).join(' / ') === 'Jeux quotidiens / Jeux flash', 'sections : « Jeux quotidiens » puis « Jeux flash » (avec leur nombre de jeux)');
+  check((await p.locator('#jeux-panel-tous .jx-filtre').allInnerTexts()).slice(0, 3).map(sansNb).join(',') === 'Tous,Quotidiens,Flash', 'filtres : Tous, Quotidiens, Flash (avec leur nombre de jeux)');
   // Chaque jeu à onglet « Chaque jour » (onglets.js) a sa carte dans « Jeux quotidiens », sauf l’Arcade (à volonté)
   const manquants = [];
   for (const id of RYTHMES.filter(([i, r]) => r === 'jour' && i !== 'arcade').map((x) => x[0])) {

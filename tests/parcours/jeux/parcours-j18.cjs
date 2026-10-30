@@ -45,7 +45,7 @@ async function balaye(p, pas = 3000) {
   check(await p.$eval('#arc-canvas', (el) => getComputedStyle(el).touchAction) === 'none', 'canevas : pas de défilement au doigt');
   check(await hscroll(p) <= 0, '390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'aucune erreur JS au chargement' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
-  check((await p.locator('.site-header a.nav-top[href="/pages/jeux/jeux.html"]').count()) === 1, 'menu : lien « Jeux » vers la page des jeux (sans sous-menu)');
+  check((await p.locator('.site-header .nav-group[data-menu="jeux"] a.nav-item[href="/pages/jeux/jeux.html#tous"]').count()) === 1, 'menu : « Jeux » déroulant, avec « Tous les jeux » vers la page des jeux');
   await p.ctx.close();
 
   /* ---------- Partie complète (horloge simulée), pause, gain une fois ---------- */
