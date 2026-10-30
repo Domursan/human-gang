@@ -14,7 +14,7 @@ import { boutonReponses } from '../../commun/core/admin-reponses.js';
 const STEPS = [1, 2, 4, 7, 11, 16];
 const dateLong = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' });
 let P = null, C = null;
-const S = { st: null, busy: false, err: null, player: null, ready: false, playing: false, pos: 0, timer: null, forVideo: null, propose: false, vol: 70, muted: false };
+const S = { st: null, busy: false, err: null, player: null, playerP: null, ready: false, playing: false, pos: 0, timer: null, forVideo: null, propose: false, vol: 70, muted: false };
 const VOL_KEY = 'hg_heardle_volume';
 
 /** Monte l'onglet. */
@@ -82,20 +82,31 @@ function ytApi() {
   });
 }
 
-/** Crée le lecteur (une fois par vidéo) dans #jh-player. */
-async function ensurePlayer() {
+/** Erreur déjà annoncée (vidéo illisible : videoBloquee) : play() ne la répète pas. */
+const DEJA_DIT = new Error('vidéo illisible');
+
+/**
+ * Crée le lecteur (une fois par vidéo) dans #jh-player et attend qu'il soit prêt : avant onReady, l'objet YouTube n'a
+ * pas encore ses méthodes (seekTo, playVideo…). Un second clic pendant la préparation attend la même promesse.
+ * Si la vidéo ne se lit pas, la promesse échoue (DEJA_DIT) et le prochain clic recrée le lecteur.
+ */
+function ensurePlayer() {
   const st = S.st;
-  if (S.player && S.forVideo === st.youtube_id) return S.player;
-  const YT = await ytApi();
-  await new Promise((res) => {
-    S.forVideo = st.youtube_id;
+  if (S.playerP && S.forVideo === st.youtube_id) return S.playerP;
+  S.forVideo = st.youtube_id;
+  S.ready = false;
+  const p = S.playerP = ytApi().then((YT) => new Promise((res, rej) => {
     S.player = new YT.Player('jh-player', {
       host: 'https://www.youtube-nocookie.com', videoId: st.youtube_id, width: '100%', height: '100%',
       playerVars: { start: st.start_s, controls: 0, disablekb: 1, modestbranding: 1, playsinline: 1, rel: 0, fs: 0, iv_load_policy: 3 },
-      events: { onReady: () => { S.ready = true; appliquerVolume(S.player); res(); }, onError: (e) => { res(); videoBloquee(e?.data); } },
+      events: {
+        onReady: () => { S.ready = true; appliquerVolume(S.player); res(S.player); },
+        onError: (e) => { if (S.playerP === p) { S.playerP = null; S.forVideo = null; } rej(DEJA_DIT); videoBloquee(e?.data); },
+      },
     });
-  });
-  return S.player;
+  }));
+  p.catch(() => { if (S.playerP === p) { S.playerP = null; S.forVideo = null; } });
+  return p;
 }
 
 /**
@@ -133,6 +144,7 @@ async function play() {
   if (S.playing) { stop(); return; }
   try {
     const p = await ensurePlayer();
+    if (typeof p?.seekTo !== 'function' || (p.getIframe && !p.getIframe()?.isConnected)) return; // onglet redessiné entre-temps : lecteur abandonné
     const st = S.st, lim = st.finished ? 16 : st.seconds;
     appliquerVolume(p);
     p.seekTo(st.start_s, true); p.playVideo();
@@ -145,7 +157,7 @@ async function play() {
       if (cur >= lim) stop(); else paintPlay();
     }, 100);
     paintPlay();
-  } catch (e) { C.toast(e?.message || String(e), 'error'); }
+  } catch (e) { if (e !== DEJA_DIT) C.toast(e?.message || String(e), 'error'); }
 }
 
 /** Met à jour le bouton et le compteur sans tout redessiner. */
@@ -218,7 +230,7 @@ function render() {
   const esc = C.esc, st = S.st;
   if (S.err) { P.innerHTML = `<p class="card">Heardle indisponible : ${esc(S.err)}</p>`; return; }
   stop();
-  S.player = null; S.forVideo = null;
+  S.player = null; S.playerP = null; S.forVideo = null;
   const hier = st.hier ? `<div class="card jd-hier"><p class="jd-hier-t">Hier · #${esc(st.hier.round)} ${esc(st.hier.title)}</p>
       <p class="muted small">trouvé par ${esc(st.hier.solvers)} membre${st.hier.solvers > 1 ? 's' : ''}${st.hier.avg ? ` · moyenne ${esc(String(st.hier.avg).replace('.', ','))} / 6` : ''}</p></div>` : '';
   const board = `<section class="card jd-board-box" aria-labelledby="jh-board-h"><h2 id="jh-board-h" class="jd-h2">Classement de la semaine</h2>${boardHtml(st.board, C.me?.id, esc)}</section>`;
