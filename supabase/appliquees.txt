@@ -36,3 +36,4 @@
 2026-10-29T22:43:20.498Z ok supabase/migrations/177_theme_pixel_pop.sql
 2026-10-30T14:41:52.698Z ok supabase/migrations/178_heardle_historique.sql
 2026-10-30T18:45:23.430Z ok supabase/migrations/179_jeux_dix_points.sql
+2026-10-31T12:31:34.652Z ok supabase/migrations/180_adrep_carte_mystere.sql
