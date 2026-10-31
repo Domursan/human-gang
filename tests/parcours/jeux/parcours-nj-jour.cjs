@@ -70,6 +70,7 @@ const ouvre = (browser, hash, extra = {}) => openPage(browser, { page: 'jeux', f
   check((await p.locator('#nj-form').count()) === 0, 'fin : le champ de réponse disparaît');
   check((await p.locator('.nj-board .jd-board-row').count()) >= 2, 'classement de la semaine affiché');
   check((await p.locator('.nj-regles .nj-bareme li').count()) === 6, 'barème : 6 cases');
+  check((await p.locator('.nj-regles .nj-bp').allInnerTexts()).join(',') === '10,9,8,7,6,5', 'barème : 10 points au 1er essai, 5 au 6e');
   await p.evaluate(CLIP_FAUX);
   await p.click('[data-act="copier"]');
   await sleep(200);

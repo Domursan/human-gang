@@ -198,13 +198,17 @@ function peindreHub() {
     if (st) st.textContent = r?.etat === 'fait' ? (r.badge || 'Fait') : r?.etat === 'en_cours' ? (r.badge || '') : '';
   }
   // Cartes de la vue « Tous les jeux » : un jeu noté aujourd'hui (hg_jeux_classement, migration 179) prend le cadre vert et
-  // ses points sur 10 ; sinon la pastille du résumé du jeu (à jouer, en cours, ou fait avant d'être noté).
+  // ses points sur 10 ; un jeu quotidien pas encore joué affiche « 10 pts max », avec ou sans résumé (sauf s'il n'a pas de
+  // partie aujourd'hui) ; sinon la pastille du résumé (en cours, ou fait avant d'être noté).
   for (const cb of document.querySelectorAll('[data-cbadge]')) {
     const k = cb.dataset.cbadge;
     const res = S.notes?.[CLE_JEU[k] || (k === 'code-du-jour' ? 'code_jour' : '')];
     const r = S.resumes.get(k);
+    const quotidien = cb.closest('[data-s]')?.dataset.s === 'quotidien';
+    const aJouer = quotidien && S.notes && (!r || r.etat === 'a_jouer');
     cb.innerHTML = res ? badgeHtml({ etat: 'fait', badge: `${nf(res.score)} pt${res.score > 1 ? 's' : ''}` })
-      : r && ['fait', 'a_jouer', 'en_cours'].includes(r.etat) ? badgeHtml(r) : '';
+      : aJouer ? badgeHtml({ etat: 'a_jouer', badge: '10 pts max' })
+        : r && ['fait', 'a_jouer', 'en_cours'].includes(r.etat) ? badgeHtml(r) : '';
   }
   const total = BONUS.length;
   const bar = $('#jeux-bar');

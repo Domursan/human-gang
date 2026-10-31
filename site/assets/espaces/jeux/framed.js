@@ -1,7 +1,7 @@
 // ===== Humane Gang — page « Jeux », onglet Framed du ciné-club (idée J9) =====
 /*
  * Rôle : deviner l'élément du jour (un film du ciné-club, une affiche ou un tuto du site) à partir d'images qui se dévoilent : chaque erreur
- * ou « Passer » dévoile l'image suivante, 6 essais au plus. Trouver à la 1re image rapporte 6 points, à la 6e 1 point.
+ * ou « Passer » dévoile l'image suivante, 6 essais au plus. Trouver à la 1re image rapporte 10 points, à la 6e 5 points.
  * Les images sont privées (bucket hg-jeux) : le stockage ne laisse lire que les images déjà dévoilées (politique
  * hg_jeux_obj_read), lues ici par URL signée courte.
  * RPC : hg_framed_state, hg_framed_guess. Gains versés par le serveur (10 ✦ trouvé, 3 ✦ sinon, réglables).

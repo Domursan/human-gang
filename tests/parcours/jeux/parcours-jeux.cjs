@@ -57,6 +57,10 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   check(await p.locator('.jx-carte:has([data-cbadge="sutom"] .pill-ok)').evaluate((li) => getComputedStyle(li).borderTopColor !== getComputedStyle(li.closest('.jx-grille').querySelector('.jx-carte:has([data-cbadge="framed"])')).borderTopColor).catch(() => false),
     'cartes notées : cadre de couleur (Framed, pas joué, reste neutre)');
   check(!(await p.locator('[data-cbadge="framed"] .pill-ok').count()), 'cartes : Framed sans pastille « fait »');
+  // Jeux quotidiens pas encore joués : même encart partout, que le jeu ait un résumé du jour (Sudoku, Citations) ou non (Framed)
+  const encarts = await Promise.all(['framed', 'heardle', 'sudoku'].map((id) => p.locator(`[data-cbadge="${id}"]`).innerText()));
+  check(encarts.every((t) => /10 pts max/i.test(t)), `cartes pas jouées : « 10 pts max » (${encarts.join(' / ')})`);
+  check(!/pts max/i.test(await sec('flash').innerText()), 'jeux flash : pas d’encart « pts max »');
   await p.click('.jx-filtre[data-f="quotidien"]'); await sleep(150);
   check(await sec('quotidien').isVisible() && await sec('flash').isHidden(), 'filtre « Quotidiens » : seulement les jeux quotidiens');
   await p.click('.jx-filtre[data-f="flash"]'); await sleep(150);

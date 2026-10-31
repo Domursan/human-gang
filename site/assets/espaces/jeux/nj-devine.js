@@ -3,7 +3,7 @@
  * Rôle : un seul moteur pour les six jeux du jour à deviner en 6 essais. Chaque jeu a sa présentation (carte floutée,
  * capture très zoomée, pochette pixelisée, réplique, silhouette de pays, photo de plat) ; la partie suit les mêmes règles :
  * 6 essais, un indice à chaque erreur ou « Passer », la réponse seulement en fin de partie. Pays et plat donnent la
- * distance et la direction à chaque essai. Barème : essai 1 = 6 points … essai 6 = 1 point.
+ * distance et la direction à chaque essai. Barème : essai 1 = 10 points … essai 6 = 5 points.
  * Réponses : seulement celles de la liste « choix » de l'état (le serveur refuse les autres) ; le champ propose des
  * suggestions sans accents ni majuscules et « Valider » reste désactivé tant que la saisie n'est pas une réponse de la liste.
  * RPC : hg_nj_etat(p_jeu), hg_nj_essai(p_jeu, p_texte) (p_texte null = passer). Les modules d'onglet sont dans jeux/nj-*.js.
@@ -44,8 +44,8 @@ const JEUX = {
     'Chaque erreur ou « Passer » débloque un indice (le 4e donne le pays).',
     'Choisis le plat dans la liste des suggestions.'] },
 };
-/** Points par essai (essai 1 = 6 points … essai 6 = 1 point). */
-const BAREME = [6, 5, 4, 3, 2, 1];
+/** Points par essai (essai 1 = 10 points … essai 6 = 5 points). */
+const BAREME = [10, 9, 8, 7, 6, 5];
 /** Flou de la carte selon le nombre d'erreurs (0 à 5 et plus). */
 const FLOU = [14, 10, 7, 4, 2, 1];
 /** Zoom de la capture selon le nombre d'erreurs (0 à 5 et plus). */
